@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/player">
+        <menu android:checkableBehavior="single">
+            <item
+                android:id="@+id/all_audio"
+                android:icon="@drawable/ic_music"
+                android:checkable="true"
+                android:title="@string/all_tracks_playlist" />
+            <item
+                android:id="@+id/playlists"
+                android:checkable="true"
+                android:icon="@drawable/ic_playlist"
+                android:title="@string/playlists" />
+            <item
+                android:id="@+id/spectrum"
+                android:checkable="true"
+                android:icon="@drawable/ic_spectrum"
+                android:title="@string/spectrum" />
+        </menu>
+    </item>
+    <item android:title="@string/options">
+        <menu>
+            <item
+                android:id="@+id/settings"
+                android:checkable="true"
+                android:icon="@drawable/ic_settings"
+                android:title="@string/settings" />
+        </menu>
+    </item>
+
+</menu>

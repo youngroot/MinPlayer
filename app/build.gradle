@@ -1,0 +1,67 @@
+apply plugin: 'com.android.application'
+
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion '26.0.2'
+    defaultConfig {
+        applicationId "com.ivanroot.minplayer"
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1', changing: true
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1', changing: true
+
+    compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.0.3'
+    compile group: 'io.reactivex.rxjava2', name: 'rxandroid', version: '2.0.1'
+    compile group: 'io.reactivex', name: 'rxjava', version: '1.2.5'
+
+    compile 'com.android.support:appcompat-v7:25.4.0'
+    compile 'com.android.support:cardview-v7:25.4.0'
+    compile 'com.android.support.constraint:constraint-layout:1.1.0-beta3'
+    compile 'com.android.support:design:25.4.0'
+    compile 'com.android.support:support-v4:25.4.0'
+
+
+    compile 'com.pushtorefresh.storio:sqlite:1.13.0'
+    compile 'com.pushtorefresh.storio:content-resolver:1.13.0'
+    compile 'com.pushtorefresh.storio:content-resolver-annotations:1.13.0'
+
+    compile "com.github.akarnokd:rxjava2-interop:0.8.1"
+
+    annotationProcessor 'com.pushtorefresh.storio:sqlite-annotations-processor:1.13.0'
+
+    testCompile 'junit:junit:4.12'
+    compile 'com.simplecityapps:recyclerview-fastscroll:1.0.16'
+    compile 'jp.wasabeef:blurry:2.1.1'
+
+    compile 'com.hwangjr.rxbus:rxbus:1.0.6'
+    compile 'com.android.support:palette-v7:25.4.0'
+    
+}

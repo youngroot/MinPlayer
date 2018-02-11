@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">MinPlayer</string>
+    <string name="unknown_song_title">Unknown</string>
+    <string name="unknown_song_album">Unknown Album</string>
+    <string name="unknown_song_artist">Unknown Artist</string>
+    <string name="create_playlist">Create New Playlist</string>
+    <string name="add_to_playlist">Add To Playlist</string>
+    <string name="add_to_next_queue">Add To Next Queue</string>
+    <string name="title_activity_playlist">PlaylistActivity</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
+    <string name="all_tracks_playlist">All Tracks</string>
+    <string name="add_playlist">Add Playlist</string>
+    <string name="playlists">Playlists</string>
+    <string name="settings">Settings</string>
+    <string name="options">Options</string>
+    <string name="player">Player</string>
+    <string name="playlist_name">Playlist Name</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="about_short">Simple Music Player</string>
+    <string name="spectrum">Spectrum</string>
+
+    <string name="title_activity_startup">StartupActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+</resources>
