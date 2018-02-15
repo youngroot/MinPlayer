@@ -15,6 +15,8 @@ import java.util.List;
 public class Playlist implements Serializable, IPlaylist {
 
     protected String name = "";
+    protected String date = "";
+    protected String time = "";
     protected boolean isShuffled = false;
     protected int audioIndex = -1;
     protected Audio currAudio = null;
@@ -22,7 +24,6 @@ public class Playlist implements Serializable, IPlaylist {
     protected List<Audio> non_shuffled_playlist;
     protected List<Audio>shuffled_playlist;
     protected int repeatMode  = IPlaylist.NOT_REPEAT;
-
 
     public Playlist(){
         playlist = new ArrayList<>();
@@ -267,6 +268,26 @@ public class Playlist implements Serializable, IPlaylist {
     @Override
     public void update(){
 
+    }
+
+    @Override
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    @Override
+    public String getTime() {
+        return time;
+    }
+
+    @Override
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    @Override
+    public String getDate() {
+        return date;
     }
 
     @Override

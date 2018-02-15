@@ -5,7 +5,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.audio.Audio;
-import com.pushtorefresh.storio.contentresolver.operations.get.DefaultGetResolver;
+import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
+import com.pushtorefresh.storio3.contentresolver.operations.get.DefaultGetResolver;
 
 /**
  * Created by Ivan Root on 28.08.2017.
@@ -15,7 +16,7 @@ public class MediaStoreAudioGetResolver extends DefaultGetResolver<Audio> {
 
     @NonNull
     @Override
-    public Audio mapFromCursor(@NonNull Cursor cursor) {
+    public Audio mapFromCursor(StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
 
         String id = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
         String data = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));

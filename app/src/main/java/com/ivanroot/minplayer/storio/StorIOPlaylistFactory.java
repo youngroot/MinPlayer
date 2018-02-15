@@ -4,11 +4,15 @@ import android.content.Context;
 
 import com.ivanroot.minplayer.utils.Utils;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.pushtorefresh.storio.sqlite.SQLiteTypeMapping;
-import com.pushtorefresh.storio.sqlite.StorIOSQLite;
-import com.pushtorefresh.storio.sqlite.impl.DefaultStorIOSQLite;
-import com.pushtorefresh.storio.sqlite.queries.Query;
+import com.pushtorefresh.storio3.sqlite.SQLiteTypeMapping;
+import com.pushtorefresh.storio3.sqlite.StorIOSQLite;
+import com.pushtorefresh.storio3.sqlite.impl.DefaultStorIOSQLite;
+import com.pushtorefresh.storio3.sqlite.queries.Query;
 
+import java.util.List;
+
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 
 /**
@@ -36,9 +40,9 @@ public class StorIOPlaylistFactory  {
         return INSTANCE;
     }
 
-    public static Observable<Playlist> createPlaylistObservable(Context context, String playlistName){
+    public static Observable<Playlist> getPlaylistObservable(Context context, String playlistName){
 
-        return Utils.v2(StorIOPlaylistFactory
+        return StorIOPlaylistFactory
                 .get(context)
                 .get()
                 .listOfObjects(Playlist.class)
@@ -48,21 +52,24 @@ public class StorIOPlaylistFactory  {
                         .whereArgs(playlistName)
                         .build())
                 .prepare()
-                .asRxObservable())
+                .asRxFlowable(BackpressureStrategy.LATEST)
+                .toObservable()
                 .flatMap(Observable::fromIterable);
     }
 
-    public static Observable<Playlist> createPlaylistObservable(Context context){
-        return Utils.v2(StorIOPlaylistFactory
+    public static Observable<List<Playlist>> getAllPlaylistsObservable(Context context){
+        return StorIOPlaylistFactory
                 .get(context)
                 .get()
                 .listOfObjects(Playlist.class)
                 .withQuery(Query.builder()
                         .table(PlaylistTable.TABLE_PLAYLISTS)
+                        .where(PlaylistTable.ROW_PLAYLIST_NAME + " != ?")
+                        .whereArgs(PlaylistTable.ALL_TRACKS_PLAYLIST)
                         .build())
                 .prepare()
-                .asRxObservable())
-                .flatMap(Observable::fromIterable);
+                .asRxFlowable(BackpressureStrategy.LATEST)
+                .toObservable();
     }
 
 }

@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.adapter.viewholder.AudioViewHolder;
 import com.ivanroot.minplayer.audio.OnAudioClickListener;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -28,21 +29,19 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
     private Playlist playlist;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Disposable disposable;
-    private OnAudioClickListener onAudioClickListener;
+    private OnAudioClickListener audioClickListener;
 
     public AudioRecyclerAdapter(Context context, String playlistName){
 
         this.context = context;
-        disposable = playlistManager.getPlaylistSubject(context)
-                .flatMap(Observable::fromIterable)
-                .filter(tempPlaylist -> tempPlaylist.getName().equals(playlistName))
+        disposable = playlistManager.getPlaylistObservable(context,playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 
     }
 
-    public void setOnAudioClickListener(OnAudioClickListener onAudioClickListener){
-        this.onAudioClickListener = onAudioClickListener;
+    public void setAudioClickListener(OnAudioClickListener audioClickListener){
+        this.audioClickListener = audioClickListener;
     }
 
     private void setPlaylist(Playlist playlist){
@@ -67,7 +66,7 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
     public void onBindViewHolder(AudioViewHolder audioViewHolder, int i) {
         audioViewHolder.representAudioItem(playlist.getAudio(i));
         audioViewHolder.itemView
-                .setOnClickListener(v -> onAudioClickListener.OnAudioClick(playlist.getAudio(i),playlist.getName()));
+                .setOnClickListener(v -> audioClickListener.OnAudioClick(playlist.getAudio(i),playlist.getName()));
     }
 
     @Override

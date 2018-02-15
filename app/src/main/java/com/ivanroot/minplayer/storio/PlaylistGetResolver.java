@@ -6,7 +6,8 @@ import android.support.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.pushtorefresh.storio.sqlite.operations.get.DefaultGetResolver;
+import com.pushtorefresh.storio3.sqlite.StorIOSQLite;
+import com.pushtorefresh.storio3.sqlite.operations.get.DefaultGetResolver;
 
 import java.lang.reflect.Type;
 
@@ -17,7 +18,7 @@ import java.lang.reflect.Type;
 public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
     @NonNull
     @Override
-    public Playlist mapFromCursor(@NonNull Cursor cursor) {
+    public Playlist mapFromCursor(StorIOSQLite storIOSQLite, @NonNull Cursor cursor) {
 
         String json = cursor.getString(cursor.getColumnIndex(PlaylistTable.ROW_PLAYLIST_JSON));
         Type typePlaylist = new TypeToken<Playlist>(){}.getType();

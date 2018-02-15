@@ -50,9 +50,7 @@ public class PlaylistAdapter extends BaseAdapter {
         fadeIn = AnimationUtils.loadAnimation(activity, R.anim.fade_in);
         fadeIn.setDuration(500);
 
-        disposable = playlistManager.getPlaylistSubject(activity)
-                .flatMap(Observable::fromIterable)
-                .filter(tempPlaylist -> tempPlaylist.getName().equals(playlistName))
+        disposable = playlistManager.getPlaylistObservable(activity,playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 

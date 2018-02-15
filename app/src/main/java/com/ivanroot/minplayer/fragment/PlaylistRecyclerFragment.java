@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -90,7 +91,7 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
             });
         }
 
-        adapter.setOnAudioClickListener((audio, playlistName) -> {
+        adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST,playlistName);
             rxBus.post(ACTION_PLAY_AUDIO,audio);
 
@@ -115,6 +116,8 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
         audioRecyclerView = (FastScrollRecyclerView) view.findViewById(R.id.audio_recycler);
         audioRecyclerView.setHasFixedSize(true);
         audioRecyclerView.setLayoutManager(layoutManager);
+        DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(audioRecyclerView.getContext(),LinearLayoutManager.VERTICAL);
+        audioRecyclerView.addItemDecoration(mDividerItemDecoration);
         audioRecyclerView.setStateChangeListener(new OnFastScrollStateChangeListener() {
 
             @Override

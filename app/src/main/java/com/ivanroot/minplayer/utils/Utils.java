@@ -3,8 +3,10 @@ package com.ivanroot.minplayer.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -18,8 +20,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import io.reactivex.Observable;
+import io.reactivex.functions.BiPredicate;
 
 import static android.content.ContentValues.TAG;
 import static hu.akarnokd.rxjava.interop.RxJavaInterop.toV2Observable;
@@ -112,5 +116,15 @@ public class Utils {
 
     public static <T> Observable<T> v2(rx.Observable<T> source) {
         return toV2Observable(source);
+    }
+
+    @NonNull
+    public static BiPredicate<Cursor, Cursor> cursorSizeComparator() {
+        return (cursor1, cursor2) -> cursor1.getCount() == cursor2.getCount();
+    }
+
+    @NonNull
+    public static <T>BiPredicate<List<T>, List<T>> listSizeComparator() {
+        return (list1, list2) -> list1.size() == list2.size();
     }
 }

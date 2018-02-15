@@ -2,6 +2,8 @@ package com.ivanroot.minplayer.playlist;
 
 import com.ivanroot.minplayer.audio.Audio;
 
+import java.util.Date;
+
 /**
  * Created by Ivan Root on 05.07.2017.
  */
@@ -55,6 +57,14 @@ public interface IPlaylist {
     boolean isShuffled();
 
     void update();
+
+    void setTime(String time);
+
+    String getTime();
+
+    void setDate(String date);
+
+    String getDate();
 
     boolean equals(IPlaylist playlist);
 }

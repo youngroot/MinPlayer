@@ -17,6 +17,8 @@ import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.storio.PlaylistTable;
 
+import java.util.Date;
+
 /**
  * Created by Ivan Root on 02.07.2017.
  */
@@ -58,6 +60,8 @@ public class PlaylistAddDialog extends DialogFragment {
         okBtn.setOnClickListener(v -> {
             String name = playlistName.getText().toString();
             playlist.setName(name);
+            playlist.setDate("00.00.00");
+            playlist.setTime("00:00:00");
             playlistManager.writePlaylist(activity,playlist);
             dismiss();
         });

@@ -5,9 +5,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.audio.Audio;
-import com.pushtorefresh.storio.contentresolver.operations.delete.DefaultDeleteResolver;
-import com.pushtorefresh.storio.contentresolver.queries.DeleteQuery;
-
+import com.pushtorefresh.storio3.contentresolver.operations.delete.DefaultDeleteResolver;
+import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 /**
  * Created by Ivan Root on 28.08.2017.
  */

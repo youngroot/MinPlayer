@@ -49,13 +49,15 @@ dependencies {
     compile 'com.android.support:support-v4:25.4.0'
 
 
-    compile 'com.pushtorefresh.storio:sqlite:1.13.0'
-    compile 'com.pushtorefresh.storio:content-resolver:1.13.0'
-    compile 'com.pushtorefresh.storio:content-resolver-annotations:1.13.0'
-
     compile "com.github.akarnokd:rxjava2-interop:0.8.1"
 
-    annotationProcessor 'com.pushtorefresh.storio:sqlite-annotations-processor:1.13.0'
+    implementation 'com.pushtorefresh.storio3:sqlite:3.0.0'
+    implementation 'com.pushtorefresh.storio3:sqlite-annotations:3.0.0'
+    annotationProcessor 'com.pushtorefresh.storio3:sqlite-annotations-processor:3.0.0'
+
+    implementation 'com.pushtorefresh.storio3:content-resolver:3.0.0'
+    implementation 'com.pushtorefresh.storio3:content-resolver-annotations:3.0.0'
+    annotationProcessor 'com.pushtorefresh.storio3:content-resolver-annotations-processor:3.0.0'
 
     testCompile 'junit:junit:4.12'
     compile 'com.simplecityapps:recyclerview-fastscroll:1.0.16'

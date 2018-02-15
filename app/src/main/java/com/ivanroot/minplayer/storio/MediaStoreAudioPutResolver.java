@@ -6,9 +6,10 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.audio.Audio;
-import com.pushtorefresh.storio.contentresolver.operations.put.DefaultPutResolver;
-import com.pushtorefresh.storio.contentresolver.queries.InsertQuery;
-import com.pushtorefresh.storio.contentresolver.queries.UpdateQuery;
+import com.pushtorefresh.storio3.contentresolver.operations.put.DefaultPutResolver;
+import com.pushtorefresh.storio3.contentresolver.queries.InsertQuery;
+import com.pushtorefresh.storio3.contentresolver.queries.UpdateQuery;
+
 
 /**
  * Created by Ivan Root on 28.08.2017.

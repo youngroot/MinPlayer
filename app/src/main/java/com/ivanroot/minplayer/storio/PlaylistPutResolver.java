@@ -6,9 +6,10 @@ import android.support.annotation.NonNull;
 import com.google.gson.Gson;
 import com.ivanroot.minplayer.playlist.IPlaylist;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.pushtorefresh.storio.sqlite.operations.put.DefaultPutResolver;
-import com.pushtorefresh.storio.sqlite.queries.InsertQuery;
-import com.pushtorefresh.storio.sqlite.queries.UpdateQuery;
+import com.pushtorefresh.storio3.sqlite.operations.put.DefaultPutResolver;
+import com.pushtorefresh.storio3.sqlite.queries.InsertQuery;
+import com.pushtorefresh.storio3.sqlite.queries.UpdateQuery;
+
 
 /**
  * Created by Ivan Root on 28.08.2017.
@@ -41,7 +42,6 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
         Gson gson = new Gson();
         String json = gson.toJson(playlist);
         ContentValues contentValues = new ContentValues();
-
         contentValues.put(PlaylistTable.ROW_PLAYLIST_NAME,playlist.getName());
         contentValues.put(PlaylistTable.ROW_PLAYLIST_JSON,json);
 

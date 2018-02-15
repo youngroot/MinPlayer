@@ -10,8 +10,9 @@
 
     <ImageView
         android:id="@+id/songAlbumArt"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="fitXY"
         app:srcCompat="@drawable/default_album_art"/>
     <LinearLayout
         android:layout_width="290dp"

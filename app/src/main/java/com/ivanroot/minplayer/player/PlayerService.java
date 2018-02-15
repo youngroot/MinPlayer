@@ -220,9 +220,7 @@ public class PlayerService
             playlistSubscription.dispose();
 
         //PlaylistManager.writePlaylist(this,playlist);
-        playlistSubscription = playlistManager.getPlaylistSubject(this)
-                .flatMap(Observable::fromIterable)
-                .filter(tempPlaylist -> tempPlaylist.getName().equals(playlistName))
+        playlistSubscription = playlistManager.getPlaylistObservable(this,playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 

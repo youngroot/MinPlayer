@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.adapter;
+package com.ivanroot.minplayer.adapter.viewholder;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
