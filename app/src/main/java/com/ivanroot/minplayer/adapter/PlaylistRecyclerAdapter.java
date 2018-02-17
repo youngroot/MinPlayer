@@ -14,7 +14,6 @@ import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
@@ -22,7 +21,7 @@ import io.reactivex.disposables.Disposable;
  * Created by Ivan Root on 16.12.2017.
  */
 
-public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
+public class PlaylistRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
         implements FastScrollRecyclerView.SectionedAdapter {
 
     private Context context;
@@ -30,8 +29,9 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Disposable disposable;
     private OnAudioClickListener audioClickListener;
+    private OnNewPlaylistUpdateListener playlistListener;
 
-    public AudioRecyclerAdapter(Context context, String playlistName){
+    public PlaylistRecyclerAdapter(Context context, String playlistName){
 
         this.context = context;
         disposable = playlistManager.getPlaylistObservable(context,playlistName)
@@ -44,8 +44,13 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
         this.audioClickListener = audioClickListener;
     }
 
+    public void setNewPlaylistUpdateListener(OnNewPlaylistUpdateListener playlistListener){
+        this.playlistListener = playlistListener;
+    }
+
     private void setPlaylist(Playlist playlist){
         this.playlist = playlist;
+        playlistListener.onNewPlaylist(playlist);
         notifyDataSetChanged();
     }
 
@@ -57,14 +62,12 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
     public AudioViewHolder onCreateViewHolder(ViewGroup parent, int i) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.audio_item,parent,false);
-        AudioViewHolder audioViewHolder = new AudioViewHolder(view);
-        audioViewHolder.representAudioItem(playlist.getAudio(i));
-        return audioViewHolder;
+        return new AudioViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(AudioViewHolder audioViewHolder, int i) {
-        audioViewHolder.representAudioItem(playlist.getAudio(i));
+        audioViewHolder.representAudioItem(context, playlist.getAudio(i));
         audioViewHolder.itemView
                 .setOnClickListener(v -> audioClickListener.OnAudioClick(playlist.getAudio(i),playlist.getName()));
     }
@@ -86,5 +89,9 @@ public class AudioRecyclerAdapter extends RecyclerView.Adapter<AudioViewHolder>
     @Override
     public String getSectionName(int i) {
         return playlist.getAudio(i).getTitle().substring(0,1);
+    }
+
+    public interface OnNewPlaylistUpdateListener {
+        void onNewPlaylist(Playlist playlist);
     }
 }

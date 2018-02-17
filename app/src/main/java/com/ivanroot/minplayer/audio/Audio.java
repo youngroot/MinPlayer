@@ -13,6 +13,7 @@ public class Audio implements Serializable {
     private String album;
     private String artist;
     private String genre;
+    private String albumArt;
 
     public  Audio(){}
 
@@ -76,6 +77,16 @@ public class Audio implements Serializable {
     public void setGenre(String genre) {
         this.genre = genre;
     }
+
+    public String getAlbumArt() {
+        return albumArt;
+    }
+
+    public void setAlbumArt(String albumArt) {
+        this.albumArt = albumArt;
+    }
+
+
 
     @Override
     public boolean equals(Object object){

@@ -1,6 +1,5 @@
 package com.ivanroot.minplayer.storio;
 
-import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
@@ -13,13 +12,11 @@ import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 
 public class MediaStoreAudioDeleteResolver extends DefaultDeleteResolver<Audio> {
 
-    private static final Uri EXTERNAL_AUDIO_URI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-
     @NonNull
     @Override
     protected DeleteQuery mapToDeleteQuery(@NonNull Audio audio) {
         return DeleteQuery.builder()
-                .uri(EXTERNAL_AUDIO_URI)
+                .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
                 .where(MediaStore.Audio.Media._ID + " = ?")
                 .whereArgs(audio.getId())
                 .build();

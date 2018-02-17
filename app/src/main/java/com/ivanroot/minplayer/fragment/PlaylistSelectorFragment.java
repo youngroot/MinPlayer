@@ -1,37 +1,18 @@
 package com.ivanroot.minplayer.fragment;
 
-import android.app.Activity;
-import android.app.ListFragment;
-import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CursorAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.PlaylistSelectorAdapter;
-import com.ivanroot.minplayer.player.RxBus;
-import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.storio.PlaylistTable;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 
 /**
  * Created by Ivan Root on 12.02.2018.
@@ -66,7 +47,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         setupRecycler(view);
         addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
-        adapter.setPlaylistClickListener((playlistName -> {
+        adapter.setOnPlaylistClickListener((playlistName -> {
             PlaylistRecyclerFragment playlistRecyclerFragment = new PlaylistRecyclerFragment(playlistName);
             getActivity()
                     .getFragmentManager()

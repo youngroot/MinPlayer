@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.ivanroot.minplayer.playlist.IPlaylist;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.pushtorefresh.storio3.sqlite.operations.put.DefaultPutResolver;
 import com.pushtorefresh.storio3.sqlite.queries.InsertQuery;
@@ -20,7 +19,7 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
     @Override
     protected InsertQuery mapToInsertQuery(@NonNull Playlist playlist) {
         return InsertQuery.builder()
-                .table(PlaylistTable.TABLE_PLAYLISTS)
+                .table(PlaylistTable.TABLE)
                 .build();
     }
 
@@ -29,8 +28,8 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
     protected UpdateQuery mapToUpdateQuery(@NonNull Playlist playlist) {
 
         return UpdateQuery.builder()
-                .table(PlaylistTable.TABLE_PLAYLISTS)
-                .where(PlaylistTable.ROW_PLAYLIST_NAME + " = ?")
+                .table(PlaylistTable.TABLE)
+                .where(PlaylistTable.PLAYLIST_NAME + " = ?")
                 .whereArgs(playlist.getName())
                 .build();
     }
@@ -42,8 +41,9 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
         Gson gson = new Gson();
         String json = gson.toJson(playlist);
         ContentValues contentValues = new ContentValues();
-        contentValues.put(PlaylistTable.ROW_PLAYLIST_NAME,playlist.getName());
-        contentValues.put(PlaylistTable.ROW_PLAYLIST_JSON,json);
+        contentValues.put(PlaylistTable.PLAYLIST_NAME,playlist.getName());
+        contentValues.put(PlaylistTable.PLAYLIST_JSON,json);
+        contentValues.put(PlaylistTable.PLAYLIST_IMAGE,playlist.getImage());
 
         return contentValues;
     }

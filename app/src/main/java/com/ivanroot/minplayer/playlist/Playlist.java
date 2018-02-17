@@ -1,6 +1,9 @@
 package com.ivanroot.minplayer.playlist;
 
+import android.graphics.Bitmap;
+
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.utils.Utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ public class Playlist implements Serializable, IPlaylist {
     protected List<Audio> non_shuffled_playlist;
     protected List<Audio>shuffled_playlist;
     protected int repeatMode  = IPlaylist.NOT_REPEAT;
+    protected transient byte[] image = null;
 
     public Playlist(){
         playlist = new ArrayList<>();
@@ -32,6 +36,28 @@ public class Playlist implements Serializable, IPlaylist {
     public Playlist(String name){
         this.name = name;
         playlist = new ArrayList<>();
+    }
+
+    public Playlist(String name, byte[] image){
+        this.name = name;
+        this.image = image;
+        playlist = new ArrayList<>();
+    }
+
+    public byte[] getImage(){
+        return image;
+    }
+
+    public Bitmap getBitmapImage() {
+        return Utils.getBitmapFromByteArray(image);
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
+    public void setBitmapImage(Bitmap bitmap){
+        this.image = Utils.getByteArrayFromBitmap(bitmap);
     }
 
     @Override

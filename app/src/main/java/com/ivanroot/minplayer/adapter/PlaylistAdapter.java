@@ -11,14 +11,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
-import com.ivanroot.minplayer.utils.AlbumArtLoader;
-import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.squareup.picasso.Picasso;
 
-import io.reactivex.Observable;
+import java.io.File;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
@@ -31,7 +31,6 @@ public class PlaylistAdapter extends BaseAdapter {
 
     private Activity activity;
     private Playlist playlist;
-    private AlbumArtLoader albumArtLoader;
     private TextView title;
     private TextView album;
     private TextView artist;
@@ -43,10 +42,9 @@ public class PlaylistAdapter extends BaseAdapter {
     private boolean isScrolling = false;
 
 
-    public PlaylistAdapter(Activity activity,String playlistName){
+    public PlaylistAdapter(Activity activity, String playlistName){
 
         this.activity = activity;
-        albumArtLoader = new AlbumArtLoader(wasAlbumArt -> {});
         fadeIn = AnimationUtils.loadAnimation(activity, R.anim.fade_in);
         fadeIn.setDuration(500);
 
@@ -96,9 +94,16 @@ public class PlaylistAdapter extends BaseAdapter {
         title.setText(tempAudio.getTitle());
         album.setText(tempAudio.getAlbum());
         artist.setText(tempAudio.getArtist());
-        albumArt.setImageResource(R.drawable.default_album_art);
-        albumArtLoader.setAlbumArt(tempAudio.getData(),albumArt);
-
+        //albumArt.setImageResource(R.drawable.default_album_art);
+        //albumArtLoader.setAlbumArt(tempAudio.getData(),albumArt);
+        try {
+            Picasso.with(activity)
+                    .load(new File(tempAudio.getAlbumArt()))
+                    .error(R.drawable.default_album_art)
+                    .into(albumArt);
+        }catch (NullPointerException ex){
+            albumArt.setImageResource(R.drawable.default_album_art);
+        }
         return view;
     }
 

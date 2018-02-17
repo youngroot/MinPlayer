@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -20,12 +19,13 @@ import android.widget.TextView;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
-import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.player.RxBus;
+import com.ivanroot.minplayer.utils.Utils;
+import com.squareup.picasso.Picasso;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +36,32 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import jp.wasabeef.blurry.Blurry;
 
-
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.*;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_CHANGE_RP_MODE;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_CHANGE_SHUFFLE_MODE;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_FAST_FORWARD;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_GET_AUDIO_POSITION;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_GET_METADATA;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_NEXT_AUDIO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_OR_PAUSE;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PREV_AUDIO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_REWIND;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_SEEK_TO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_METADATA_UPDATED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_NEXT_AUDIO_METADATA;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_GET_AUDIO_POSITION;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_GET_METADATA;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_GET_RP_MODE;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_PREV_AUDIO_METADATA;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_RP_MODE_CHANGED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_SHUFFLED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_UNSHUFFLED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_AUDIO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_DURATION;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_IS_PLAYING;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_IS_SHUFFLED;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_RP_MODE;
 
 /**
  * Created by Ivan Root on 10.06.2017.
@@ -47,7 +71,6 @@ public class PlayerFragment extends Fragment {
 
     private ImageView albumArt;
     private ImageView bigAlbumArt;
-    private MediaMetadataRetriever mmr;
     private SeekBar songProgress;
     private TextView title;
     private TextView album;
@@ -76,7 +99,6 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mmr = new MediaMetadataRetriever();
         rxBus.register(this);
     }
 
@@ -212,44 +234,49 @@ public class PlayerFragment extends Fragment {
         album.setText(currAudio.getAlbum());
         artist.setText(currAudio.getArtist());
 
-        mmr.setDataSource(currAudio.getData());
-        byte[] data = mmr.getEmbeddedPicture();
-        Bitmap bmp;
-        if (data != null) {
 
-            InputStream is = new ByteArrayInputStream(mmr.getEmbeddedPicture());
-            bmp = BitmapFactory.decodeStream(is);
-            albumArt.setImageBitmap(bmp);
+        /*Bitmap bitmap = Utils.extractAudioAlbumArt(currAudio.getData());
+        if (bitmap != null)
+            albumArt.setImageBitmap(bitmap);
+        else
+            albumArt.setImageResource(R.drawable.default_album_art);
+        */
 
-        } else {
-            bmp = BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey);
+        /*
+        Palette palette = Palette.generate(bmp);
+
+        int bgColor = palette.getDarkVibrantColor(palette.getVibrantColor(Color.WHITE));
+        int elementColor = palette.getVibrantColor((Color.WHITE));
+
+        if(elementColor == bgColor){
+            bgColor = palette.getDominantColor(Color.WHITE);
+            if(elementColor == Color.WHITE){
+                if(bgColor == elementColor)
+                    elementColor = Color.BLACK;
+            }
+            elementColor = palette.getDarkVibrantColor(Color.BLACK);
+        }
+        */
+
+        Bitmap bitmap = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
+                BitmapFactory.decodeResource(getResources(),R.drawable.lowpoly_grey));
+
+        try {
+            Picasso.with(getActivity())
+                    .load(new File(currAudio.getAlbumArt()))
+                    .error(R.drawable.default_album_art)
+                    .into(albumArt);
+        }catch (NullPointerException ex){
             albumArt.setImageResource(R.drawable.default_album_art);
         }
-//        Palette palette = Palette.generate(bmp);
-//
-//        int bgColor = palette.getDarkVibrantColor(palette.getVibrantColor(Color.WHITE));
-//        int elementColor = palette.getVibrantColor((Color.WHITE));
-//
-//        if(elementColor == bgColor){
-//            bgColor = palette.getDominantColor(Color.WHITE);
-//            if(elementColor == Color.WHITE){
-//                if(bgColor == elementColor)
-//                    elementColor = Color.BLACK;
-//            }
-//            elementColor = palette.getDarkVibrantColor(Color.BLACK);
-//        }
 
         Blurry.with(getActivity())
                 .async()
                 .sampling(10)
                 .color(Color.argb(80,60,60,60))
-                .from(bmp)
+                .from(bitmap)
                 .into(bigAlbumArt);
 
-
-//        title.setTextColor(elementColor);
-//        album.setTextColor(elementColor);
-//        artist.setTextColor(elementColor);
     }
 
     @Subscribe(tags = {@Tag(EVENT_METADATA_UPDATED), @Tag(EVENT_ON_GET_METADATA)})

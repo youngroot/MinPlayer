@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.viewholder.PlaylistViewHolder;
 import com.ivanroot.minplayer.playlist.OnPlaylistClickListener;
-import com.ivanroot.minplayer.playlist.Playlist;
+import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
@@ -30,7 +30,7 @@ import io.reactivex.disposables.Disposable;
 public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHolder>
         implements FastScrollRecyclerView.SectionedAdapter {
 
-    private List<Playlist> playlistList;
+    private List<PlaylistItem> playlistItems;
     private PlaylistManager playlistManager;
     private Disposable disposable;
     private OnPlaylistClickListener playlistClickListener;
@@ -39,20 +39,23 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     public PlaylistSelectorAdapter(Context context) {
         this.context = context;
         playlistManager = PlaylistManager.getInstance();
-        disposable = playlistManager.getAllPlaylistsObservable(context)
+        disposable = playlistManager.getPlaylistItemsObservable(context)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setList);
+                .subscribe(this::setPlaylistItems);
+
+
+
 
     }
 
-    public void setPlaylistClickListener(OnPlaylistClickListener playlistClickListener) {
+    public void setOnPlaylistClickListener(OnPlaylistClickListener playlistClickListener) {
         this.playlistClickListener = playlistClickListener;
     }
 
 
-    private void setList(List<Playlist> list) {
+    private void setPlaylistItems(List<PlaylistItem> playlistItems) {
         Log.i(this.toString(), "new List!");
-        playlistList = list;
+        this.playlistItems = playlistItems;
         notifyDataSetChanged();
     }
 
@@ -75,16 +78,16 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
 
     @Override
     public void onBindViewHolder(PlaylistViewHolder playlistViewHolder, int i) {
-        Playlist playlist = playlistList.get(i);
-        playlistViewHolder.representPlaylistItem(playlist);
-        playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlist.getName()));
+        PlaylistItem playlistItem = playlistItems.get(i);
+        playlistViewHolder.representPlaylistItem(playlistItem);
+        playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, v);
             popupMenu.inflate(R.menu.playlist_more_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.remove_playlist:
-                        showDeletionDialog(playlist.getName());
+                        showDeletionDialog(playlistItem.getName());
                         return true;
                     default:
                         return false;
@@ -97,7 +100,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     @Override
     public int getItemCount() {
         try {
-            return playlistList.size();
+            return playlistItems.size();
         } catch (NullPointerException ex) {
             return 0;
         }
@@ -107,7 +110,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     @NonNull
     @Override
     public String getSectionName(int i) {
-        return playlistList
+        return playlistItems
                 .get(i)
                 .getName()
                 .substring(0, 1);

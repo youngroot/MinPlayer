@@ -10,7 +10,8 @@ import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.player.RxBus;
 
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.*;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_AUDIO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_SET_PLAYLIST;
 
 /**
  * Created by Ivan Root on 02.06.2017.
@@ -32,7 +33,7 @@ public class AudioListFragment extends ListFragment {
         position = getListView().getFirstVisiblePosition();
         outState.putInt("list_position",position);
         if(playlistName != null) {
-            outState.putString("playlist_name", playlistName);
+            outState.putString("name", playlistName);
         }
         super.onSaveInstanceState(outState);
     }
@@ -51,7 +52,7 @@ public class AudioListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(savedInstanceState != null)
-            playlistName = savedInstanceState.getString("playlist_name");
+            playlistName = savedInstanceState.getString("name");
         adapter = new PlaylistAdapter(getActivity(),playlistName);
         rxBus.register(this);
         setListAdapter(adapter);

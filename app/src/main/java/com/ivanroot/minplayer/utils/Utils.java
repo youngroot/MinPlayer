@@ -1,25 +1,23 @@
 package com.ivanroot.minplayer.utils;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.os.Environment;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -32,7 +30,7 @@ import static hu.akarnokd.rxjava.interop.RxJavaInterop.toV2Observable;
  * Created by Ivan Root on 07.07.2017.
  */
 public class Utils {
-    public static void storeImage(Bitmap image, Context context, String filename, String directory) {
+    public static void storeImage(Context context,Bitmap image, String filename, String directory) {
         File pictureFile = getOutputMediaFile(context,filename,directory);
         if (pictureFile == null) {
             Log.e("store Image error", "file == null !");
@@ -89,31 +87,6 @@ public class Utils {
         return hash;
     }
 
-    public static void checkAndRequestPermission(Activity activity, String permission){
-
-        if (ContextCompat.checkSelfPermission(activity,permission) != PackageManager.PERMISSION_GRANTED) {
-
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                //ActivityCompat.requestPermissions(activity,new String[]{permission},permission);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
-    }
-
     public static <T> Observable<T> v2(rx.Observable<T> source) {
         return toV2Observable(source);
     }
@@ -126,5 +99,52 @@ public class Utils {
     @NonNull
     public static <T>BiPredicate<List<T>, List<T>> listSizeComparator() {
         return (list1, list2) -> list1.size() == list2.size();
+    }
+
+    public static byte[] getByteArrayFromBitmap(Bitmap bitmap) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
+            return byteArrayOutputStream.toByteArray();
+        }catch (NullPointerException ex){
+            return null;
+        }
+    }
+
+    public static Bitmap getBitmapFromByteArray(byte[] bytes){
+        try {
+            InputStream is = new ByteArrayInputStream(bytes);
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            return bitmap;
+        }catch (NullPointerException ex){
+            return null;
+        }
+    }
+
+    public static Bitmap extractAudioAlbumArt(String data){
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(data);
+        byte[] bytes = mmr.getEmbeddedPicture();
+        if(bytes != null)
+            return BitmapFactory.decodeStream(new ByteArrayInputStream(bytes));
+        else return null;
+    }
+
+    public static Bitmap getAudioAlbumArt(String path){
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeFile(path);
+        }catch (NullPointerException ex){}
+        return bitmap;
+    }
+    public  static Bitmap getAudioAlbumArt(String path, Bitmap defaultImage){
+        Bitmap bitmap = getAudioAlbumArt(path);
+        if(bitmap == null) return defaultImage;
+        return bitmap;
+    }
+
+    public static Bitmap combineBitmapsIntoOne(List<Bitmap> bitmaps){
+
+        return null;
     }
 }

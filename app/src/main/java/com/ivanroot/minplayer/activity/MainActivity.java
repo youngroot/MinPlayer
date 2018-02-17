@@ -20,15 +20,15 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.hwangjr.rxbus.Bus;
+import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
-import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
 import com.ivanroot.minplayer.fragment.PlaylistRecyclerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
-import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.fragment.VisFragment;
+import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.storio.PlaylistTable;
-import com.ivanroot.minplayer.fragment.VisFragment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity
         } else {
 
             wasStarted = savedInstanceState.getBoolean("wasStarted");
-            playlistName = savedInstanceState.getString("playlist_name");
+            playlistName = savedInstanceState.getString("name");
             //getSupportActionBar().setTitle(savedInstanceState.getString("title", getResources().getString(R.string.app_name)));
         }
     }
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity
         outState.putBoolean("wasStarted", wasStarted);
         outState.putString("title", getSupportActionBar().getTitle().toString());
         if (playlistName != null) {
-            outState.putString("playlist_name", playlistName);
+            outState.putString("name", playlistName);
         }
     }
 

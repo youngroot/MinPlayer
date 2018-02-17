@@ -12,15 +12,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.hwangjr.rxbus.Bus;
-import com.ivanroot.minplayer.adapter.AudioRecyclerAdapter;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.adapter.PlaylistRecyclerAdapter;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.storio.PlaylistTable;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.*;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_AUDIO;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_SET_PLAYLIST;
 
 /**
  * Created by Ivan Root on 17.12.2017.
@@ -33,7 +34,7 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
 
 
     private String playlistName;
-    private AudioRecyclerAdapter adapter;
+    private PlaylistRecyclerAdapter adapter;
     private FastScrollRecyclerView audioRecyclerView;
     private FloatingActionButton playFab;
     private PlaylistManager playlistManager;
@@ -53,8 +54,8 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState != null)
-            playlistName = savedInstanceState.getString("playlist_name");
-        adapter = new AudioRecyclerAdapter(getActivity(), playlistName);
+            playlistName = savedInstanceState.getString("name");
+        adapter = new PlaylistRecyclerAdapter(getActivity(), playlistName);
         playlistManager = PlaylistManager.getInstance();
         rxBus.register(this);
         super.onCreate(savedInstanceState);
@@ -94,6 +95,10 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
         adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST,playlistName);
             rxBus.post(ACTION_PLAY_AUDIO,audio);
+
+        });
+
+        adapter.setNewPlaylistUpdateListener(playlist -> {
 
         });
     }
@@ -165,7 +170,7 @@ public class PlaylistRecyclerFragment extends NavFragmentBase {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (playlistName != null)
-            outState.putString("playlist_name", playlistName);
+            outState.putString("name", playlistName);
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, audioRecyclerView.getLayoutManager().onSaveInstanceState());
         super.onSaveInstanceState(outState);
     }

@@ -1,7 +1,6 @@
 package com.ivanroot.minplayer.storio;
 
 import android.content.ContentValues;
-import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
@@ -17,14 +16,12 @@ import com.pushtorefresh.storio3.contentresolver.queries.UpdateQuery;
 
 public class MediaStoreAudioPutResolver extends DefaultPutResolver<Audio> {
 
-    private static final Uri EXTERNAL_AUDIO_URI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-
     @NonNull
     @Override
     protected InsertQuery mapToInsertQuery(@NonNull Audio audio) {
 
         return InsertQuery.builder()
-                .uri(EXTERNAL_AUDIO_URI)
+                .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
                 .build();
     }
 
@@ -33,7 +30,7 @@ public class MediaStoreAudioPutResolver extends DefaultPutResolver<Audio> {
     protected UpdateQuery mapToUpdateQuery(@NonNull Audio audio) {
 
         return UpdateQuery.builder()
-                .uri(EXTERNAL_AUDIO_URI)
+                .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
                 .where(MediaStore.Audio.Media._ID + " = ?")
                 .whereArgs(audio.getId())
                 .build();

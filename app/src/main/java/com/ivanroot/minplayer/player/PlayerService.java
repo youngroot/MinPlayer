@@ -14,7 +14,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadata;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.audiofx.AudioEffect;
 import android.media.session.MediaController;
@@ -41,15 +40,13 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.storio.PlaylistTable;
+import com.ivanroot.minplayer.utils.Utils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
@@ -79,7 +76,6 @@ public class PlayerService
     private MediaSessionManager mediaSessionManager;
     private MediaSession mediaSession;
     private MediaController.TransportControls transportControls;
-    private MediaMetadataRetriever mmr;
     private boolean ongoingCall = false;
     private PhoneStateListener phoneStateListener;
     private TelephonyManager telephonyManager;
@@ -101,7 +97,6 @@ public class PlayerService
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnInfoListener(this);
-        mmr = new MediaMetadataRetriever();
         nextQueue = new PriorityQueue<>();
         rxBus.register(this);
         enableEqualizer();
@@ -843,17 +838,8 @@ public class PlayerService
                 playPauseAction = playbackAction(0);
             }
 
-            Bitmap largeIcon;
-
-            mmr.setDataSource(currAudio.getData());
-            byte[] data = mmr.getEmbeddedPicture();
-            if (data != null) {
-
-                InputStream is = new ByteArrayInputStream(mmr.getEmbeddedPicture());
-                largeIcon = BitmapFactory.decodeStream(is);
-
-            } else
-                largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art);
+            Bitmap largeIcon = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
+                    BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art));
 
             Intent intent = new Intent(this, PlayerActivity.class);
 
@@ -914,16 +900,8 @@ public class PlayerService
 
         Log.i("PlayerService", "updateMetadata");
         if (currAudio != null) {
-            Bitmap albumArt;
-            mmr.setDataSource(currAudio.getData());
-            byte[] data = mmr.getEmbeddedPicture();
-            if (data != null) {
-
-                InputStream is = new ByteArrayInputStream(mmr.getEmbeddedPicture());
-                albumArt = BitmapFactory.decodeStream(is);
-
-            } else
-                albumArt = BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art);
+            Bitmap albumArt = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
+                    BitmapFactory.decodeResource(getResources(),R.drawable.default_album_art));
 
             mediaSession.setMetadata(new MediaMetadata.Builder()
                     .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)

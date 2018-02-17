@@ -2,7 +2,6 @@ package com.ivanroot.minplayer.fragment;
 
 import android.app.Fragment;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,13 +19,13 @@ import android.widget.TextView;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
-import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.activity.PlayerActivity;
+import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.player.RxBus;
+import com.squareup.picasso.Picasso;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +57,6 @@ import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_POSITION;
 
 public class ControllerFragment extends Fragment {
 
-    private Handler updater;
     private ImageView albumArt;
     private TextView title;
     private TextView album;
@@ -67,7 +65,6 @@ public class ControllerFragment extends Fragment {
     private ImageButton playBtn;
     private ImageButton nextBtn;
     private ImageButton prevBtn;
-    private MediaMetadataRetriever mmr;
     private Animation botTop;
     private Animation topBotDiss;
     private static final int animDuration = 300;
@@ -89,8 +86,8 @@ public class ControllerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mmr = new MediaMetadataRetriever();
-        updater = new Handler();
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        Handler updater = new Handler();
         rxBus.register(this);
         initAnimation();
     }
@@ -153,21 +150,20 @@ public class ControllerFragment extends Fragment {
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
-            mmr.setDataSource(currAudio.getData());
+
+            try {
+                Picasso.with(getActivity())
+                        .load(new File(currAudio.getAlbumArt()))
+                        .error(R.drawable.default_album_art)
+                        .into(albumArt);
+            }catch (NullPointerException ex){
+                albumArt.setImageResource(R.drawable.default_album_art);
+            }
 
             if (!(boolean) state.get(KEY_IS_PLAYING)) {
                 playBtn.setImageResource(R.drawable.ic_play_noti);
             } else {
                 playBtn.setImageResource(R.drawable.ic_pause_noti);
-            }
-            byte[] data = mmr.getEmbeddedPicture();
-            if (data != null) {
-
-                InputStream is = new ByteArrayInputStream(mmr.getEmbeddedPicture());
-                albumArt.setImageBitmap(BitmapFactory.decodeStream(is));
-
-            } else {
-                albumArt.setImageResource(R.drawable.default_album_art);
             }
 
             if (container.getVisibility() == View.GONE) {
