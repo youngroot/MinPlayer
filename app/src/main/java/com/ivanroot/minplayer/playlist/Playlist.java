@@ -20,6 +20,7 @@ public class Playlist implements Serializable, IPlaylist {
     protected String name = "";
     protected String date = "";
     protected String time = "";
+    protected String imagePath = "";
     protected boolean isShuffled = false;
     protected int audioIndex = -1;
     protected Audio currAudio = null;
@@ -27,7 +28,7 @@ public class Playlist implements Serializable, IPlaylist {
     protected List<Audio> non_shuffled_playlist;
     protected List<Audio>shuffled_playlist;
     protected int repeatMode  = IPlaylist.NOT_REPEAT;
-    protected transient byte[] image = null;
+
 
     public Playlist(){
         playlist = new ArrayList<>();
@@ -38,26 +39,26 @@ public class Playlist implements Serializable, IPlaylist {
         playlist = new ArrayList<>();
     }
 
-    public Playlist(String name, byte[] image){
+    public Playlist(String name, String imagePath){
         this.name = name;
-        this.image = image;
+        this.imagePath = imagePath;
         playlist = new ArrayList<>();
     }
 
-    public byte[] getImage(){
-        return image;
+    public String getImagePath(){
+        return imagePath;
     }
 
     public Bitmap getBitmapImage() {
-        return Utils.getBitmapFromByteArray(image);
+        return null;
     }
 
-    public void setImage(byte[] image) {
-        this.image = image;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public void setBitmapImage(Bitmap bitmap){
-        this.image = Utils.getByteArrayFromBitmap(bitmap);
+
     }
 
     @Override
@@ -292,9 +293,7 @@ public class Playlist implements Serializable, IPlaylist {
     }
 
     @Override
-    public void update(){
-
-    }
+    public void update(){}
 
     @Override
     public void setTime(String time) {

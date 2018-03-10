@@ -16,8 +16,8 @@ public class PlaylistItemGetResolver extends DefaultGetResolver<PlaylistItem> {
     @Override
     public PlaylistItem mapFromCursor(@NonNull StorIOSQLite storIOSQLite, @NonNull Cursor cursor) {
         PlaylistItem playlistItem = new PlaylistItem();
-        playlistItem.setName(cursor.getString(cursor.getColumnIndex(PlaylistTable.PLAYLIST_NAME)));
-        playlistItem.setImage(cursor.getBlob(cursor.getColumnIndex(PlaylistTable.PLAYLIST_IMAGE)));
+        playlistItem.setName(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.NAME)));
+        playlistItem.setImagePath(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.IMAGE_PATH)));
         return playlistItem;
     }
 }

@@ -95,10 +95,10 @@ public class PlaylistAdapter extends BaseAdapter {
         album.setText(tempAudio.getAlbum());
         artist.setText(tempAudio.getArtist());
         //albumArt.setImageResource(R.drawable.default_album_art);
-        //albumArtLoader.setAlbumArt(tempAudio.getData(),albumArt);
+        //albumArtLoader.setAlbumArtPath(tempAudio.getData(),albumArt);
         try {
             Picasso.with(activity)
-                    .load(new File(tempAudio.getAlbumArt()))
+                    .load(new File(tempAudio.getAlbumArtPath()))
                     .error(R.drawable.default_album_art)
                     .into(albumArt);
         }catch (NullPointerException ex){

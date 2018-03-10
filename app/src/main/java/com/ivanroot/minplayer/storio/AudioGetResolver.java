@@ -15,13 +15,12 @@ import com.pushtorefresh.storio3.contentresolver.queries.Query;
  * Created by Ivan Root on 28.08.2017.
  */
 
-public class MediaStoreAudioGetResolver extends DefaultGetResolver<Audio> {
+public class AudioGetResolver extends DefaultGetResolver<Audio> {
 
 
     @NonNull
     @Override
     public Audio mapFromCursor(StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
-
         int albumId = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
         String id = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
         String data = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
@@ -46,7 +45,7 @@ public class MediaStoreAudioGetResolver extends DefaultGetResolver<Audio> {
             String albumArt = tempCursor.getString(tempCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
             tempCursor.close();
             Log.i(toString(),albumArt);
-            audio.setAlbumArt(albumArt);
+            audio.setAlbumArtPath(albumArt);
 
         } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
             Log.e(toString(), ex.getMessage());

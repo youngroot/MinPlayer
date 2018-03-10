@@ -672,7 +672,7 @@ public class PlayerService
         settings = getSharedPreferences(SERVICE_NAME, Context.MODE_PRIVATE);
         //wasPlaying = settings.getBoolean("wasPlaying",false);
         if (checkPermissions()) {
-            String playlistName = settings.getString("playlist", PlaylistTable.ALL_TRACKS_PLAYLIST);
+            String playlistName = settings.getString("playlist", PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
             setPlaylist(playlistName);
         } else {
             startActivity(new Intent(this, StartupActivity.class));
@@ -838,7 +838,7 @@ public class PlayerService
                 playPauseAction = playbackAction(0);
             }
 
-            Bitmap largeIcon = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
+            Bitmap largeIcon = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
                     BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art));
 
             Intent intent = new Intent(this, PlayerActivity.class);
@@ -900,7 +900,7 @@ public class PlayerService
 
         Log.i("PlayerService", "updateMetadata");
         if (currAudio != null) {
-            Bitmap albumArt = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
+            Bitmap albumArt = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
                     BitmapFactory.decodeResource(getResources(),R.drawable.default_album_art));
 
             mediaSession.setMetadata(new MediaMetadata.Builder()

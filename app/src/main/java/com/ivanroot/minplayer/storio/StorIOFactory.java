@@ -18,7 +18,7 @@ import io.reactivex.Observable;
  * Created by Ivan Root on 28.08.2017.
  */
 
-public class StorIOPlaylistFactory  {
+public class StorIOFactory {
 
     private static StorIOSQLite INSTANCE;
 
@@ -46,13 +46,13 @@ public class StorIOPlaylistFactory  {
 
     public static Observable<Playlist> getPlaylistObservable(Context context, String playlistName){
 
-        return StorIOPlaylistFactory
+        return StorIOFactory
                 .get(context)
                 .get()
                 .listOfObjects(Playlist.class)
                 .withQuery(Query.builder()
                         .table(PlaylistTable.TABLE)
-                        .where(PlaylistTable.PLAYLIST_NAME + " = ?")
+                        .where(PlaylistTable.Playlist.NAME + " = ?")
                         .whereArgs(playlistName)
                         .build())
                 .prepare()
@@ -62,14 +62,14 @@ public class StorIOPlaylistFactory  {
     }
 
     public static Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context){
-        return StorIOPlaylistFactory
+        return StorIOFactory
                 .get(context)
                 .get()
                 .listOfObjects(PlaylistItem.class)
                 .withQuery(Query.builder()
                         .table(PlaylistTable.TABLE)
-                        .where(PlaylistTable.PLAYLIST_NAME + " != ?")
-                        .whereArgs(PlaylistTable.ALL_TRACKS_PLAYLIST)
+                        .where(PlaylistTable.Playlist.NAME + " != ?")
+                        .whereArgs(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)
                         .build())
                 .prepare()
                 .asRxFlowable(BackpressureStrategy.LATEST)

@@ -1,24 +1,27 @@
 package com.ivanroot.minplayer.playlist;
 
-import android.graphics.Bitmap;
-
-import com.ivanroot.minplayer.utils.Utils;
-
 /**
  * Created by Ivan Root on 16.02.2018.
  */
 
 public class PlaylistItem {
 
-    public String name;
+    private String name;
 
-    public byte[] image;
+    private String imagePath;
 
-    String date;
+    private String date;
 
-    String time;
+    private String time;
 
     public PlaylistItem(){}
+
+    public PlaylistItem(String name, String imagePath, String date, String time) {
+        this.name = name;
+        this.imagePath = imagePath;
+        this.date = date;
+        this.time = time;
+    }
 
     public String getName() {
         return name;
@@ -28,21 +31,14 @@ public class PlaylistItem {
         this.name = name;
     }
 
-    public Bitmap getBitmapImage(){
-        return Utils.getBitmapFromByteArray(image);
+    public String getImagePath(){
+        return imagePath;
     }
 
-    public byte[] getImage(){
-        return image;
+    public void setImagePath(String imagePath){
+        this.imagePath = imagePath;
     }
 
-    public void setImage(byte[] image){
-        this.image = image;
-    }
-
-    public void setBitmapImage(Bitmap bitmap){
-        image = Utils.getByteArrayFromBitmap(bitmap);
-    }
 
 
 }

@@ -19,11 +19,11 @@ public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
     @NonNull
     @Override
     public Playlist mapFromCursor(StorIOSQLite storIOSQLite, @NonNull Cursor cursor) {
-
-        String json = cursor.getString(cursor.getColumnIndex(PlaylistTable.PLAYLIST_JSON));
+        String json = cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.JSON));
         Type typePlaylist = new TypeToken<Playlist>(){}.getType();
         Playlist playlist = new Gson().fromJson(json,typePlaylist);
-        playlist.setImage(cursor.getBlob(cursor.getColumnIndex(PlaylistTable.PLAYLIST_IMAGE)));
+        playlist.setName(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.NAME)));
+        playlist.setImagePath(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.IMAGE_PATH)));
         return playlist;
     }
 }

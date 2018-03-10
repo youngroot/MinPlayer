@@ -110,37 +110,37 @@ public class PlayerFragment extends Fragment {
         prepareListeners();
         initAnimations();
         prepareScreenUpdater();
-        rxBus.post(ACTION_GET_METADATA,this);
+        rxBus.post(ACTION_GET_METADATA, this);
         return view;
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if(screenUpdater != null)
+        if (screenUpdater != null)
             screenUpdater.dispose();
     }
 
     private void prepareScreenUpdater() {
 
-        screenUpdater = Observable.<List<Pair<String,Object>>>create(emitter ->{
+        screenUpdater = Observable.<List<Pair<String, Object>>>create(emitter -> {
             while (true) {
 
-                List<Pair<String,Object>> actions = new ArrayList<>();
+                List<Pair<String, Object>> actions = new ArrayList<>();
                 if (prevBtn.isPressed()) {
-                    actions.add(new Pair<>(ACTION_REWIND,250));
+                    actions.add(new Pair<>(ACTION_REWIND, 250));
                     delayedTime = 100;
                 } else if (nextBtn.isPressed()) {
-                    actions.add(new Pair<>(ACTION_FAST_FORWARD,250));
+                    actions.add(new Pair<>(ACTION_FAST_FORWARD, 250));
                     delayedTime = 100;
                 } else {
                     delayedTime = 1000;
                 }
-                actions.add(new Pair<>(ACTION_GET_AUDIO_POSITION,this));
+                actions.add(new Pair<>(ACTION_GET_AUDIO_POSITION, this));
                 emitter.onNext(actions);
                 try {
                     Thread.sleep(delayedTime);
-                }catch (InterruptedException ex){
+                } catch (InterruptedException ex) {
 
                 }
             }
@@ -148,17 +148,17 @@ public class PlayerFragment extends Fragment {
                 .subscribeOn(Schedulers.newThread())
                 .flatMap(Observable::fromIterable)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(pair -> rxBus.post(pair.first,pair.second));
+                .subscribe(pair -> rxBus.post(pair.first, pair.second));
     }
 
     private void prepareListeners() {
-        playBtn.setOnClickListener(v -> rxBus.post(ACTION_PLAY_OR_PAUSE,this));
-        prevBtn.setOnClickListener(v -> rxBus.post(ACTION_PREV_AUDIO,this));
+        playBtn.setOnClickListener(v -> rxBus.post(ACTION_PLAY_OR_PAUSE, this));
+        prevBtn.setOnClickListener(v -> rxBus.post(ACTION_PREV_AUDIO, this));
         prevBtn.setOnLongClickListener(v -> true);
-        nextBtn.setOnClickListener(v -> rxBus.post(ACTION_NEXT_AUDIO,true));
+        nextBtn.setOnClickListener(v -> rxBus.post(ACTION_NEXT_AUDIO, true));
         nextBtn.setOnLongClickListener(v -> true);
-        shuffleBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_SHUFFLE_MODE,this));
-        repeatBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_RP_MODE,this));
+        shuffleBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_SHUFFLE_MODE, this));
+        repeatBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_RP_MODE, this));
         songProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int position, boolean fromUser) {
@@ -176,7 +176,7 @@ public class PlayerFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                rxBus.post(ACTION_SEEK_TO,seekBar.getProgress());
+                rxBus.post(ACTION_SEEK_TO, seekBar.getProgress());
             }
         });
     }
@@ -185,7 +185,6 @@ public class PlayerFragment extends Fragment {
     public void onPositionChangedEvents(Integer pos) {
         songProgress.setProgress(pos);
     }
-
 
 
     private void prepareViews(View view) {
@@ -224,7 +223,7 @@ public class PlayerFragment extends Fragment {
     }
 
 
-    private void updateView(HashMap<String,Object> state) {
+    private void updateView(HashMap<String, Object> state) {
 
         Audio currAudio = (Audio) state.get(KEY_AUDIO);
 
@@ -258,68 +257,64 @@ public class PlayerFragment extends Fragment {
         }
         */
 
-        Bitmap bitmap = Utils.getAudioAlbumArt(currAudio.getAlbumArt(),
-                BitmapFactory.decodeResource(getResources(),R.drawable.lowpoly_grey));
+        Bitmap bitmap = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
+                BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey));
 
-        try {
-            Picasso.with(getActivity())
-                    .load(new File(currAudio.getAlbumArt()))
-                    .error(R.drawable.default_album_art)
-                    .into(albumArt);
-        }catch (NullPointerException ex){
-            albumArt.setImageResource(R.drawable.default_album_art);
-        }
+        Picasso.with(getActivity())
+                .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
+                .error(R.drawable.default_album_art)
+                .into(albumArt);
 
         Blurry.with(getActivity())
                 .async()
                 .sampling(10)
-                .color(Color.argb(80,60,60,60))
+                .color(Color.argb(80, 60, 60, 60))
                 .from(bitmap)
                 .into(bigAlbumArt);
 
     }
 
     @Subscribe(tags = {@Tag(EVENT_METADATA_UPDATED), @Tag(EVENT_ON_GET_METADATA)})
-    public void onMetadataEvents(HashMap<String,Object> state) {
-            updateView(state);
-            firstAnimation(state);
+    public void onMetadataEvents(HashMap<String, Object> state) {
+        updateView(state);
+        firstAnimation(state);
     }
 
     @Subscribe(tags = {@Tag(EVENT_NEXT_AUDIO_METADATA)})
-    public void onNextAudioEvent(HashMap<String,Object> state) {
+    public void onNextAudioEvent(HashMap<String, Object> state) {
 
-            albumArt.startAnimation(fadeOut);
-            secNow.startAnimation(fadeOut);
-            secLeft.startAnimation(fadeOut);
-            title.startAnimation(fadeOut);
-            album.startAnimation(fadeOut);
-            artist.startAnimation(fadeOut);
-            updateView(state);
-            albumArt.startAnimation(fadeIn);
-            secNow.startAnimation(fadeIn);
-            secLeft.startAnimation(fadeIn);
-            title.startAnimation(rightLeft);
-            album.startAnimation(rightLeft);
-            artist.startAnimation(rightLeft);
+        albumArt.startAnimation(fadeOut);
+        secNow.startAnimation(fadeOut);
+        secLeft.startAnimation(fadeOut);
+        title.startAnimation(fadeOut);
+        album.startAnimation(fadeOut);
+        artist.startAnimation(fadeOut);
+        updateView(state);
+        albumArt.startAnimation(fadeIn);
+        secNow.startAnimation(fadeIn);
+        secLeft.startAnimation(fadeIn);
+        title.startAnimation(rightLeft);
+        album.startAnimation(rightLeft);
+        artist.startAnimation(rightLeft);
 
     }
 
     @Subscribe(tags = {@Tag(EVENT_PREV_AUDIO_METADATA)})
-    public void onPrevAudioEvent(HashMap<String,Object> state) {
+    public void onPrevAudioEvent(HashMap<String, Object> state) {
 
-            albumArt.startAnimation(fadeOut);
-            secNow.startAnimation(fadeOut);
-            secLeft.startAnimation(fadeOut);
-            title.startAnimation(fadeOut);
-            album.startAnimation(fadeOut);
-            artist.startAnimation(fadeOut);
-            updateView(state);
-            albumArt.startAnimation(fadeIn);
-            secNow.startAnimation(fadeIn);
-            secLeft.startAnimation(fadeIn);
-            title.startAnimation(leftRight);
-            album.startAnimation(leftRight);
-            artist.startAnimation(leftRight);
+        albumArt.startAnimation(fadeOut);
+        secNow.startAnimation(fadeOut);
+        secLeft.startAnimation(fadeOut);
+        title.startAnimation(fadeOut);
+        album.startAnimation(fadeOut);
+        artist.startAnimation(fadeOut);
+        updateView(state);
+        albumArt.startAnimation(fadeIn);
+        secNow.startAnimation(fadeIn);
+        secLeft.startAnimation(fadeIn);
+        title.startAnimation(leftRight);
+        album.startAnimation(leftRight);
+        artist.startAnimation(leftRight);
 
     }
 
@@ -329,13 +324,13 @@ public class PlayerFragment extends Fragment {
         if (isPlaying) {
             albumArt.startAnimation(zoomIn);
             playBtn.setImageResource(R.drawable.ic_pause);
-        }else {
+        } else {
             albumArt.startAnimation(zoomOut);
             playBtn.setImageResource(R.drawable.ic_play);
         }
     }
 
-    @Subscribe(tags = {@Tag(EVENT_SHUFFLED),@Tag(EVENT_UNSHUFFLED)})
+    @Subscribe(tags = {@Tag(EVENT_SHUFFLED), @Tag(EVENT_UNSHUFFLED)})
     public void onShuffleModeEvents(Boolean isShuffled) {
         if (isShuffled) {
             shuffleBtn.setImageResource(R.drawable.ic_shuffle);
@@ -344,7 +339,7 @@ public class PlayerFragment extends Fragment {
         }
     }
 
-    @Subscribe(tags = {@Tag(EVENT_RP_MODE_CHANGED),@Tag(EVENT_ON_GET_RP_MODE)})
+    @Subscribe(tags = {@Tag(EVENT_RP_MODE_CHANGED), @Tag(EVENT_ON_GET_RP_MODE)})
     public void rpModeActions(Integer repeatMode) {
         switch (repeatMode) {
             case 0:
@@ -378,23 +373,23 @@ public class PlayerFragment extends Fragment {
 
     }
 
-    private void firstAnimation(HashMap<String,Object> state) {
+    private void firstAnimation(HashMap<String, Object> state) {
 
-            onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
-            onShuffleModeEvents((boolean)state.get(KEY_IS_SHUFFLED));
-            rpModeActions((int)state.get(KEY_RP_MODE));
-            secNow.startAnimation(leftRight);
-            secLeft.startAnimation(rightLeft);
-            songProgress.startAnimation(bounce);
-            title.startAnimation(leftRight);
-            album.startAnimation(rightLeft);
-            artist.startAnimation(leftRight);
-            closeBtn.startAnimation(bounce);
-            playBtn.startAnimation(bounce);
-            prevBtn.startAnimation(leftRight);
-            nextBtn.startAnimation(rightLeft);
-            shuffleBtn.startAnimation(leftRight);
-            repeatBtn.startAnimation(rightLeft);
+        onPlayPauseEvents((boolean) state.get(KEY_IS_PLAYING));
+        onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
+        rpModeActions((int) state.get(KEY_RP_MODE));
+        secNow.startAnimation(leftRight);
+        secLeft.startAnimation(rightLeft);
+        songProgress.startAnimation(bounce);
+        title.startAnimation(leftRight);
+        album.startAnimation(rightLeft);
+        artist.startAnimation(leftRight);
+        closeBtn.startAnimation(bounce);
+        playBtn.startAnimation(bounce);
+        prevBtn.startAnimation(leftRight);
+        nextBtn.startAnimation(rightLeft);
+        shuffleBtn.startAnimation(leftRight);
+        repeatBtn.startAnimation(rightLeft);
 
     }
 

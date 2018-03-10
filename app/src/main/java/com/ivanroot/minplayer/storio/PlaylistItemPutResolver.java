@@ -26,7 +26,7 @@ public class PlaylistItemPutResolver extends DefaultPutResolver<PlaylistItem> {
     protected UpdateQuery mapToUpdateQuery(@NonNull PlaylistItem playlistItem) {
         return UpdateQuery.builder()
                 .table(PlaylistTable.TABLE)
-                .where(PlaylistTable.PLAYLIST_NAME + " = ?")
+                .where(PlaylistTable.Playlist.NAME + " = ?")
                 .whereArgs(playlistItem.getName())
                 .build();
     }
@@ -35,8 +35,8 @@ public class PlaylistItemPutResolver extends DefaultPutResolver<PlaylistItem> {
     @Override
     protected ContentValues mapToContentValues(@NonNull PlaylistItem playlistItem) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(PlaylistTable.PLAYLIST_NAME,playlistItem.getName());
-        contentValues.put(PlaylistTable.PLAYLIST_IMAGE, playlistItem.getImage());
+        contentValues.put(PlaylistTable.Playlist.NAME,playlistItem.getName());
+        contentValues.put(PlaylistTable.Playlist.IMAGE_PATH, playlistItem.getImagePath());
         return contentValues;
     }
 }

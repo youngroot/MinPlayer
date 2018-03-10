@@ -79,7 +79,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     @Override
     public void onBindViewHolder(PlaylistViewHolder playlistViewHolder, int i) {
         PlaylistItem playlistItem = playlistItems.get(i);
-        playlistViewHolder.representPlaylistItem(playlistItem);
+        playlistViewHolder.representPlaylistItem(context,playlistItem);
         playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, v);

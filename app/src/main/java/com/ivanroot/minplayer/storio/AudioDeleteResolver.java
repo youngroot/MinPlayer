@@ -10,7 +10,7 @@ import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
  * Created by Ivan Root on 28.08.2017.
  */
 
-public class MediaStoreAudioDeleteResolver extends DefaultDeleteResolver<Audio> {
+public class AudioDeleteResolver extends DefaultDeleteResolver<Audio> {
 
     @NonNull
     @Override

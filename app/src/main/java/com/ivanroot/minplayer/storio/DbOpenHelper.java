@@ -7,11 +7,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.google.gson.Gson;
 import com.ivanroot.minplayer.playlist.Playlist;
 
-import static com.ivanroot.minplayer.storio.PlaylistTable.ALL_TRACKS_PLAYLIST;
+import static com.ivanroot.minplayer.storio.PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST;
 import static com.ivanroot.minplayer.storio.PlaylistTable.DB_NAME;
 import static com.ivanroot.minplayer.storio.PlaylistTable.DB_VERSION;
-import static com.ivanroot.minplayer.storio.PlaylistTable.PLAYLIST_JSON;
-import static com.ivanroot.minplayer.storio.PlaylistTable.PLAYLIST_NAME;
+import static com.ivanroot.minplayer.storio.PlaylistTable.Playlist.JSON;
+import static com.ivanroot.minplayer.storio.PlaylistTable.Playlist.NAME;
 import static com.ivanroot.minplayer.storio.PlaylistTable.TABLE;
 import static com.ivanroot.minplayer.storio.PlaylistTable.createTableQuery;
 
@@ -33,7 +33,6 @@ public class DbOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         Gson gson = new Gson();
         String json = gson.toJson(new Playlist(ALL_TRACKS_PLAYLIST));
         db.execSQL(createTableQuery());
@@ -47,12 +46,11 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     }
 
     private String initialWritePlaylistQuery(String name, String json){
-
         return "INSERT INTO "
                 + TABLE + " ( "
-                + PLAYLIST_NAME
+                + NAME
                 + ", "
-                + PLAYLIST_JSON
+                + JSON
                 + " ) VALUES ( '"
                 + name
                 + "', '"

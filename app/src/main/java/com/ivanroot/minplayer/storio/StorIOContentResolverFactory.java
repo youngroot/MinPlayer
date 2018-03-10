@@ -19,7 +19,7 @@ import io.reactivex.Observable;
  * Created by Ivan Root on 28.08.2017.
  */
 
-public class StorIOMediaStoreFactory {
+public class StorIOContentResolverFactory {
 
     private static StorIOContentResolver INSTANCE;
 
@@ -30,9 +30,9 @@ public class StorIOMediaStoreFactory {
         INSTANCE = DefaultStorIOContentResolver.builder()
                 .contentResolver(context.getContentResolver())
                 .addTypeMapping(Audio.class, ContentResolverTypeMapping.<Audio>builder()
-                        .putResolver(new MediaStoreAudioPutResolver())
-                        .getResolver(new MediaStoreAudioGetResolver())
-                        .deleteResolver(new MediaStoreAudioDeleteResolver())
+                        .putResolver(new AudioPutResolver())
+                        .getResolver(new AudioGetResolver())
+                        .deleteResolver(new AudioDeleteResolver())
                         .build())
                 .build();
 
@@ -40,7 +40,7 @@ public class StorIOMediaStoreFactory {
     }
 
     public static Observable<List<Audio>> getAllAudioObservable(Context context, String sortOrder) {
-        return StorIOMediaStoreFactory
+        return StorIOContentResolverFactory
                 .get(context)
                 .get()
                 .listOfObjects(Audio.class)

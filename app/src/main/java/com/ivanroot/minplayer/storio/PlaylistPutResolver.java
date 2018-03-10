@@ -26,10 +26,9 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
     @NonNull
     @Override
     protected UpdateQuery mapToUpdateQuery(@NonNull Playlist playlist) {
-
         return UpdateQuery.builder()
                 .table(PlaylistTable.TABLE)
-                .where(PlaylistTable.PLAYLIST_NAME + " = ?")
+                .where(PlaylistTable.Playlist.NAME + " = ?")
                 .whereArgs(playlist.getName())
                 .build();
     }
@@ -37,13 +36,13 @@ public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
     @NonNull
     @Override
     protected ContentValues mapToContentValues(@NonNull Playlist playlist) {
-
         Gson gson = new Gson();
         String json = gson.toJson(playlist);
+
         ContentValues contentValues = new ContentValues();
-        contentValues.put(PlaylistTable.PLAYLIST_NAME,playlist.getName());
-        contentValues.put(PlaylistTable.PLAYLIST_JSON,json);
-        contentValues.put(PlaylistTable.PLAYLIST_IMAGE,playlist.getImage());
+        contentValues.put(PlaylistTable.Playlist.NAME,playlist.getName());
+        contentValues.put(PlaylistTable.Playlist.JSON,json);
+        contentValues.put(PlaylistTable.Playlist.IMAGE_PATH,playlist.getImagePath());
 
         return contentValues;
     }

@@ -13,7 +13,7 @@ public class Audio implements Serializable {
     private String album;
     private String artist;
     private String genre;
-    private String albumArt;
+    private String albumArtPath;
 
     public  Audio(){}
 
@@ -78,12 +78,12 @@ public class Audio implements Serializable {
         this.genre = genre;
     }
 
-    public String getAlbumArt() {
-        return albumArt;
+    public String getAlbumArtPath() {
+        return albumArtPath;
     }
 
-    public void setAlbumArt(String albumArt) {
-        this.albumArt = albumArt;
+    public void setAlbumArtPath(String albumArtPath) {
+        this.albumArtPath = albumArtPath;
     }
 
 

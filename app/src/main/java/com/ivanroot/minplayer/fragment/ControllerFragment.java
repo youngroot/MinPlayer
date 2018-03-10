@@ -23,6 +23,7 @@ import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.PlayerActivity;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.player.RxBus;
+import com.ivanroot.minplayer.utils.Utils;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -103,7 +104,7 @@ public class ControllerFragment extends Fragment {
         updateProgressDisposable = Observable.interval(1000, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(i -> RxBus.getInstance().post(ACTION_GET_AUDIO_POSITION, this));
-        rxBus.post(ACTION_GET_METADATA,this);
+        rxBus.post(ACTION_GET_METADATA, this);
 
         return view;
     }
@@ -146,19 +147,16 @@ public class ControllerFragment extends Fragment {
         Audio currAudio = (Audio) state.get(KEY_AUDIO);
         if (currAudio != null) {
             songProgress.setMax((int) state.get(KEY_DURATION));
-            songProgress.setProgress((int)state.get(KEY_POSITION));
+            songProgress.setProgress((int) state.get(KEY_POSITION));
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
 
-            try {
-                Picasso.with(getActivity())
-                        .load(new File(currAudio.getAlbumArt()))
-                        .error(R.drawable.default_album_art)
-                        .into(albumArt);
-            }catch (NullPointerException ex){
-                albumArt.setImageResource(R.drawable.default_album_art);
-            }
+
+            Picasso.with(getActivity())
+                    .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
+                    .error(R.drawable.default_album_art)
+                    .into(albumArt);
 
             if (!(boolean) state.get(KEY_IS_PLAYING)) {
                 playBtn.setImageResource(R.drawable.ic_play_noti);
@@ -197,7 +195,7 @@ public class ControllerFragment extends Fragment {
             playBtn.setImageResource(R.drawable.ic_play_noti);
     }
 
-    @Subscribe(tags = {@Tag(EVENT_ON_POSITION_CHANGED),@Tag(EVENT_ON_GET_AUDIO_POSITION)})
+    @Subscribe(tags = {@Tag(EVENT_ON_POSITION_CHANGED), @Tag(EVENT_ON_GET_AUDIO_POSITION)})
     public void onPositionChangedEvents(Integer pos) {
         songProgress.setProgress(pos);
     }

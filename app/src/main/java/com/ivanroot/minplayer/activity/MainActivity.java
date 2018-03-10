@@ -23,7 +23,6 @@ import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
-import com.ivanroot.minplayer.fragment.PlaylistRecyclerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.player.PlayerService;
@@ -75,7 +74,7 @@ public class MainActivity extends AppCompatActivity
     private void initItemId() {
 
         itemId = new HashMap<>();
-        itemId.put(PlaylistRecyclerFragment.NAME, R.id.all_audio);
+        itemId.put(PlaylistFragment.NAME, R.id.all_audio);
         itemId.put(PlaylistSelectorFragment.NAME, R.id.playlists);
         itemId.put(VisFragment.NAME, R.id.spectrum);
     }
@@ -130,9 +129,9 @@ public class MainActivity extends AppCompatActivity
 
             switch (fragment.getTag()) {
 
-                case PlaylistRecyclerFragment.NAME:
-                    String name = ((PlaylistRecyclerFragment)fragment).getPlaylistName();
-                    if(!name.equals(PlaylistTable.ALL_TRACKS_PLAYLIST)) {
+                case PlaylistFragment.NAME:
+                    String name = ((PlaylistFragment)fragment).getPlaylistName();
+                    if(!name.equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
                         fragmentLauncher(R.id.playlists);
                         navigationView.setCheckedItem(R.id.playlists);
                     }
@@ -141,11 +140,6 @@ public class MainActivity extends AppCompatActivity
                 case PlaylistSelectorFragment.NAME:
                     fragmentLauncher(R.id.all_audio);
                     navigationView.setCheckedItem(R.id.all_audio);
-                    break;
-
-                case PlaylistFragment.NAME:
-                    fragmentLauncher(R.id.playlists);
-                    navigationView.setCheckedItem(R.id.playlist);
                     break;
 
                 case VisFragment.NAME:
@@ -206,7 +200,8 @@ public class MainActivity extends AppCompatActivity
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
+        drawerToggle =
+                new ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
             // Called when drawer is opened
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
@@ -237,15 +232,11 @@ public class MainActivity extends AppCompatActivity
         switch (itemId) {
 
             case R.id.all_audio:
-                fragment = new PlaylistRecyclerFragment(PlaylistTable.ALL_TRACKS_PLAYLIST);
+                fragment = new PlaylistFragment(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
                 break;
 
             case R.id.playlists:
                 fragment = new PlaylistSelectorFragment();
-                break;
-
-            case R.id.playlist:
-                fragment = new PlaylistFragment(playlistName, null);
                 break;
 
             case R.id.spectrum:

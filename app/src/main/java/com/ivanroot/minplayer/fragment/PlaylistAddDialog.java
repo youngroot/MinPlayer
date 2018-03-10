@@ -3,7 +3,6 @@ package com.ivanroot.minplayer.fragment;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -43,15 +42,12 @@ public class PlaylistAddDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.add_playlist_dialog, null);
-
         playlist = new Playlist();
-
-
         ListView audioListView = (ListView) dialogView.findViewById(R.id.audioList);
         final EditText playlistName = (EditText) dialogView.findViewById(R.id.playlistName);
         Button cancelBtn = (Button) dialogView.findViewById(R.id.cancelBtn);
         Button okBtn = (Button) dialogView.findViewById(R.id.okBtn);
-        adapter = new PlaylistAdapter(getActivity(),PlaylistTable.ALL_TRACKS_PLAYLIST);
+        adapter = new PlaylistAdapter(getActivity(), PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
         audioListView.setAdapter(adapter);
         audioListView.setOnItemClickListener((parent, view, position, id) -> playlist.addAudio(adapter.getItem(position)));
 
@@ -61,7 +57,6 @@ public class PlaylistAddDialog extends DialogFragment {
             String name = playlistName.getText().toString();
             if(!name.equals("")) {
                 playlist.setName(name);
-                playlist.setBitmapImage(BitmapFactory.decodeResource(getResources(),R.drawable.music_big));
                 playlist.setDate("");
                 playlist.setTime("");
                 playlistManager.writePlaylist(activity, playlist);

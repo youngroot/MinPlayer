@@ -48,11 +48,11 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
         adapter.setOnPlaylistClickListener((playlistName -> {
-            PlaylistRecyclerFragment playlistRecyclerFragment = new PlaylistRecyclerFragment(playlistName);
+            PlaylistFragment playlistFragment = new PlaylistFragment(playlistName);
             getActivity()
                     .getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentHolder,playlistRecyclerFragment,playlistRecyclerFragment.toString())
+                    .replace(R.id.fragmentHolder, playlistFragment, playlistFragment.toString())
                     .commit();
         }));
         return view;
