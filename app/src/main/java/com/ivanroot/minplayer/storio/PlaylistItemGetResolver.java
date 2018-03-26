@@ -1,23 +1,24 @@
 package com.ivanroot.minplayer.storio;
 
 import android.database.Cursor;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.playlist.PlaylistItem;
-import com.pushtorefresh.storio3.sqlite.StorIOSQLite;
-import com.pushtorefresh.storio3.sqlite.operations.get.DefaultGetResolver;
+import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
+import com.pushtorefresh.storio3.contentresolver.operations.get.DefaultGetResolver;
 
 /**
- * Created by Ivan Root on 17.02.2018.
+ * Created by ivanroot on 3/24/18.
  */
 
 public class PlaylistItemGetResolver extends DefaultGetResolver<PlaylistItem> {
     @NonNull
     @Override
-    public PlaylistItem mapFromCursor(@NonNull StorIOSQLite storIOSQLite, @NonNull Cursor cursor) {
+    public PlaylistItem mapFromCursor(@NonNull StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
+        String playlistName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists.NAME));
         PlaylistItem playlistItem = new PlaylistItem();
-        playlistItem.setName(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.NAME)));
-        playlistItem.setImagePath(cursor.getString(cursor.getColumnIndex(PlaylistTable.Playlist.IMAGE_PATH)));
+        playlistItem.setName(playlistName);
         return playlistItem;
     }
 }

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.provider.MediaStore;
 
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.playlist.Playlist;
+import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.pushtorefresh.storio3.contentresolver.ContentResolverTypeMapping;
 import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.impl.DefaultStorIOContentResolver;
@@ -34,14 +36,23 @@ public class StorIOContentResolverFactory {
                         .getResolver(new AudioGetResolver())
                         .deleteResolver(new AudioDeleteResolver())
                         .build())
+                .addTypeMapping(Playlist.class, ContentResolverTypeMapping.<Playlist>builder()
+                        .putResolver(new PlaylistPutResolver())
+                        .getResolver(new PlaylistGetResolver())
+                        .deleteResolver(new PlaylistDeleteResolver())
+                        .build())
+                .addTypeMapping(PlaylistItem.class,ContentResolverTypeMapping.<PlaylistItem>builder()
+                        .putResolver(new PlaylistItemPutResolver())
+                        .getResolver(new PlaylistItemGetResolver())
+                        .deleteResolver(new PlaylistItemDeleteResolver())
+                        .build())
                 .build();
 
         return INSTANCE;
     }
 
     public static Observable<List<Audio>> getAllAudioObservable(Context context, String sortOrder) {
-        return StorIOContentResolverFactory
-                .get(context)
+        return get(context)
                 .get()
                 .listOfObjects(Audio.class)
                 .withQuery(Query.builder()
@@ -53,5 +64,32 @@ public class StorIOContentResolverFactory {
                 .asRxFlowable(BackpressureStrategy.LATEST)
                 .toObservable();
 
+    }
+
+    public static Observable<Playlist> getPlaylistObservable(Context context, String playlistName){
+        return get(context)
+                .get()
+                .listOfObjects(Playlist.class)
+                .withQuery(Query.builder()
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
+                        .whereArgs(playlistName)
+                        .build())
+                .prepare()
+                .asRxFlowable(BackpressureStrategy.LATEST)
+                .toObservable()
+                .flatMap(Observable::fromIterable);
+    }
+
+    public static Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context){
+        return get(context)
+                .get()
+                .listOfObjects(PlaylistItem.class)
+                .withQuery(Query.builder()
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .build())
+                .prepare()
+                .asRxFlowable(BackpressureStrategy.LATEST)
+                .toObservable();
     }
 }

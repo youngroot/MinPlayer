@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 
 public class Audio implements Serializable {
-    private String id;
+    private long id;
     private String data;
     private String title;
     private String album;
@@ -22,7 +22,7 @@ public class Audio implements Serializable {
         return id + "\n" + data + "\n" + title + "\n" + album + "\n" + artist;
     }
 
-    public Audio(String id, String data, String title, String album, String artist) {
+    public Audio(long id, String data, String title, String album, String artist) {
         this.id = id;
         this.data = data;
         this.title = title;
@@ -30,11 +30,11 @@ public class Audio implements Serializable {
         this.artist = artist;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 

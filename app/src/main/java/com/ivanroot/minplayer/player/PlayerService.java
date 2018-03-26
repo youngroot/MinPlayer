@@ -39,7 +39,6 @@ import com.ivanroot.minplayer.activity.StartupActivity;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.storio.PlaylistTable;
 import com.ivanroot.minplayer.utils.Utils;
 
 import java.io.IOException;
@@ -672,7 +671,7 @@ public class PlayerService
         settings = getSharedPreferences(SERVICE_NAME, Context.MODE_PRIVATE);
         //wasPlaying = settings.getBoolean("wasPlaying",false);
         if (checkPermissions()) {
-            String playlistName = settings.getString("playlist", PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
+            String playlistName = settings.getString("playlist", PlaylistManager.ALL_TRACKS_PLAYLIST);
             setPlaylist(playlistName);
         } else {
             startActivity(new Intent(this, StartupActivity.class));

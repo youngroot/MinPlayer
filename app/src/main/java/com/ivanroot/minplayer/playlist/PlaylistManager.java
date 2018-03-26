@@ -1,19 +1,24 @@
 package com.ivanroot.minplayer.playlist;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.storio.PlaylistTable;
 import com.ivanroot.minplayer.storio.StorIOContentResolverFactory;
-import com.ivanroot.minplayer.storio.StorIOFactory;
 import com.ivanroot.minplayer.utils.Utils;
-import com.pushtorefresh.storio3.sqlite.queries.DeleteQuery;
-import com.pushtorefresh.storio3.sqlite.queries.Query;
-import com.pushtorefresh.storio3.sqlite.queries.RawQuery;
+import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
+import com.pushtorefresh.storio3.contentresolver.queries.Query;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +26,6 @@ import java.util.Objects;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -31,6 +35,11 @@ import io.reactivex.schedulers.Schedulers;
  */
 
 public class PlaylistManager {
+
+    public static final String ASC_SORT_ORDER = MediaStore.Audio.Media.TITLE + " ASC";
+    public static final String ALL_TRACKS_PLAYLIST = "com.ivanroot.minplayer.all_tracks_playlist";
+    public static final String IMAGE_DIR = "playlists_images";
+    public static final String IMAGE_PATH = "playlist_image";
 
     private static final PlaylistManager ourInstance = new PlaylistManager();
 
@@ -43,28 +52,30 @@ public class PlaylistManager {
 
     public Observable<Playlist> getPlaylistObservable(Context context, String playlistName) {
 
-        Observable playlistObservable = StorIOFactory.getPlaylistObservable(context, playlistName);
-        Observable audioObservable = StorIOContentResolverFactory.getAllAudioObservable(context, PlaylistTable.ASC_SORT_ORDER);
 
-        if (playlistName.equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST))
-            return Observable.combineLatest(playlistObservable, audioObservable,
-                    (playlist, audios) -> ((Playlist) playlist).setAudioList((List<Audio>) audios));
+        if (playlistName.equals(ALL_TRACKS_PLAYLIST))
+            return StorIOContentResolverFactory
+                    .getAllAudioObservable(context, ASC_SORT_ORDER)
+                    .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
 
-        else
-            return Observable.combineLatest(playlistObservable, audioObservable,
-                    (playlist, audios) -> removeNonexistentAudios((Playlist) playlist, (List<Audio>) audios));
+//        else
+//            return Observable.combineLatest(playlistObservable, audioObservable,
+//                    (playlist, audios) -> removeNonexistentAudios((Playlist) playlist, (List<Audio>) audios));
+
+        return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
     }
 
     public Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context){
-        return StorIOFactory.getPlaylistItemsObservable(context);
+        return StorIOContentResolverFactory.getPlaylistItemsObservable(context);
     }
 
     public synchronized void writePlaylist(Context context, Playlist playlist) {
 
         if (playlist == null) return;
 
-        if (Objects.equals(playlist.getName(), PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST))
-            playlist.setAudioList(new ArrayList<>());
+        if (Objects.equals(playlist.getName(), ALL_TRACKS_PLAYLIST))
+            //playlist.setAudioList(new ArrayList<>());
+            return;
 
         Completable.create(e -> {
             List<Bitmap> bitmaps = new ArrayList<>();
@@ -75,13 +86,13 @@ public class PlaylistManager {
                 }
             }
             Bitmap bitmap = Utils.combineFourBitmapsIntoOne(bitmaps);
-            String path = Utils.saveImage(context,bitmap,PlaylistTable.Playlist.IMAGE_DIR,playlist.getName());
+            String path = Utils.saveImage(context,bitmap, IMAGE_DIR,playlist.getName());
             playlist.setImagePath(path);
             e.onComplete();
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> StorIOFactory.get(context)
+                .subscribe(() -> StorIOContentResolverFactory.get(context)
                         .put()
                         .object(playlist)
                         .prepare()
@@ -89,13 +100,49 @@ public class PlaylistManager {
 
     }
 
+    public synchronized void addToPlaylist(Context context, String playlistName, Audio audio){
+        try {
+
+            ContentResolver contentResolver = context.getContentResolver();
+
+            String[] projection = new String[]{MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME};
+            String selection = MediaStore.Audio.Playlists.NAME + " =? ";
+            String[] selectionArgs = new String[]{playlistName};
+
+            Cursor cursor = contentResolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
+            cursor.moveToFirst();
+
+            long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+            int playlistSize = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._COUNT));
+            cursor.close();
+
+            Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
+
+            ContentValues contentValues = new ContentValues(2);
+            contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audio.getId());
+            contentValues.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, playlistSize);
+
+            contentResolver.insert(membersUri, contentValues);
+
+        }catch (CursorIndexOutOfBoundsException ex){
+            ex.printStackTrace();
+            Log.e(toString(),ex.getMessage());
+        }
+    }
+
     public PlaylistItem getPlaylistItem(Context context, String playlistName){
-        return StorIOFactory.get(context)
+        if(playlistName.equals(ALL_TRACKS_PLAYLIST)){
+            PlaylistItem playlistItem = new PlaylistItem();
+            playlistItem.setName(ALL_TRACKS_PLAYLIST);
+            return playlistItem;
+        }
+
+        return StorIOContentResolverFactory.get(context)
                 .get()
                 .object(PlaylistItem.class)
                 .withQuery(Query.builder()
-                        .table(PlaylistTable.TABLE)
-                        .where(PlaylistTable.Playlist.NAME + " = ?")
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
                         .whereArgs(playlistName)
                         .build())
                 .prepare()
@@ -103,13 +150,13 @@ public class PlaylistManager {
     }
 
     public synchronized void removePlaylist(Context context, String name) {
-        if (!Objects.equals(name, PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
-            StorIOFactory.get(context)
+        if (!Objects.equals(name, ALL_TRACKS_PLAYLIST)) {
+            StorIOContentResolverFactory.get(context)
                     .delete()
                     .byQuery(DeleteQuery
                             .builder()
-                            .table(PlaylistTable.TABLE)
-                            .where(PlaylistTable.Playlist.NAME + " = ?")
+                            .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                            .where(MediaStore.Audio.Playlists.NAME + " = ?")
                             .whereArgs(name)
                             .build())
                     .prepare()
@@ -121,7 +168,7 @@ public class PlaylistManager {
     public String getTitleFromPlaylistName(Context context, String playlistName) {
         String title;
         switch (playlistName){
-            case PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST:
+            case ALL_TRACKS_PLAYLIST:
                 title = context.getResources().getString(R.string.all_tracks_playlist);
                 break;
             default:
@@ -148,13 +195,7 @@ public class PlaylistManager {
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) {
 
-        StorIOFactory.get(context)
-                .executeSQL()
-                .withQuery(RawQuery.builder()
-                        .query(PlaylistTable.renamePlaylistQuery(oldName,newName))
-                        .build())
-                .prepare()
-                .executeAsBlocking();
+        //TODO: Implement playlist renaming
     }
 
 

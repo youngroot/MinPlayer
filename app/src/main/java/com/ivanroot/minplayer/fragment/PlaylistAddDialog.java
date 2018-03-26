@@ -16,7 +16,6 @@ import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.storio.PlaylistTable;
 
 /**
  * Created by Ivan Root on 02.07.2017.
@@ -47,7 +46,7 @@ public class PlaylistAddDialog extends DialogFragment {
         final EditText playlistName = (EditText) dialogView.findViewById(R.id.playlistName);
         Button cancelBtn = (Button) dialogView.findViewById(R.id.cancelBtn);
         Button okBtn = (Button) dialogView.findViewById(R.id.okBtn);
-        adapter = new PlaylistAdapter(getActivity(), PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
+        adapter = new PlaylistAdapter(getActivity(), PlaylistManager.ALL_TRACKS_PLAYLIST);
         audioListView.setAdapter(adapter);
         audioListView.setOnItemClickListener((parent, view, position, id) -> playlist.addAudio(adapter.getItem(position)));
 

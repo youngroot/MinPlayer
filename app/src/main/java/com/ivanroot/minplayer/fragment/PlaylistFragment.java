@@ -19,8 +19,6 @@ import com.ivanroot.minplayer.adapter.PlaylistRecyclerAdapter;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.storio.PlaylistTable;
-import com.ivanroot.minplayer.storio.StorIOFactory;
 import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -82,7 +80,7 @@ public class PlaylistFragment extends NavFragmentBase {
                     .onRestoreInstanceState(savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT));
         }
 
-        if(!playlistItem.getName().equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
+        if(!playlistItem.getName().equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
             playlistImage = (ImageView) view.findViewById(R.id.playlistImage);
         }
         return view;
@@ -91,7 +89,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private void prepareListeners(View view) {
 
 
-        if(!playlistItem.getName().equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
+        if(!playlistItem.getName().equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
 
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
@@ -116,7 +114,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private View getView(LayoutInflater inflater, @Nullable ViewGroup container) {
 
-        int layoutResource = (playlistItem.getName().equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)
+        int layoutResource = (playlistItem.getName().equals(PlaylistManager.ALL_TRACKS_PLAYLIST)
                 ? R.layout.all_tracks_recycler_layout
                 : R.layout.playlist_recycler_layout);
         View view = inflater.inflate(layoutResource, container, false);
@@ -179,7 +177,7 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onViewCreated(view, savedInstanceState);
         String title = playlistManager.getTitleFromPlaylistName(getActivity(),playlistItem.getName());
         activity.getSupportActionBar().setTitle(title);
-        if(!playlistItem.getName().equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
+        if(!playlistItem.getName().equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
             Picasso.with(getActivity())
                     .load(Utils.getFileFromPath(playlistItem.getImagePath()))
                     .error(R.drawable.default_album_art)

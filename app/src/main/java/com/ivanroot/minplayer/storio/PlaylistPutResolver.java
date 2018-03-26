@@ -1,49 +1,60 @@
 package com.ivanroot.minplayer.storio;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import com.google.gson.Gson;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.pushtorefresh.storio3.sqlite.operations.put.DefaultPutResolver;
-import com.pushtorefresh.storio3.sqlite.queries.InsertQuery;
-import com.pushtorefresh.storio3.sqlite.queries.UpdateQuery;
-
+import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
+import com.pushtorefresh.storio3.contentresolver.operations.put.PutResolver;
+import com.pushtorefresh.storio3.contentresolver.operations.put.PutResult;
 
 /**
- * Created by Ivan Root on 28.08.2017.
+ * Created by ivanroot on 3/23/18.
  */
 
-public class PlaylistPutResolver extends DefaultPutResolver<Playlist> {
-    @NonNull
-    @Override
-    protected InsertQuery mapToInsertQuery(@NonNull Playlist playlist) {
-        return InsertQuery.builder()
-                .table(PlaylistTable.TABLE)
-                .build();
-    }
+public class PlaylistPutResolver extends PutResolver<Playlist> {
 
     @NonNull
     @Override
-    protected UpdateQuery mapToUpdateQuery(@NonNull Playlist playlist) {
-        return UpdateQuery.builder()
-                .table(PlaylistTable.TABLE)
-                .where(PlaylistTable.Playlist.NAME + " = ?")
-                .whereArgs(playlist.getName())
-                .build();
+    public PutResult performPut(@NonNull StorIOContentResolver storIOContentResolver, @NonNull Playlist playlist) {
+        try {
+
+            ContentResolver contentResolver = storIOContentResolver.lowLevel().contentResolver();
+
+            long playlistId = playlist.getId();
+            boolean newPlaylist = false;
+
+            if (playlistId == -1) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Audio.Playlists.NAME,playlist.getName());
+                playlistId = Long.parseLong(contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, values).getLastPathSegment());
+                newPlaylist = true;
+            }
+
+            Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
+
+            if(!newPlaylist)
+                contentResolver.delete(membersUri,null,null);
+
+            ContentValues[] values = new ContentValues[playlist.size()];
+
+            for (int i = 0; i < playlist.size(); i++){
+                values[i] = new ContentValues(2);
+                values[i].put(MediaStore.Audio.Playlists.Members.AUDIO_ID,playlist.getAudio(i).getId());
+                values[i].put(MediaStore.Audio.Playlists.Members.PLAY_ORDER,i);
+            }
+
+            contentResolver.bulkInsert(membersUri,values);
+        }
+        catch (Exception | Error e){
+            e.printStackTrace();
+            Log.e(toString(),e.getMessage());
+        }
+        return null;
     }
 
-    @NonNull
-    @Override
-    protected ContentValues mapToContentValues(@NonNull Playlist playlist) {
-        Gson gson = new Gson();
-        String json = gson.toJson(playlist);
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(PlaylistTable.Playlist.NAME,playlist.getName());
-        contentValues.put(PlaylistTable.Playlist.JSON,json);
-        contentValues.put(PlaylistTable.Playlist.IMAGE_PATH,playlist.getImagePath());
-
-        return contentValues;
-    }
 }

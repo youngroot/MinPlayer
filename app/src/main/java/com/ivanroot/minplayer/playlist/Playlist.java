@@ -17,6 +17,7 @@ import java.util.List;
 
 public class Playlist implements Serializable, IPlaylist {
 
+    protected long id = -1;
     protected String name = "";
     protected String date = "";
     protected String time = "";
@@ -32,6 +33,14 @@ public class Playlist implements Serializable, IPlaylist {
 
     public Playlist(){
         playlist = new ArrayList<>();
+    }
+
+    public long getId(){
+        return id;
+    }
+
+    public void setId(long id){
+        this.id = id;
     }
 
     public Playlist(String name){

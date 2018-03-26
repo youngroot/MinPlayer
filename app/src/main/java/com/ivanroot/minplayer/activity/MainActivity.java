@@ -27,7 +27,7 @@ import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.player.RxBus;
-import com.ivanroot.minplayer.storio.PlaylistTable;
+import com.ivanroot.minplayer.playlist.PlaylistManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity
 
                 case PlaylistFragment.NAME:
                     String name = ((PlaylistFragment)fragment).getPlaylistName();
-                    if(!name.equals(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST)) {
+                    if(!name.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
                         fragmentLauncher(R.id.playlists);
                         navigationView.setCheckedItem(R.id.playlists);
                     }
@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity
         switch (itemId) {
 
             case R.id.all_audio:
-                fragment = new PlaylistFragment(PlaylistTable.Playlist.ALL_TRACKS_PLAYLIST);
+                fragment = new PlaylistFragment(PlaylistManager.ALL_TRACKS_PLAYLIST);
                 break;
 
             case R.id.playlists:

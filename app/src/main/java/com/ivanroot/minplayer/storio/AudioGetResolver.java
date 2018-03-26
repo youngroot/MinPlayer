@@ -21,8 +21,9 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
     @NonNull
     @Override
     public Audio mapFromCursor(StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
+
         int albumId = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-        String id = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+        long id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
         String data = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
         String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
         String album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
