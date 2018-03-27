@@ -29,16 +29,22 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
             boolean newPlaylist = false;
 
             if (playlistId == -1) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Audio.Playlists.NAME,playlist.getName());
-                playlistId = Long.parseLong(contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, values).getLastPathSegment());
+                ContentValues value = new ContentValues();
+                value.put(MediaStore.Audio.Playlists.NAME,playlist.getName());
+//                value.put(MediaStore.Audio.Playlists.DATE_ADDED,playlist.getDateAdded().getTime());
+                playlistId = Long.parseLong(contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, value).getLastPathSegment());
                 newPlaylist = true;
             }
 
             Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
 
-            if(!newPlaylist)
-                contentResolver.delete(membersUri,null,null);
+            if(!newPlaylist) {
+                contentResolver.delete(membersUri, null, null);
+            }
+
+//            ContentValues value = new ContentValues();
+//            value.put(MediaStore.Audio.Playlists.DATE_MODIFIED,playlist.getDateModified().getTime());
+//            contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,value);
 
             ContentValues[] values = new ContentValues[playlist.size()];
 

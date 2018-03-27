@@ -12,6 +12,8 @@ import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.operations.get.DefaultGetResolver;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
 
+import java.util.Date;
+
 /**
  * Created by ivanroot on 3/23/18.
  */
@@ -24,6 +26,8 @@ public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
 
         long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
         String playlistName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists.NAME));
+        //Date dateAdded  = new Date(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.DATE_ADDED)));
+        //Date dateModified = new Date(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.DATE_MODIFIED)));
 
         Cursor playlistMembersCursor = contentResolver.get()
                 .cursor()
@@ -36,6 +40,8 @@ public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
 
         Playlist playlist = new Playlist(playlistName);
         playlist.setId(playlistId);
+        //playlist.setDateAdded(dateAdded);
+        //playlist.setDateModified(dateModified);
 
         AudioGetResolver audioGetResolver = new AudioGetResolver();
 

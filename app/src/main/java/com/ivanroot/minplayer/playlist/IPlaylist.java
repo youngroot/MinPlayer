@@ -58,13 +58,13 @@ public interface IPlaylist {
 
     void update();
 
-    void setTime(String time);
+    void setDateAdded(Date dateAdded);
 
-    String getTime();
+    Date getDateAdded();
 
-    void setDate(String date);
+    void setDateModified(Date dateModified);
 
-    String getDate();
+    Date getDateModified();
 
     boolean equals(IPlaylist playlist);
 }

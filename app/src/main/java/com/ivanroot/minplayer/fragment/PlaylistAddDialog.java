@@ -17,6 +17,8 @@ import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 
+import java.util.Calendar;
+
 /**
  * Created by Ivan Root on 02.07.2017.
  */
@@ -56,8 +58,8 @@ public class PlaylistAddDialog extends DialogFragment {
             String name = playlistName.getText().toString();
             if(!name.equals("")) {
                 playlist.setName(name);
-                playlist.setDate("");
-                playlist.setTime("");
+                playlist.setDateAdded(Calendar.getInstance().getTime());
+                playlist.setDateModified(Calendar.getInstance().getTime());
                 playlistManager.writePlaylist(activity, playlist);
                 dismiss();
             }

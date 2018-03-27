@@ -1,13 +1,14 @@
 package com.ivanroot.minplayer.playlist;
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.utils.Utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 
@@ -19,8 +20,8 @@ public class Playlist implements Serializable, IPlaylist {
 
     protected long id = -1;
     protected String name = "";
-    protected String date = "";
-    protected String time = "";
+    protected Date dateAdded;
+    protected Date dateModified;
     protected String imagePath = "";
     protected boolean isShuffled = false;
     protected int audioIndex = -1;
@@ -58,16 +59,8 @@ public class Playlist implements Serializable, IPlaylist {
         return imagePath;
     }
 
-    public Bitmap getBitmapImage() {
-        return null;
-    }
-
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
-    }
-
-    public void setBitmapImage(Bitmap bitmap){
-
     }
 
     @Override
@@ -154,13 +147,11 @@ public class Playlist implements Serializable, IPlaylist {
 
     @Override
     public Audio getCurrentAudio(){
-
         return currAudio;
     }
 
     @Override
     public void cleanCurrAudio() {
-
         currAudio = null;
     }
 
@@ -305,23 +296,23 @@ public class Playlist implements Serializable, IPlaylist {
     public void update(){}
 
     @Override
-    public void setTime(String time) {
-        this.time = time;
+    public void setDateAdded(@NonNull Date dateAdded) {
+        this.dateAdded = dateAdded;
     }
 
     @Override
-    public String getTime() {
-        return time;
+    public Date getDateAdded() {
+        return dateAdded;
     }
 
     @Override
-    public void setDate(String date) {
-        this.date = date;
+    public void setDateModified(Date dateModified) {
+        this.dateModified = dateModified;
     }
 
     @Override
-    public String getDate() {
-        return date;
+    public Date getDateModified() {
+        return dateModified;
     }
 
     @Override

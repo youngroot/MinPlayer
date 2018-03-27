@@ -29,18 +29,43 @@
                android:id="@+id/playlistHeader"
                android:layout_width="match_parent"
                android:layout_height="match_parent"
-               android:background="@drawable/header_gradient"
                app:layout_collapseMode="parallax"
                android:fitsSystemWindows="true"
                app:layout_collapseParallaxMultiplier="0.7" >
-               <ImageView
-                   android:id="@+id/playlistImage"
-                   android:layout_width="@dimen/app_bar_height"
-                   android:layout_height="match_parent"
-                   android:scaleType="centerCrop"
-                   android:src="@drawable/playlist_header"
-                   android:layout_alignParentStart="true"
-                   android:layout_alignParentTop="true"/>
+               <RelativeLayout
+                   android:padding="4dp"
+                   android:id="@+id/playlistImageLayout"
+                   android:layout_width="160dp"
+                   android:layout_height="160dp">
+                   <ImageView
+                       android:id="@+id/SubPlaylistImage1"
+                       android:layout_width="80dp"
+                       android:layout_height="80dp"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentStart="true"
+                       android:scaleType="fitXY"/>
+                   <ImageView
+                       android:id="@+id/SubPlaylistImage2"
+                       android:layout_width="80dp"
+                       android:layout_height="80dp"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentEnd="true"
+                       android:scaleType="fitXY"/>
+                   <ImageView
+                       android:id="@+id/SubPlaylistImage3"
+                       android:layout_width="80dp"
+                       android:layout_height="80dp"
+                       android:layout_alignParentBottom="true"
+                       android:layout_alignParentStart="true"
+                       android:scaleType="fitXY"/>
+                   <ImageView
+                       android:id="@+id/SubPlaylistImage4"
+                       android:layout_width="80dp"
+                       android:layout_height="80dp"
+                       android:layout_alignParentBottom="true"
+                       android:layout_alignParentEnd="true"
+                       android:scaleType="fitXY"/>
+               </RelativeLayout>
            </RelativeLayout>
 
             <android.support.v7.widget.Toolbar

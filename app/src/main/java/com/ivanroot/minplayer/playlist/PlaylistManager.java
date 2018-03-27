@@ -58,10 +58,6 @@ public class PlaylistManager {
                     .getAllAudioObservable(context, ASC_SORT_ORDER)
                     .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
 
-//        else
-//            return Observable.combineLatest(playlistObservable, audioObservable,
-//                    (playlist, audios) -> removeNonexistentAudios((Playlist) playlist, (List<Audio>) audios));
-
         return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
     }
 
@@ -77,26 +73,11 @@ public class PlaylistManager {
             //playlist.setAudioList(new ArrayList<>());
             return;
 
-        Completable.create(e -> {
-            List<Bitmap> bitmaps = new ArrayList<>();
-            for(Audio audio : playlist.getAudioList()){
-                if(audio.getAlbumArtPath() != null && bitmaps.size() < 4){
-                    Bitmap bitmap = BitmapFactory.decodeFile(audio.getAlbumArtPath());
-                    bitmaps.add(bitmap);
-                }
-            }
-            Bitmap bitmap = Utils.combineFourBitmapsIntoOne(bitmaps);
-            String path = Utils.saveImage(context,bitmap, IMAGE_DIR,playlist.getName());
-            playlist.setImagePath(path);
-            e.onComplete();
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> StorIOContentResolverFactory.get(context)
-                        .put()
-                        .object(playlist)
-                        .prepare()
-                        .executeAsBlocking());
+        StorIOContentResolverFactory.get(context)
+                .put()
+                .object(playlist)
+                .prepare()
+                .executeAsBlocking();
 
     }
 
@@ -176,21 +157,6 @@ public class PlaylistManager {
         }
 
         return title;
-    }
-
-    private Playlist removeNonexistentAudios(Playlist playlist, List<Audio> audios) {
-
-        List<Audio> removeList = new ArrayList<>();
-        for (Audio audio : playlist.getAudioList())
-            if (!audios.contains(audio))
-                removeList.add(audio);
-        for (Audio audio : removeList) {
-            if (playlist.getCurrentAudio().equals(audio))
-                playlist.cleanCurrAudio();
-            playlist.deleteAudio(audio);
-        }
-
-        return playlist;
     }
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) {

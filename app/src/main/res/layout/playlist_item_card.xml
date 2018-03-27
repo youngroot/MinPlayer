@@ -3,48 +3,78 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_marginStart="10dp"
     android:layout_marginEnd="10dp"
-    android:layout_marginTop="5dp"
+    android:layout_marginTop="2dp"
     android:layout_marginBottom="2dp"
-    android:padding="5dp"
+    android:padding="2dp"
     card_view:cardCornerRadius="10dp"
     card_view:cardElevation="@dimen/cardview_default_elevation"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="60dp"
     android:background="?android:attr/selectableItemBackground">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/playlistImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:padding="5dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/playlist_header" />
+        <android.support.v7.widget.CardView
+            android:id="@+id/playlistImageCard"
+            card_view:cardCornerRadius="10dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp">
+            <RelativeLayout
+                android:id="@+id/playlistImageLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:id="@+id/SubPlaylistImage1"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentStart="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage2"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage3"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage4"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:scaleType="fitXY"/>
+            </RelativeLayout>
+
+        </android.support.v7.widget.CardView>
 
         <TextView
             android:id="@+id/playlistName"
+            android:text="@string/playlist_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            android:layout_marginStart="5dp"
+            android:textSize="16sp"
+            android:layout_toEndOf="@id/playlistImageCard"/>
 
         <TextView
-            android:id="@+id/date"
+            android:id="@+id/playlistSize"
+            android:text="@string/songs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/playlistName"
-            android:layout_centerHorizontal="true"/>
-
-        <TextView
-            android:id="@+id/time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/date"
-            android:layout_centerHorizontal="true"/>
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@id/playlistImageCard"/>
 
         <ImageButton
             android:id="@+id/more_btn"
