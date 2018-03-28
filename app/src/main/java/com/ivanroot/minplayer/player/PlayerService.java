@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.player;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -32,7 +33,6 @@ import android.widget.Toast;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
-import com.ivanroot.minplayer.Manifest;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.PlayerActivity;
 import com.ivanroot.minplayer.activity.StartupActivity;

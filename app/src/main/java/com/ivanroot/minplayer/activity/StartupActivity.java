@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.activity;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -11,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.ivanroot.minplayer.Manifest;
 import com.ivanroot.minplayer.R;
 
 import java.util.ArrayList;
@@ -120,12 +120,9 @@ public class StartupActivity extends AppCompatActivity {
     private void startPlayer(int waitMillis){
         Log.i("StartupActivity","startPlayer");
         new Handler()
-                .postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent intent = new Intent(StartupActivity.this,MainActivity.class);
-                        startActivity(intent);
-                    }
+                .postDelayed(() -> {
+                    Intent intent = new Intent(StartupActivity.this,MainActivity.class);
+                    startActivity(intent);
                 },waitMillis);
     }
 }

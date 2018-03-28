@@ -28,15 +28,15 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
     public PlaylistViewHolder(View itemView) {
         super(itemView);
         playlistImages = new ImageView[]{
-                (ImageView)itemView.findViewById(R.id.SubPlaylistImage1),
-                (ImageView)itemView.findViewById(R.id.SubPlaylistImage2),
-                (ImageView)itemView.findViewById(R.id.SubPlaylistImage3),
-                (ImageView)itemView.findViewById(R.id.SubPlaylistImage4)
+                itemView.findViewById(R.id.SubPlaylistImage1),
+                itemView.findViewById(R.id.SubPlaylistImage2),
+                itemView.findViewById(R.id.SubPlaylistImage3),
+                itemView.findViewById(R.id.SubPlaylistImage4)
 
         };
-        playlistName = (TextView)itemView.findViewById(R.id.playlistName);
-        playlistSize = (TextView)itemView.findViewById(R.id.playlistSize);
-        moreBtn = (ImageButton)itemView.findViewById(R.id.more_btn);
+        playlistName = itemView.findViewById(R.id.playlistName);
+        playlistSize = itemView.findViewById(R.id.playlistSize);
+        moreBtn = itemView.findViewById(R.id.more_btn);
     }
 
     public void representPlaylistItem(Context context, PlaylistItem playlistItem){
@@ -45,12 +45,13 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
             playlistSize.setText(playlistItem.getPlaylistSize() + " " + context.getResources().getString(R.string.songs));
             for (int i = 0; i < 4; i++) {
                 String imagePath = playlistItem.getImagePaths()[i];
-                playlistImages[i].setBackgroundColor(0xFFFFFF);
                 if (imagePath != null) {
                     Picasso.with(context)
                             .load(Utils.getFileFromPath(imagePath))
                             .error(R.drawable.default_album_art)
                             .into(playlistImages[i]);
+                }else{
+                    playlistImages[i].setImageResource(R.color.colorWhite);
                 }
             }
         }catch (NullPointerException ex){

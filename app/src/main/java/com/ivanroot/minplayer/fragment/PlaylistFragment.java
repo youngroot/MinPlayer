@@ -98,10 +98,10 @@ public class PlaylistFragment extends NavFragmentBase {
 
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
             playlistImages = new ImageView[]{
-                    (ImageView)view.findViewById(R.id.SubPlaylistImage1),
-                    (ImageView)view.findViewById(R.id.SubPlaylistImage2),
-                    (ImageView)view.findViewById(R.id.SubPlaylistImage3),
-                    (ImageView)view.findViewById(R.id.SubPlaylistImage4)
+                    view.findViewById(R.id.SubPlaylistImage1),
+                    view.findViewById(R.id.SubPlaylistImage2),
+                    view.findViewById(R.id.SubPlaylistImage3),
+                    view.findViewById(R.id.SubPlaylistImage4)
 
             };
         }
@@ -115,7 +115,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
 
-            playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
+            playFab = view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
                 rxBus.post(ACTION_SET_PLAYLIST, playlistName);
                 if(adapter.getPlaylist().size() > 0) {
@@ -141,7 +141,7 @@ public class PlaylistFragment extends NavFragmentBase {
                 : R.layout.playlist_recycler_layout);
         View view = inflater.inflate(layoutResource, container, false);
 
-        appBarLayout = (AppBarLayout) view.findViewById(R.id.app_bar);
+        appBarLayout = view.findViewById(R.id.app_bar);
 
         return view;
     }
@@ -149,11 +149,11 @@ public class PlaylistFragment extends NavFragmentBase {
     private void setupRecycler(View view) {
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        audioRecyclerView = (FastScrollRecyclerView) view.findViewById(R.id.audio_recycler);
+        audioRecyclerView = view.findViewById(R.id.audio_recycler);
         audioRecyclerView.setHasFixedSize(true);
         audioRecyclerView.setLayoutManager(layoutManager);
-        DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(audioRecyclerView.getContext(),LinearLayoutManager.VERTICAL);
-        audioRecyclerView.addItemDecoration(mDividerItemDecoration);
+        //DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(audioRecyclerView.getContext(),LinearLayoutManager.VERTICAL);
+        //audioRecyclerView.addItemDecoration(mDividerItemDecoration);
         audioRecyclerView.setStateChangeListener(new OnFastScrollStateChangeListener() {
 
             @Override
