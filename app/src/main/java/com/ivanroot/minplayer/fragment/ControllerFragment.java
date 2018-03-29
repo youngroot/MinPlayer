@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.fragment;
 
+import android.app.ActivityOptions;
 import android.app.Fragment;
 import android.content.Intent;
 import android.media.MediaMetadataRetriever;
@@ -26,7 +27,6 @@ import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.utils.Utils;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -111,7 +111,7 @@ public class ControllerFragment extends Fragment {
 
     private void prepareViews(View view) {
 
-        albumArt = (ImageView) view.findViewById(R.id.songAlbumArt);
+        albumArt = (ImageView) view.findViewById(R.id.albumArt);
         title = (TextView) view.findViewById(R.id.songTitle);
         album = (TextView) view.findViewById(R.id.songAlbum);
         artist = (TextView) view.findViewById(R.id.songArtist);

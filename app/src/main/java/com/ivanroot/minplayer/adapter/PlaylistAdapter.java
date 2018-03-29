@@ -35,7 +35,7 @@ public class PlaylistAdapter extends BaseAdapter {
     private TextView album;
     private TextView artist;
     private ImageView albumArt;
-    private ImageButton extraBtn;
+    private ImageButton moreBtn;
     private Animation fadeIn;
     private Disposable disposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
@@ -81,14 +81,14 @@ public class PlaylistAdapter extends BaseAdapter {
 
         if(view == null) {
             LayoutInflater inflater = activity.getLayoutInflater();
-            view = inflater.inflate(R.layout.audio_item, null);
+            view = inflater.inflate(R.layout.audio_item_playlist_add_dialog, null);
         }
 
         title = (TextView)view.findViewById(R.id.songTitle);
         album = (TextView)view.findViewById(R.id.songAlbum);
         artist = (TextView)view.findViewById(R.id.songArtist);
-        albumArt = (ImageView)view.findViewById(R.id.songAlbumArt);
-        //extraBtn = (ImageButton)view.findViewById(R.id.extraBtn);
+        albumArt = (ImageView)view.findViewById(R.id.albumArt);
+        //moreBtn = (ImageButton)view.findViewById(R.id.moreBtn);
 
         Audio tempAudio = getItem(position);
         title.setText(tempAudio.getTitle());

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/tools"
+    android:id="@+id/playlist_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/playlistImageCardOuter"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        card_view:cardCornerRadius="12dp"
+        card_view:cardElevation="2dp">
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/playlistImageCardInner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            card_view:cardCornerRadius="12dp"
+            card_view:cardElevation="0dp">
+
+            <RelativeLayout
+                android:id="@+id/playlistImageLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:id="@+id/SubPlaylistImage1"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentStart="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage2"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage3"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:scaleType="fitXY"/>
+                <ImageView
+                    android:id="@+id/SubPlaylistImage4"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:scaleType="fitXY"/>
+            </RelativeLayout>
+        </android.support.v7.widget.CardView>
+    </android.support.v7.widget.CardView>
+
+    <TextView
+        android:id="@+id/playlistName"
+        android:text="@string/playlist_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="5dp"
+        android:textSize="16sp"
+        android:layout_toEndOf="@id/playlistImageCardOuter"/>
+
+    <TextView
+        android:id="@+id/playlistSize"
+        android:text="@string/songs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/playlistName"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@id/playlistImageCardOuter"/>
+
+</RelativeLayout>

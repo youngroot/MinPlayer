@@ -79,11 +79,11 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     @Override
     public void onBindViewHolder(PlaylistViewHolder playlistViewHolder, int i) {
         PlaylistItem playlistItem = playlistItems.get(i);
-        playlistViewHolder.representPlaylistItem(context,playlistItem);
+        playlistViewHolder.representItem(context,playlistItem);
         playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, v);
-            popupMenu.inflate(R.menu.playlist_more_menu);
+            popupMenu.inflate(R.menu.playlist_item_more_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.remove_playlist:

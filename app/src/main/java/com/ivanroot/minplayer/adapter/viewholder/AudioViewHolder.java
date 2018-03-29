@@ -1,8 +1,8 @@
 package com.ivanroot.minplayer.adapter.viewholder;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,13 +11,11 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.utils.Utils;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
-
 /**
  * Created by Ivan Root on 16.12.2017.
  */
 
-public class AudioViewHolder extends RecyclerView.ViewHolder {
+public class AudioViewHolder extends BaseItemViewHolder<Audio> {
 
     private TextView title;
     private TextView album;
@@ -29,11 +27,13 @@ public class AudioViewHolder extends RecyclerView.ViewHolder {
         title = (TextView) itemView.findViewById(R.id.songTitle);
         album = (TextView) itemView.findViewById(R.id.songAlbum);
         artist = (TextView) itemView.findViewById(R.id.songArtist);
-        albumArt = (ImageView) itemView.findViewById(R.id.songAlbumArt);
+        albumArt = (ImageView) itemView.findViewById(R.id.albumArt);
+        moreBtn = (ImageButton) itemView.findViewById(R.id.moreBtn);
 
     }
 
-    public void representAudioItem(Context context, Audio audio) {
+    @Override
+    public void representItem(Context context, Audio audio) {
         title.setText(audio.getTitle());
         album.setText(audio.getAlbum());
         artist.setText(audio.getArtist());
@@ -42,6 +42,6 @@ public class AudioViewHolder extends RecyclerView.ViewHolder {
                 .load(Utils.getFileFromPath(audio.getAlbumArtPath()))
                 .error(R.drawable.default_album_art)
                 .into(albumArt);
-
     }
+
 }

@@ -17,29 +17,29 @@ import com.squareup.picasso.Picasso;
  * Created by Ivan Root on 12.02.2018.
  */
 
-public class PlaylistViewHolder extends RecyclerView.ViewHolder {
+public class PlaylistViewHolder extends BaseItemViewHolder<PlaylistItem> {
 
     private ImageView[] playlistImages;
     private ImageView playlistImage;
     private TextView playlistName;
     private TextView playlistSize;
-    private ImageButton moreBtn;
+
 
     public PlaylistViewHolder(View itemView) {
         super(itemView);
         playlistImages = new ImageView[]{
-                itemView.findViewById(R.id.SubPlaylistImage1),
-                itemView.findViewById(R.id.SubPlaylistImage2),
-                itemView.findViewById(R.id.SubPlaylistImage3),
-                itemView.findViewById(R.id.SubPlaylistImage4)
+                (ImageView) itemView.findViewById(R.id.SubPlaylistImage1),
+                (ImageView) itemView.findViewById(R.id.SubPlaylistImage2),
+                (ImageView) itemView.findViewById(R.id.SubPlaylistImage3),
+                (ImageView) itemView.findViewById(R.id.SubPlaylistImage4)
 
         };
-        playlistName = itemView.findViewById(R.id.playlistName);
-        playlistSize = itemView.findViewById(R.id.playlistSize);
-        moreBtn = itemView.findViewById(R.id.more_btn);
+        playlistName = (TextView) itemView.findViewById(R.id.playlistName);
+        playlistSize = (TextView) itemView.findViewById(R.id.playlistSize);
+        moreBtn = (ImageButton) itemView.findViewById(R.id.moreBtn);
     }
 
-    public void representPlaylistItem(Context context, PlaylistItem playlistItem){
+    public void representItem(Context context, PlaylistItem playlistItem){
         try {
             playlistName.setText(playlistItem.getName());
             playlistSize.setText(playlistItem.getPlaylistSize() + " " + context.getResources().getString(R.string.songs));
@@ -61,7 +61,4 @@ public class PlaylistViewHolder extends RecyclerView.ViewHolder {
 
     }
 
-    public void setMoreBtnOnClickListener(View.OnClickListener onClickListener){
-        moreBtn.setOnClickListener(onClickListener);
-    }
 }

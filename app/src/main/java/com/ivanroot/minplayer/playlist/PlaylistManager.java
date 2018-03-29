@@ -16,6 +16,7 @@ import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.storio.StorIOContentResolverFactory;
 import com.ivanroot.minplayer.utils.Utils;
+import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
 
@@ -26,6 +27,7 @@ import java.util.Objects;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -43,7 +45,8 @@ public class PlaylistManager {
 
     private static final PlaylistManager ourInstance = new PlaylistManager();
 
-    private PlaylistManager() {}
+    private PlaylistManager() {
+    }
 
     public static synchronized PlaylistManager getInstance() {
         return ourInstance;
@@ -61,7 +64,7 @@ public class PlaylistManager {
         return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
     }
 
-    public Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context){
+    public Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context) {
         return StorIOContentResolverFactory.getPlaylistItemsObservable(context);
     }
 
@@ -81,23 +84,24 @@ public class PlaylistManager {
 
     }
 
-    public synchronized void addToPlaylist(Context context, String playlistName, Audio audio){
-        try {
-
+    public synchronized void addToPlaylist(Context context, String playlistName, Audio audio) {
+        Completable.create(emitter -> {
             ContentResolver contentResolver = context.getContentResolver();
 
             String[] projection = new String[]{MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME};
-            String selection = MediaStore.Audio.Playlists.NAME + " =? ";
+            String selection = MediaStore.Audio.Playlists.NAME + " = ?";
             String[] selectionArgs = new String[]{playlistName};
 
             Cursor cursor = contentResolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
             cursor.moveToFirst();
 
             long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-            int playlistSize = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._COUNT));
             cursor.close();
 
             Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
+            cursor = contentResolver.query(membersUri, null, null, null, null);
+            int playlistSize = cursor.getCount();
+            cursor.close();
 
             ContentValues contentValues = new ContentValues(2);
             contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audio.getId());
@@ -105,14 +109,20 @@ public class PlaylistManager {
 
             contentResolver.insert(membersUri, contentValues);
 
-        }catch (CursorIndexOutOfBoundsException ex){
-            ex.printStackTrace();
-            Log.e(toString(),ex.getMessage());
-        }
+            emitter.onComplete();
+
+
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(throwable -> {
+                    throwable.printStackTrace();
+                    Log.e(toString(), throwable.getMessage());
+                })
+                .subscribe();
     }
 
-    public PlaylistItem getPlaylistItem(Context context, String playlistName){
-        if(playlistName.equals(ALL_TRACKS_PLAYLIST)){
+    public PlaylistItem getPlaylistItem(Context context, String playlistName) {
+        if (playlistName.equals(ALL_TRACKS_PLAYLIST)) {
             PlaylistItem playlistItem = new PlaylistItem();
             playlistItem.setName(ALL_TRACKS_PLAYLIST);
             return playlistItem;
@@ -148,7 +158,7 @@ public class PlaylistManager {
 
     public String getTitleFromPlaylistName(Context context, String playlistName) {
         String title;
-        switch (playlistName){
+        switch (playlistName) {
             case ALL_TRACKS_PLAYLIST:
                 title = context.getResources().getString(R.string.all_tracks_playlist);
                 break;

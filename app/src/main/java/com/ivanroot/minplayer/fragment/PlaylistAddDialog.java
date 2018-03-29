@@ -3,6 +3,7 @@ package com.ivanroot.minplayer.fragment;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -71,6 +72,12 @@ public class PlaylistAddDialog extends DialogFragment {
 
         builder.setView(dialogView);
         return builder.create();
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        adapter.dispose();
+        super.onDismiss(dialog);
     }
 
 }

@@ -5,8 +5,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.PlaylistRecyclerAdapter;
@@ -26,8 +27,6 @@ import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.squareup.picasso.Picasso;
-
-import java.io.File;
 
 import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_SET_PLAYLIST;
@@ -52,6 +51,8 @@ public class PlaylistFragment extends NavFragmentBase {
     private ImageView playlistImage = null;
     private ImageView[] playlistImages = null;
     private Bus rxBus = RxBus.getInstance();
+    private boolean selectorDialogIsActive = false;
+    private Audio selectedAudio;
 
     public PlaylistFragment(){}
 
@@ -65,7 +66,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-
+        super.onCreate(savedInstanceState);
         playlistManager = PlaylistManager.getInstance();
 
         if(savedInstanceState == null) {
@@ -79,7 +80,6 @@ public class PlaylistFragment extends NavFragmentBase {
 
         adapter = new PlaylistRecyclerAdapter(getActivity(), playlistName);
         rxBus.register(this);
-        super.onCreate(savedInstanceState);
     }
 
     @Nullable
@@ -90,18 +90,18 @@ public class PlaylistFragment extends NavFragmentBase {
         setupDrawer(view);
         setupRecycler(view);
 
-
         if (savedInstanceState != null) {
-            audioRecyclerView.getLayoutManager()
+            audioRecyclerView
+                    .getLayoutManager()
                     .onRestoreInstanceState(savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT));
         }
 
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
             playlistImages = new ImageView[]{
-                    view.findViewById(R.id.SubPlaylistImage1),
-                    view.findViewById(R.id.SubPlaylistImage2),
-                    view.findViewById(R.id.SubPlaylistImage3),
-                    view.findViewById(R.id.SubPlaylistImage4)
+                    (ImageView) view.findViewById(R.id.SubPlaylistImage1),
+                    (ImageView) view.findViewById(R.id.SubPlaylistImage2),
+                    (ImageView) view.findViewById(R.id.SubPlaylistImage3),
+                    (ImageView) view.findViewById(R.id.SubPlaylistImage4)
 
             };
         }
@@ -112,10 +112,9 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void prepareListeners(View view) {
 
-
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
 
-            playFab = view.findViewById(R.id.fab_play);
+            playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
                 rxBus.post(ACTION_SET_PLAYLIST, playlistName);
                 if(adapter.getPlaylist().size() > 0) {
@@ -124,6 +123,22 @@ public class PlaylistFragment extends NavFragmentBase {
                 appBarLayout.setExpanded(false, true);
             });
         }
+
+        adapter.setMoreBtnListener((v,playlist,i) -> {
+            PopupMenu popupMenu = new PopupMenu(getActivity(), v);
+            popupMenu.inflate(R.menu.audio_item_more_menu);
+            popupMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.add_to_playlist:
+                        selectedAudio = adapter.getPlaylist().getAudio(i);
+                        showPlaylistSelectionDialog(selectedAudio);
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+            popupMenu.show();
+        });
 
         adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST,playlistName);
@@ -141,7 +156,7 @@ public class PlaylistFragment extends NavFragmentBase {
                 : R.layout.playlist_recycler_layout);
         View view = inflater.inflate(layoutResource, container, false);
 
-        appBarLayout = view.findViewById(R.id.app_bar);
+        appBarLayout = (AppBarLayout) view.findViewById(R.id.app_bar);
 
         return view;
     }
@@ -149,7 +164,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private void setupRecycler(View view) {
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        audioRecyclerView = view.findViewById(R.id.audio_recycler);
+        audioRecyclerView = (FastScrollRecyclerView) view.findViewById(R.id.audio_recycler);
         audioRecyclerView.setHasFixedSize(true);
         audioRecyclerView.setLayoutManager(layoutManager);
         //DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(audioRecyclerView.getContext(),LinearLayoutManager.VERTICAL);
@@ -196,15 +211,35 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onViewCreated(view, savedInstanceState);
         String title = playlistManager.getTitleFromPlaylistName(getActivity(),playlistName);
         activity.getSupportActionBar().setTitle(title);
-        if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+
+        if(savedInstanceState != null){
+            selectorDialogIsActive = savedInstanceState.getBoolean("selector_dialog_is_active");
+            String json = savedInstanceState.getString("selected_audio");
+            selectedAudio = new Gson().fromJson(json,Audio.class);
+
+            if(selectorDialogIsActive){
+                PlaylistSelectorDialog dialog = (PlaylistSelectorDialog)getActivity()
+                        .getFragmentManager()
+                        .findFragmentByTag(getActivity().getResources().getString(R.string.add_to_playlist));
+                if(dialog != null){
+                    dialog.setPlaylistItemClickListener(playlistItem -> {
+                        playlistManager.addToPlaylist(getActivity(),playlistItem.getName(),selectedAudio);
+                    dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
+                    });
+                }
+            }
 
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        Gson gson = new Gson();
+        String json = gson.toJson(selectedAudio);
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, audioRecyclerView.getLayoutManager().onSaveInstanceState());
         outState.putString("playlist_name",playlistName);
+        outState.putBoolean("selector_dialog_is_active",selectorDialogIsActive);
+        outState.putString("selected_audio",json);
         super.onSaveInstanceState(outState);
     }
 
@@ -245,4 +280,13 @@ public class PlaylistFragment extends NavFragmentBase {
             Log.e(toString(),ex.getMessage());
         }
     }
+
+    public void showPlaylistSelectionDialog(Audio audio){
+        PlaylistSelectorDialog dialog = new PlaylistSelectorDialog();
+        dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(),playlistItem.getName(),audio));
+        dialog.show(getActivity().getFragmentManager(),getActivity().getResources().getString(R.string.add_to_playlist));
+        selectorDialogIsActive = true;
+        dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
+    }
+
 }
