@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/music"
         android:supportsRtl="true"
-        android:theme="@style/BlueTheme">
+        android:theme="@style/GreyTheme">
         <activity
             android:name=".activity.PlayerActivity"
             android:launchMode="singleTask" />
@@ -36,7 +36,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/BlueTheme"
+            android:theme="@style/GreyTheme"
             android:launchMode="singleTask">
 
         </activity>

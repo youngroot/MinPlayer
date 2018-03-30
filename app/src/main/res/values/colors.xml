@@ -4,11 +4,12 @@
     <color name="colorDarkBlue">#303F9F</color>
     <color name="colorPink">#FF4081</color>
     <color name="colorGrey">#616A6B</color>
+    <color name="colorSilver">#C0C0C0</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorBlack">#000000</color>
     <color name="colorBlackTransparent">#8F000000</color>
     <color name="colorDarkMagenta">#8B008B</color>
     <color name="colorPurple">#800080</color>
     <color name="colorMediumPurple">#9370DB</color>
-    <color name="black_overlay">#66000000</color>
+    <color name="colorBlackOverlay">#66000000</color>
 </resources>

@@ -1,13 +1,13 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="BlueTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="GreyTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- enable window content transitions -->
         <item name="android:windowActivityTransitions">false</item>
 
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorBlue</item>
-        <item name="colorPrimaryDark">@color/colorDarkBlue</item>
+        <item name="colorPrimary">@color/colorGrey</item>
+        <item name="colorPrimaryDark">@color/colorGrey</item>
         <item name="colorAccent">@color/colorMediumPurple</item>
         <item name = "android:textColor">@color/colorBlack</item>
         <!-- specify enter and exit transitions -->
@@ -19,9 +19,13 @@
             @transition/change_image_transform</item>
         <item name="android:windowSharedElementExitTransition">
             @transition/change_image_transform</item>
+
     </style>
 
-
+    <style name="CollapsingToolbarLayoutExpandedTextStyle" parent="GreyTheme">
+        <item name="android:textColor">@android:color/transparent</item>
+        <item name="android:textSize">0sp</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

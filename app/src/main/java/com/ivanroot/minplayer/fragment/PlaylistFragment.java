@@ -13,11 +13,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.adapter.PlaylistRecyclerAdapter;
+import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.Playlist;
@@ -43,13 +44,15 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private PlaylistItem playlistItem = null;
     private String playlistName = null;
-    private PlaylistRecyclerAdapter adapter;
+    private PlaylistAdapter adapter;
     private FastScrollRecyclerView audioRecyclerView;
     private FloatingActionButton playFab;
     private PlaylistManager playlistManager;
     private AppBarLayout appBarLayout;
     private ImageView playlistImage = null;
     private ImageView[] playlistImages = null;
+    private TextView playlistNameView;
+    private TextView playlistSizeView;
     private Bus rxBus = RxBus.getInstance();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
@@ -78,7 +81,7 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistName = savedInstanceState.getString("playlist_name");
         }
 
-        adapter = new PlaylistRecyclerAdapter(getActivity(), playlistName);
+        adapter = new PlaylistAdapter(getActivity(), playlistName);
         rxBus.register(this);
     }
 
@@ -97,6 +100,8 @@ public class PlaylistFragment extends NavFragmentBase {
         }
 
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+            playlistNameView = (TextView)view.findViewById(R.id.playlistName);
+            playlistSizeView = (TextView)view.findViewById(R.id.playlistSize);
             playlistImages = new ImageView[]{
                     (ImageView) view.findViewById(R.id.SubPlaylistImage1),
                     (ImageView) view.findViewById(R.id.SubPlaylistImage2),
@@ -146,14 +151,17 @@ public class PlaylistFragment extends NavFragmentBase {
 
         });
 
-        adapter.setNewPlaylistUpdateListener(this::setImages);
+        adapter.setNewPlaylistUpdateListener(playlist -> {
+            setImages(playlist);
+            setText(playlist);
+        });
     }
 
     private View getView(LayoutInflater inflater, @Nullable ViewGroup container) {
 
         int layoutResource = (playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)
-                ? R.layout.all_tracks_recycler_layout
-                : R.layout.playlist_recycler_layout);
+                ? R.layout.all_tracks_playlist_fragment
+                : R.layout.playlist_fragment);
         View view = inflater.inflate(layoutResource, container, false);
 
         appBarLayout = (AppBarLayout) view.findViewById(R.id.app_bar);
@@ -256,11 +264,6 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onDestroy();
     }
 
-    @Override
-    public String toString() {
-        return NAME;
-    }
-
     private void setImages(Playlist playlist){
         try {
             int i = 0;
@@ -279,6 +282,19 @@ public class PlaylistFragment extends NavFragmentBase {
             ex.printStackTrace();
             Log.e(toString(),ex.getMessage());
         }
+    }
+
+    private void setText(Playlist playlist){
+       try {
+
+           playlistNameView.setText(playlist.getName());
+           String playlistSize = playlist.size()+ " " + getActivity().getResources().getString(R.string.songs);
+           playlistSizeView.setText(playlistSize);
+       }catch (NullPointerException ex){
+           ex.printStackTrace();
+           Log.e(toString(),ex.getMessage());
+       }
+
     }
 
     public void showPlaylistSelectionDialog(Audio audio){

@@ -19,7 +19,7 @@ import com.ivanroot.minplayer.visualization.VisualizerSurface;
  * Created by Ivan Root on 02.11.2017.
  */
 
-public class VisFragment extends Fragment{
+public class VisFragment extends Fragment {
 
     public static final String NAME = "VisFragment";
     private int audioSessionId = 0;
@@ -27,19 +27,18 @@ public class VisFragment extends Fragment{
     private static final int VIOLET = 0xFFEE82EE;
     private VisualizerSurface visSurface;
 
-    public VisFragment(int audioSessionId){
+    public VisFragment() {}
+
+    public VisFragment(int audioSessionId) {
         this.audioSessionId = audioSessionId;
-    }
-
-    public static VisFragment newInstance(int audioSessionId){
-
-        VisFragment visFragment = new VisFragment(audioSessionId);
-        return visFragment;
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        if(savedInstanceState != null){
+            audioSessionId = savedInstanceState.getInt("audio_session_id");
+        }
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = getActivity().getTheme();
         theme.resolveAttribute(R.attr.colorAccent, typedValue, true);
@@ -50,19 +49,19 @@ public class VisFragment extends Fragment{
                 .useDecibels(true)
                 .useRoundedCorners(true)
                 .setColors(Color.WHITE, color, color);
-        visSurface = new VisualizerSurface(getActivity(),audioSessionId,vis);
+        visSurface = new VisualizerSurface(getActivity(), audioSessionId, vis);
         return visSurface;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-
         super.onActivityCreated(savedInstanceState);
-
     }
 
     @Override
-    public String toString() {
-        return NAME;
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt("audio_session_id",audioSessionId);
+        super.onSaveInstanceState(outState);
     }
+
 }

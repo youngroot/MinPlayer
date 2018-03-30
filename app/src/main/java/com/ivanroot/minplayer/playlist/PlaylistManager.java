@@ -64,6 +64,10 @@ public class PlaylistManager {
         return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
     }
 
+    public Observable<List<Audio>>getAllAudioObservable(Context context){
+        return StorIOContentResolverFactory.getAllAudioObservable(context,ASC_SORT_ORDER);
+    }
+
     public Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context) {
         return StorIOContentResolverFactory.getPlaylistItemsObservable(context);
     }

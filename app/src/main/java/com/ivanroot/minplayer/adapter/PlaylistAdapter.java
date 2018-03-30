@@ -1,115 +1,109 @@
 package com.ivanroot.minplayer.adapter;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.BaseAdapter;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.adapter.viewholder.AudioViewHolder;
+import com.ivanroot.minplayer.audio.OnAudioClickListener;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.squareup.picasso.Picasso;
-
-import java.io.File;
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
-
 /**
- * Created by Ivan Root on 02.07.2017.
+ * Created by Ivan Root on 16.12.2017.
  */
 
-public class PlaylistAdapter extends BaseAdapter {
+public class PlaylistAdapter extends RecyclerView.Adapter<AudioViewHolder>
+        implements FastScrollRecyclerView.SectionedAdapter {
 
     private Activity activity;
     private Playlist playlist;
-    private TextView title;
-    private TextView album;
-    private TextView artist;
-    private ImageView albumArt;
-    private ImageButton moreBtn;
-    private Animation fadeIn;
-    private Disposable disposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
-    private boolean isScrolling = false;
-
+    private Disposable disposable;
+    private OnAudioClickListener audioClickListener;
+    private OnNewPlaylistUpdateListener playlistListener;
+    private OnMoreBtnClickListener moreBtnListener;
 
     public PlaylistAdapter(Activity activity, String playlistName){
 
         this.activity = activity;
-        fadeIn = AnimationUtils.loadAnimation(activity, R.anim.fade_in);
-        fadeIn.setDuration(500);
-
-        disposable = playlistManager.getPlaylistObservable(activity,playlistName)
+        disposable = playlistManager.getPlaylistObservable(this.activity,playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 
     }
 
+    public void setAudioClickListener(OnAudioClickListener audioClickListener){
+        this.audioClickListener = audioClickListener;
+    }
+
+    public void setNewPlaylistUpdateListener(OnNewPlaylistUpdateListener playlistListener){
+        this.playlistListener = playlistListener;
+    }
+
+    public void setMoreBtnListener(OnMoreBtnClickListener moreBtnListener){
+        this.moreBtnListener = moreBtnListener;
+    }
+
     private void setPlaylist(Playlist playlist){
         this.playlist = playlist;
+        playlistListener.onNewPlaylist(playlist);
         notifyDataSetChanged();
     }
 
+    public Playlist getPlaylist(){
+        return this.playlist;
+    }
+
     @Override
-    public int getCount() {
+    public AudioViewHolder onCreateViewHolder(ViewGroup parent, int i) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.audio_item,parent,false);
+        return new AudioViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(AudioViewHolder audioViewHolder, int i) {
+        audioViewHolder.representItem(activity, playlist.getAudio(i));
+        audioViewHolder.itemView
+                .setOnClickListener(v -> audioClickListener.OnAudioClick(playlist.getAudio(i),playlist.getName()));
+        audioViewHolder
+                .setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v,playlist,i));
+    }
+
+    @Override
+    public int getItemCount() {
         if(playlist != null)
             return playlist.size();
         else return 0;
     }
 
-    @Override
-    public Audio getItem(int position) {
-        return playlist.getAudio(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return (long) position;
-    }
-
-    @Override
-    public View getView(int position, View view, ViewGroup parent) {
-
-        if(view == null) {
-            LayoutInflater inflater = activity.getLayoutInflater();
-            view = inflater.inflate(R.layout.audio_item_playlist_add_dialog, null);
-        }
-
-        title = (TextView)view.findViewById(R.id.songTitle);
-        album = (TextView)view.findViewById(R.id.songAlbum);
-        artist = (TextView)view.findViewById(R.id.songArtist);
-        albumArt = (ImageView)view.findViewById(R.id.albumArt);
-        //moreBtn = (ImageButton)view.findViewById(R.id.moreBtn);
-
-        Audio tempAudio = getItem(position);
-        title.setText(tempAudio.getTitle());
-        album.setText(tempAudio.getAlbum());
-        artist.setText(tempAudio.getArtist());
-        //albumArt.setImageResource(R.drawable.default_album_art);
-        //albumArtLoader.setAlbumArtPath(tempAudio.getData(),albumArt);
-        try {
-            Picasso.with(activity)
-                    .load(new File(tempAudio.getAlbumArtPath()))
-                    .error(R.drawable.default_album_art)
-                    .into(albumArt);
-        }catch (NullPointerException ex){
-            albumArt.setImageResource(R.drawable.default_album_art);
-        }
-        return view;
-    }
-
     public void dispose(){
         if(disposable != null)
             disposable.dispose();
+    }
+
+
+    @NonNull
+    @Override
+    public String getSectionName(int i) {
+        return playlist.getAudio(i).getTitle().substring(0,1);
+    }
+
+    public interface OnNewPlaylistUpdateListener {
+        void onNewPlaylist(Playlist playlist);
+    }
+
+    public interface OnMoreBtnClickListener{
+        void onMoreBtnClick(View view, Playlist playlist, int i);
     }
 
 }

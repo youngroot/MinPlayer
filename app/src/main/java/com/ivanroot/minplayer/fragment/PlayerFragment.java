@@ -25,7 +25,6 @@ import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.utils.Utils;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +104,7 @@ public class PlayerFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.player_fragment_layout, container, false);
+        View view = inflater.inflate(R.layout.player_fragment, container, false);
         prepareViews(view);
         prepareListeners();
         initAnimations();
@@ -214,12 +213,6 @@ public class PlayerFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         rxBus.unregister(this);
-    }
-
-    public static PlayerFragment newInstance() {
-
-        PlayerFragment playerFragment = new PlayerFragment();
-        return playerFragment;
     }
 
 

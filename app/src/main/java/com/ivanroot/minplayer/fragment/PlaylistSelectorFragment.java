@@ -28,11 +28,6 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
 
 
     @Override
-    public String toString() {
-        return NAME;
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new PlaylistSelectorAdapter(getActivity());
@@ -42,7 +37,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.playlist_selector_layout, container, false);
+        View view = inflater.inflate(R.layout.playlist_selector_fragment, container, false);
         setupDrawer(view);
         setupRecycler(view);
         addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);

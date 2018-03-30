@@ -14,12 +14,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.adapter.viewholder.BaseItemViewHolder;
 import com.ivanroot.minplayer.adapter.viewholder.PlaylistViewHolder;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -36,9 +33,11 @@ public class PlaylistSelectorDialog extends DialogFragment {
     private PlaylistSelectorAdapter.OnPlaylistItemClickListener playlistItemClickListener;
     private DialogInterface.OnDismissListener dismissListener;
 
-    public void setPlaylistItemClickListener(PlaylistSelectorAdapter.OnPlaylistItemClickListener playlistItemClickListener){
+    public void setPlaylistItemClickListener(@NonNull PlaylistSelectorAdapter.OnPlaylistItemClickListener playlistItemClickListener){
         this.playlistItemClickListener = playlistItem -> {
-            playlistItemClickListener.onPlaylistItemClick(playlistItem);
+            if(playlistItemClickListener != null) {
+                playlistItemClickListener.onPlaylistItemClick(playlistItem);
+            }
             Activity activity = getActivity();
             String message = activity.getResources().getString(R.string.audio_was_added_to) + " " + playlistItem.getName();
             Toast.makeText(activity,message,Toast.LENGTH_SHORT).show();
@@ -54,7 +53,7 @@ public class PlaylistSelectorDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.playlist_selector_dialog_layout, null);
+        View dialogView = inflater.inflate(R.layout.playlist_selector_dialog, null);
         FastScrollRecyclerView recyclerView = (FastScrollRecyclerView)dialogView.findViewById(R.id.playlist_recycler);
         adapter = new PlaylistSelectorAdapter(getActivity(),playlistItemClickListener);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -65,11 +64,8 @@ public class PlaylistSelectorDialog extends DialogFragment {
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        try {
+        if(dismissListener != null) {
             dismissListener.onDismiss(dialog);
-        }catch (NullPointerException ex){
-            ex.printStackTrace();
-            Log.d(toString(),ex.getMessage());
         }
         adapter.dispose();
         super.onDismiss(dialog);

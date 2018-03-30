@@ -1,11 +1,8 @@
 package com.ivanroot.minplayer.fragment;
 
-import android.app.ActivityOptions;
 import android.app.Fragment;
 import android.content.Intent;
-import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,21 +71,9 @@ public class ControllerFragment extends Fragment {
     private Disposable updateProgressDisposable;
 
 
-    public ControllerFragment() {
-        super();
-    }
-
-    public static ControllerFragment newInstance() {
-        ControllerFragment controllerFragment = new ControllerFragment();
-        return controllerFragment;
-    }
-
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        Handler updater = new Handler();
         rxBus.register(this);
         initAnimation();
     }
@@ -97,7 +82,7 @@ public class ControllerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.media_controller, container, false);
+        View view = inflater.inflate(R.layout.media_controller_fragment, container, false);
         this.container = container;
         prepareViews(view);
         prepareListeners(view);

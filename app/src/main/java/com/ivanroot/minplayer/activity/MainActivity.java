@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity
     private PlayerService player;
     private boolean wasStarted = false;
     private Toolbar toolbar;
-    private FloatingActionButton addBtn;
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle drawerToggle;
     private NavigationView navigationView;
@@ -47,14 +46,11 @@ public class MainActivity extends AppCompatActivity
     private Map<String, Integer> itemId;
     private ControllerFragment controllerFragment;
     private Bus rxBus = RxBus.getInstance();
-    public static final String ACTION_LAUNCH_FRAGMENT = "com.ivanroot.minplayer.action_launch_fragment";
-    public static final String EVENT_FRAGMENT_LAUNCHED = "com.ivanroot.minplayer.action_launch_fragment";
 
     private ServiceConnection conn = new ServiceConnection() {
+
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
-
-
             PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
             player = binder.getService();
             controllerFragment = new ControllerFragment();
@@ -72,7 +68,6 @@ public class MainActivity extends AppCompatActivity
     };
 
     private void initItemId() {
-
         itemId = new HashMap<>();
         itemId.put(PlaylistFragment.NAME, R.id.all_audio);
         itemId.put(PlaylistSelectorFragment.NAME, R.id.playlists);
@@ -89,8 +84,6 @@ public class MainActivity extends AppCompatActivity
         setupDrawer();
 
         if (savedInstanceState == null) {
-
-            Log.i("MainActivity", "savedInstanceState == null");
             startPlayerService();
             fragmentLauncher(R.id.all_audio);
             navigationView.setCheckedItem(R.id.all_audio);
@@ -119,7 +112,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
@@ -128,7 +120,6 @@ public class MainActivity extends AppCompatActivity
                     .findFragmentById(R.id.fragmentHolder);
 
             switch (fragment.getTag()) {
-
                 case PlaylistFragment.NAME:
                     String name = ((PlaylistFragment)fragment).getPlaylistName();
                     if(!name.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
@@ -218,7 +209,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-
         int id = item.getItemId();
         fragmentLauncher(id);
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -226,21 +216,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void fragmentLauncher(Integer itemId) {
-
         Fragment fragment = null;
-
+        String tag = null;
         switch (itemId) {
 
             case R.id.all_audio:
                 fragment = new PlaylistFragment(PlaylistManager.ALL_TRACKS_PLAYLIST);
+                tag = PlaylistFragment.NAME;
                 break;
 
             case R.id.playlists:
                 fragment = new PlaylistSelectorFragment();
+                tag = PlaylistSelectorFragment.NAME;
                 break;
 
             case R.id.spectrum:
                 fragment = new VisFragment(0);
+                tag = VisFragment.NAME;
                 break;
 
             case R.id.settings:
@@ -251,7 +243,7 @@ public class MainActivity extends AppCompatActivity
         if (fragment != null) {
             getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentHolder, fragment, fragment.toString())
+                    .replace(R.id.fragmentHolder, fragment, tag)
                     .commit();
         }
 
