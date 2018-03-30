@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -51,6 +52,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private AppBarLayout appBarLayout;
     private ImageView playlistImage = null;
     private ImageView[] playlistImages = null;
+    private CardView playlistHeaderCard;
     private TextView playlistNameView;
     private TextView playlistSizeView;
     private Bus rxBus = RxBus.getInstance();
@@ -100,6 +102,8 @@ public class PlaylistFragment extends NavFragmentBase {
         }
 
         if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+            playlistHeaderCard = (CardView)view.findViewById(R.id.playlistHeaderCard);
+            //playlistHeaderCard.getBackground().setAlpha(100);
             playlistNameView = (TextView)view.findViewById(R.id.playlistName);
             playlistSizeView = (TextView)view.findViewById(R.id.playlistSize);
             playlistImages = new ImageView[]{
