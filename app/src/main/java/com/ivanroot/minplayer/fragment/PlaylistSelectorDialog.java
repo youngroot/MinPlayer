@@ -108,7 +108,11 @@ public class PlaylistSelectorDialog extends DialogFragment {
 
             PlaylistItem playlistItem = playlistItems.get(i);
             playlistViewHolder.representItem(context,playlistItem);
-            playlistViewHolder.itemView.setOnClickListener(v -> playlistItemClickListener.onPlaylistItemClick(playlistItem));
+            playlistViewHolder.itemView.setOnClickListener(v -> {
+                if (playlistItemClickListener != null)
+                    playlistItemClickListener.onPlaylistItemClick(playlistItem);
+            });
+
         }
 
         @Override

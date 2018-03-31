@@ -49,7 +49,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<AudioViewHolder>
         this.playlistListener = playlistListener;
     }
 
-    public void setMoreBtnListener(OnMoreBtnClickListener moreBtnListener){
+    public void setOnMoreBtnClickListener(OnMoreBtnClickListener moreBtnListener){
         this.moreBtnListener = moreBtnListener;
     }
 

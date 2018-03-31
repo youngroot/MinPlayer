@@ -34,6 +34,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     private PlaylistManager playlistManager;
     private Disposable disposable;
     private OnPlaylistClickListener playlistClickListener;
+    private OnMoreBtnClickListener moreBtnClickListener;
     private Context context;
 
     public PlaylistSelectorAdapter(Context context) {
@@ -43,30 +44,20 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylistItems);
 
-
-
-
     }
 
     public void setOnPlaylistClickListener(OnPlaylistClickListener playlistClickListener) {
         this.playlistClickListener = playlistClickListener;
     }
 
+    public void setOnMoreBtnClickListener(OnMoreBtnClickListener moreBtnClickListener){
+        this.moreBtnClickListener = moreBtnClickListener;
+    }
 
     private void setPlaylistItems(List<PlaylistItem> playlistItems) {
         Log.i(this.toString(), "new List!");
         this.playlistItems = playlistItems;
         notifyDataSetChanged();
-    }
-
-    private void showDeletionDialog(String playlistName) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setMessage(R.string.remove_playlist_question)
-                .setPositiveButton(R.string.ok, (dialogInterface, i) -> playlistManager.removePlaylist(context, playlistName))
-                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.dismiss());
-        builder.show();
-
     }
 
     @Override
@@ -82,18 +73,9 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
         playlistViewHolder.representItem(context,playlistItem);
         playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
-            PopupMenu popupMenu = new PopupMenu(context, v);
-            popupMenu.inflate(R.menu.playlist_item_more_menu);
-            popupMenu.setOnMenuItemClickListener(item -> {
-                switch (item.getItemId()) {
-                    case R.id.remove_playlist:
-                        showDeletionDialog(playlistItem.getName());
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-            popupMenu.show();
+            if(moreBtnClickListener != null){
+                moreBtnClickListener.onMoreBtnClick(v,playlistItem);
+            }
         });
     }
 
@@ -119,5 +101,13 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     public void dispose() {
         if (disposable != null)
             disposable.dispose();
+    }
+
+    public void removePlaylistFromStorage(String playlistName){
+        playlistManager.removePlaylist(context, playlistName);
+    }
+
+    public interface OnMoreBtnClickListener{
+        void onMoreBtnClick(View view, PlaylistItem playlistItem);
     }
 }

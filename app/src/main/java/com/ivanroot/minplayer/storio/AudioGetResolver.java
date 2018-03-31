@@ -2,6 +2,7 @@ package com.ivanroot.minplayer.storio;
 
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -22,7 +23,7 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
     @Override
     public Audio mapFromCursor(StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
 
-        int albumId = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+        long albumId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
         long id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
         String data = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
         String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
@@ -32,6 +33,7 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
         Audio audio = new Audio(id, data, title, album, artist);
 
         try {
+
             Cursor tempCursor = contentResolver.get()
                     .cursor()
                     .withQuery(Query.builder()
@@ -48,7 +50,24 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
             Log.i(toString(),albumArt);
             audio.setAlbumArtPath(albumArt);
 
+            Uri genreUri = MediaStore.Audio.Genres.getContentUriForAudioId("external",(int)id);
+
+            tempCursor = contentResolver.get()
+                    .cursor()
+                    .withQuery(Query.builder()
+                            .uri(genreUri)
+                            .build())
+                    .prepare()
+                    .executeAsBlocking();
+            tempCursor.moveToFirst();
+
+            String genre = tempCursor.getString(tempCursor.getColumnIndex(MediaStore.Audio.Genres.NAME));
+            tempCursor.close();
+            Log.i(toString(),genre);
+            audio.setGenre(genre);
+
         } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
+            ex.printStackTrace();
             Log.e(toString(), ex.getMessage());
         }
 

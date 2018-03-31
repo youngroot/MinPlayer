@@ -133,7 +133,8 @@ public class PlaylistFragment extends NavFragmentBase {
             });
         }
 
-        adapter.setMoreBtnListener((v,playlist,i) -> {
+        adapter.setOnMoreBtnClickListener((v, playlist, i) -> {
+
             PopupMenu popupMenu = new PopupMenu(getActivity(), v);
             popupMenu.inflate(R.menu.audio_item_more_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
@@ -197,18 +198,25 @@ public class PlaylistFragment extends NavFragmentBase {
 
         });
 
-        /*audioRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        audioRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            private String logMessage;
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState){
+                logMessage = "onScrollStateChanged: new state: " + newState;
+                Log.i(toString(),logMessage);
+
+            }
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0 && playFab.getVisibility() == View.VISIBLE) {
-                    playFab.hide();
-                } else if (dy < 0 && playFab.getVisibility() != View.VISIBLE) {
-                    playFab.show();
-                }
+                logMessage = "onScrolled dx: " + dx + " dy: " + dy;
+                Log.i(toString(),logMessage);
             }
-        });*/
+
+        });
 
         audioRecyclerView.setAdapter(adapter);
     }

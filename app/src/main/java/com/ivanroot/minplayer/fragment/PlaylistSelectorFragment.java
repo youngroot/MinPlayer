@@ -3,7 +3,9 @@ package com.ivanroot.minplayer.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,7 +28,6 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     private FloatingActionButton addFab;
 
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,18 +41,12 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         View view = inflater.inflate(R.layout.playlist_selector_fragment, container, false);
         setupDrawer(view);
         setupRecycler(view);
-        addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);
-        addFab.setOnClickListener(v -> showPlaylistCreationDialog());
-        adapter.setOnPlaylistClickListener((playlistName -> {
-            PlaylistFragment playlistFragment = new PlaylistFragment(playlistName);
-            getActivity()
-                    .getFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragmentHolder, playlistFragment, playlistFragment.toString())
-                    .commit();
-        }));
+        prepareListeners(view);
+
+
         return view;
     }
+
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -83,10 +78,52 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         recyclerView.setAdapter(adapter);
     }
 
+    private void prepareListeners(View view) {
+
+        addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);
+
+        addFab.setOnClickListener(v -> showPlaylistCreationDialog());
+
+        adapter.setOnPlaylistClickListener((playlistName -> {
+            PlaylistFragment playlistFragment = new PlaylistFragment(playlistName);
+            getActivity()
+                    .getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentHolder, playlistFragment, PlaylistFragment.NAME)
+                    .commit();
+        }));
+
+        adapter.setOnMoreBtnClickListener((v, playlistItem) -> {
+            PopupMenu popupMenu = new PopupMenu(getActivity(), v);
+            popupMenu.inflate(R.menu.playlist_item_more_menu);
+            popupMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.remove_playlist:
+                        showPlaylistDeletionDialog(playlistItem.getName());
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+            popupMenu.show();
+
+        });
+    }
+
+
     private void showPlaylistCreationDialog(){
         PlaylistAddDialog dialog = new PlaylistAddDialog();
         String tag = getResources().getString(R.string.add_playlist);
         dialog.show(getFragmentManager(),tag);
+    }
+
+    private void showPlaylistDeletionDialog(String playlistName){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                .setMessage(R.string.remove_playlist_question)
+                .setPositiveButton(R.string.ok, (dialogInterface, i) -> adapter.removePlaylistFromStorage(playlistName))
+                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.dismiss());
+        builder.show();
+
     }
 
     @Override
