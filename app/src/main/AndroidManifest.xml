@@ -27,7 +27,8 @@
         android:theme="@style/GreyTheme">
         <activity
             android:name=".activity.PlayerActivity"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@style/GreyTheme" />
 
         <service
             android:name=".player.PlayerService"

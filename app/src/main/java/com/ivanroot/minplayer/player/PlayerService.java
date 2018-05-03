@@ -34,6 +34,7 @@ import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.activity.PlayerActivity;
 import com.ivanroot.minplayer.activity.StartupActivity;
 import com.ivanroot.minplayer.audio.Audio;
@@ -840,7 +841,7 @@ public class PlayerService
             Bitmap largeIcon = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
                     BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art));
 
-            Intent intent = new Intent(this, PlayerActivity.class);
+            Intent intent = new Intent(this, MainActivity.class);
 
             Notification.Builder notificationBuilder = new Notification.Builder(this)
                     .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))

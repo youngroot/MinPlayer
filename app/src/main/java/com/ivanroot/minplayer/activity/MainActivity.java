@@ -8,7 +8,6 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -22,12 +21,14 @@ import android.view.View;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
+import com.ivanroot.minplayer.fragment.PlayerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,9 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private String playlistName;
     private Map<String, Integer> itemId;
+    private SlidingUpPanelLayout panelLayout;
     private ControllerFragment controllerFragment;
+    private PlayerFragment playerFragment;
     private Bus rxBus = RxBus.getInstance();
 
     private ServiceConnection conn = new ServiceConnection() {
@@ -53,11 +56,6 @@ public class MainActivity extends AppCompatActivity
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
             player = binder.getService();
-            controllerFragment = new ControllerFragment();
-            getFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.controllerHolder, controllerFragment)
-                    .commit();
             Log.i("onServiceConnected", player.getClass().getName());
         }
 
@@ -79,6 +77,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         rxBus.register(this);
         setContentView(R.layout.activity_main);
+        panelLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
         bindService(new Intent(this, PlayerService.class), conn, Context.BIND_AUTO_CREATE);
         initItemId();
         setupDrawer();
@@ -100,6 +99,14 @@ public class MainActivity extends AppCompatActivity
     private void startPlayerService() {
         if (!wasStarted) {
             startService(new Intent(this, PlayerService.class));
+            controllerFragment = new ControllerFragment();
+            playerFragment = new PlayerFragment();
+            //controllerFragment.setPanelLayout(panelLayout);
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.controllerHolder, controllerFragment, ControllerFragment.NAME)
+                    .commit();
+
             wasStarted = true;
         }
     }
@@ -247,6 +254,10 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
 
+    }
+
+    public SlidingUpPanelLayout getPanelLayout(){
+        return panelLayout;
     }
 
 }

@@ -67,5 +67,16 @@ dependencies {
     implementation 'com.hwangjr.rxbus:rxbus:1.0.6'
     implementation 'com.android.support:palette-v7:25.4.0'
     implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.sothree.slidinguppanel:library:3.4.0'
 
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            def requested = details.requested
+            if (requested.group == 'com.android.support') {
+                if (!requested.name.startsWith("multidex")) {
+                    details.useVersion '25.4.0'
+                }
+            }
+        }
+    }
 }

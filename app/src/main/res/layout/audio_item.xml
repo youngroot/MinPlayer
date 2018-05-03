@@ -5,8 +5,8 @@
     android:id="@+id/song_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:layout_marginTop="4dp">
+    android:layout_marginTop="4dp"
+    android:background="?android:attr/selectableItemBackground">
 
     <android.support.v7.widget.CardView
         android:id="@+id/albumArtCardOuter"
@@ -15,66 +15,66 @@
         android:layout_marginStart="5dp"
         card_view:cardCornerRadius="10dp"
         card_view:cardElevation="2dp">
-       <android.support.v7.widget.CardView
-           android:id="@+id/albumArtCardInner"
-           android:layout_width="match_parent"
-           android:layout_height="match_parent"
-           card_view:cardCornerRadius="10dp"
-           card_view:cardElevation="0dp">
-           <ImageView
-               android:id="@+id/albumArt"
-               android:layout_width="match_parent"
-               android:layout_height="match_parent"
-               android:scaleType="fitXY"
-               app:srcCompat="@drawable/default_album_art"/>
-       </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/albumArtCardInner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            card_view:cardCornerRadius="10dp"
+            card_view:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/albumArt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/default_album_art" />
+        </android.support.v7.widget.CardView>
     </android.support.v7.widget.CardView>
-    <RelativeLayout
+
+    <LinearLayout
         android:id="@+id/infoLayout"
-        android:layout_toEndOf="@id/albumArtCardOuter"
         android:layout_width="265dp"
-        android:layout_height="wrap_content">
-        <LinearLayout
-            android:layout_marginStart="5dp"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@id/albumArtCardOuter"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/songTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_centerVertical="true">
+            android:maxLines="1"
+            android:text="@string/app_name"
+            android:textColor="@color/colorBlack"
+            android:textSize="15sp" />
 
-            <TextView
-                android:id="@+id/songTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/app_name"
-                android:textColor="@color/colorBlack"
-                android:textSize="15sp" />
+        <TextView
+            android:id="@+id/songAlbum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/app_name"
+            android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/songAlbum"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/app_name"
-                android:visibility="gone"/>
+        <TextView
+            android:id="@+id/songArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/app_name" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/songArtist"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/app_name"/>
-        </LinearLayout>
-    </RelativeLayout>
 
     <ImageButton
         android:id="@+id/moreBtn"
         android:layout_width="25dp"
         android:layout_height="25dp"
-        app:srcCompat="@drawable/ic_more_vert"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
         android:layout_marginEnd="15dp"
-        android:layout_centerVertical="true"/>
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        app:srcCompat="@drawable/ic_more_vert" />
 
 </RelativeLayout>

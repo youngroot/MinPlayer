@@ -1,124 +1,208 @@
 package com.ivanroot.minplayer.fragment;
 
 import android.app.Fragment;
-import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.activity.PlayerActivity;
+import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.player.RxBus;
+import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
+import static com.ivanroot.minplayer.player.PlayerActionsEvents.*;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import jp.wasabeef.blurry.Blurry;
 
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_GET_AUDIO_POSITION;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_GET_METADATA;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_NEXT_AUDIO;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_OR_PAUSE;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PREV_AUDIO;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_METADATA_UPDATED;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_NEXT_AUDIO_METADATA;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_GET_AUDIO_POSITION;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_GET_METADATA;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_ON_POSITION_CHANGED;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.EVENT_PREV_AUDIO_METADATA;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_AUDIO;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_DURATION;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_IS_PLAYING;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.KEY_POSITION;
-
-/**
- * Created by Ivan Root on 03.07.2017.
- */
 
 public class ControllerFragment extends Fragment {
+    public static final String NAME = "controllerFragment";
 
+    private ProgressBar smallProgress;
+    private ImageView smallAlbumArt;
+    private TextView smallTitle;
+    private TextView smallArtist;
+    private TextView smallAlbum;
+    private ImageButton smallPrevBtn;
+    private ImageButton smallPlayBtn;
+    private ImageButton smallNextBtn;
+    private ViewGroup smallViewContainer;
+
+    private SeekBar playbackProgress;
+    private ImageView bigAlbumArt;
     private ImageView albumArt;
     private TextView title;
-    private TextView album;
     private TextView artist;
-    private ProgressBar songProgress;
-    private ImageButton playBtn;
+    private TextView album;
     private ImageButton nextBtn;
-    private ImageButton prevBtn;
-    private Animation botTop;
-    private Animation topBotDiss;
-    private static final int animDuration = 300;
-    private ViewGroup container;
-    private Bus rxBus = RxBus.getInstance();
-    private Disposable updateProgressDisposable;
+    private ImageButton playBtn;
+    private  ImageButton prevBtn;
+    private ImageButton shuffleBtn;
+    private ImageButton repeatBtn;
+    private SlidingUpPanelLayout panelLayout;
 
+    private int delayedTime = 1000;
+    private Bus rxBus = RxBus.getInstance();
+    private Disposable screenUpdater;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         rxBus.register(this);
-        initAnimation();
     }
 
-
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        View view = inflater.inflate(R.layout.media_controller_fragment, container, false);
-        this.container = container;
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        Log.i(toString(),"onCreateView");
+        View view = inflater.inflate(R.layout.controller_fragment, container, false);
         prepareViews(view);
-        prepareListeners(view);
-        updateProgressDisposable = Observable.interval(1000, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(i -> RxBus.getInstance().post(ACTION_GET_AUDIO_POSITION, this));
-        rxBus.post(ACTION_GET_METADATA, this);
+        prepareListeners();
+        prepareScreenUpdater();
 
+        if(savedInstanceState != null)
+            applyAlphaToSmallViews(savedInstanceState.getFloat("smallAlpha",1));
+
+        rxBus.post(ACTION_GET_METADATA, this);
+//        rxBus.post(ACTION_IS_PLAYING,this);
+//        rxBus.post(ACTION_IS_SHUFFLED,this);
+//        rxBus.post(ACTION_GET_RP_MODE,this);
         return view;
     }
 
     private void prepareViews(View view) {
+        smallProgress = (ProgressBar) view.findViewById(R.id.smallProgress);
+        smallAlbumArt = (ImageView) view.findViewById(R.id.smallAlbumArt);
+        smallTitle = (TextView) view.findViewById(R.id.smallTitle);
+        smallArtist = (TextView) view.findViewById(R.id.smallArtist);
+        smallAlbum = (TextView) view.findViewById(R.id.smallAlbum);
+        smallPrevBtn = (ImageButton) view.findViewById(R.id.smallPrevBtn);
+        smallPlayBtn = (ImageButton) view.findViewById(R.id.smallPlayBtn);
+        smallNextBtn = (ImageButton) view.findViewById(R.id.smallNextBtn);
+        smallViewContainer = (ViewGroup) view.findViewById(R.id.small_controller_layout);
 
+        playbackProgress = (SeekBar) view.findViewById(R.id.songProgress);
+        bigAlbumArt = (ImageView) view.findViewById(R.id.bigAlbumArt);
         albumArt = (ImageView) view.findViewById(R.id.albumArt);
-        title = (TextView) view.findViewById(R.id.songTitle);
-        album = (TextView) view.findViewById(R.id.songAlbum);
-        artist = (TextView) view.findViewById(R.id.songArtist);
-        songProgress = (ProgressBar) view.findViewById(R.id.songProgress);
+        title = (TextView) view.findViewById(R.id.txtTitle);
+        artist = (TextView) view.findViewById(R.id.txtArtist);
+        album = (TextView) view.findViewById(R.id.txtAlbum);
         playBtn = (ImageButton) view.findViewById(R.id.playBtn);
         prevBtn = (ImageButton) view.findViewById(R.id.prevBtn);
         nextBtn = (ImageButton) view.findViewById(R.id.nextBtn);
+        shuffleBtn = (ImageButton) view.findViewById(R.id.shuffleBtn);
+        repeatBtn = (ImageButton) view.findViewById(R.id.repeatBtn);
+
+        if(panelLayout == null && getActivity() instanceof MainActivity)
+            panelLayout = ((MainActivity)getActivity()).getPanelLayout();
     }
 
-    private void prepareListeners(View view) {
+    private void prepareListeners(){
+        smallPrevBtn.setOnClickListener(view -> rxBus.post(ACTION_PREV_AUDIO,this));
+        smallPlayBtn.setOnClickListener(view -> rxBus.post(ACTION_PLAY_OR_PAUSE,this));
+        smallNextBtn.setOnClickListener(view -> rxBus.post(ACTION_NEXT_AUDIO,this));
 
-        view.setOnClickListener(v -> getActivity().startActivity(new Intent(getActivity(), PlayerActivity.class)));
-        playBtn.setOnClickListener(v -> rxBus.post(ACTION_PLAY_OR_PAUSE, this));
-        prevBtn.setOnClickListener(v -> rxBus.post(ACTION_PREV_AUDIO, this));
-        nextBtn.setOnClickListener(v -> rxBus.post(ACTION_NEXT_AUDIO, this));
+        playbackProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                rxBus.post(ACTION_SEEK_TO, seekBar.getProgress());
+            }
+        });
+        prevBtn.setOnClickListener(view -> rxBus.post(ACTION_PREV_AUDIO,this));
+        prevBtn.setOnLongClickListener(v -> true);
+        playBtn.setOnClickListener(view -> rxBus.post(ACTION_PLAY_OR_PAUSE,this));
+        nextBtn.setOnClickListener(view -> rxBus.post(ACTION_NEXT_AUDIO,this));
+        nextBtn.setOnLongClickListener(v -> true);
+        shuffleBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_SHUFFLE_MODE, this));
+        repeatBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_RP_MODE, this));
+
+
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        if(panelLayout != null){
+            panelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+                @Override
+                public void onPanelSlide(View panel, float slideOffset) {
+                    applyAlphaToSmallViews(1 - slideOffset);
+                }
+
+                @Override
+                public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+//                    if(getActivity() instanceof MainActivity)
+//                        if (newState == SlidingUpPanelLayout.PanelState.EXPANDED)
+//                            getActivity()
+//                                    .getWindow()
+//                                    .setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+//                                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//                        else getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+//                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+
+
+
+                }
+            });
+        }
+
+        Blurry.with(getActivity())
+                .async()
+                .sampling(10)
+                .color(Color.argb(80, 60, 60, 60))
+                .from(BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey))
+                .into(bigAlbumArt);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.i(toString(),"onSaveInstanceState");
+        if(smallViewContainer != null) {
+            outState.putFloat("smallAlpha", smallViewContainer.getAlpha());
+            Log.i(toString(),"small alpha: " + String.valueOf(smallViewContainer.getAlpha()));
+        }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (updateProgressDisposable != null)
-            updateProgressDisposable.dispose();
+        if(screenUpdater != null)
+            screenUpdater.dispose();
     }
 
     @Override
@@ -127,70 +211,144 @@ public class ControllerFragment extends Fragment {
         rxBus.unregister(this);
     }
 
-    private void updateView(HashMap<String, Object> state, @NonNull ViewGroup container) {
+    public void setPanelLayout(SlidingUpPanelLayout panelLayout){
+        this.panelLayout = panelLayout;
+    }
 
+    private void updateView(HashMap<String, Object> state){
         Audio currAudio = (Audio) state.get(KEY_AUDIO);
-        if (currAudio != null) {
-            songProgress.setMax((int) state.get(KEY_DURATION));
-            songProgress.setProgress((int) state.get(KEY_POSITION));
+        if(currAudio != null) {
+            if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
+                panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            smallProgress.setMax((int) state.get(KEY_DURATION));
+            smallTitle.setText(currAudio.getTitle());
+            smallAlbum.setText(currAudio.getAlbum());
+            smallArtist.setText(currAudio.getArtist());
+
+            playbackProgress.setMax((int) state.get(KEY_DURATION));
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
 
+            onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+            onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
+            onRepeatModeEvents((int)state.get(KEY_RP_MODE));
+
+            Bitmap bitmap = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
+                    BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey));
+
+            Picasso.with(getActivity())
+                    .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
+                    .error(R.drawable.default_album_art)
+                    .into(smallAlbumArt);
 
             Picasso.with(getActivity())
                     .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
                     .error(R.drawable.default_album_art)
                     .into(albumArt);
 
-            if (!(boolean) state.get(KEY_IS_PLAYING)) {
-                playBtn.setImageResource(R.drawable.ic_play_noti);
-            } else {
-                playBtn.setImageResource(R.drawable.ic_pause_noti);
-            }
-
-            if (container.getVisibility() == View.GONE) {
-                container.setVisibility(View.VISIBLE);
-                container.startAnimation(botTop);
-            }
-        } else {
-            if (container.getVisibility() == View.VISIBLE) {
-                container.startAnimation(topBotDiss);
-                container.setVisibility(View.GONE);
-            }
+            Blurry.with(getActivity())
+                    .async()
+                    .sampling(10)
+                    .color(Color.argb(80, 60, 60, 60))
+                    .from(bitmap)
+                    .into(bigAlbumArt);
+        }
+        else {
+            panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
         }
 
     }
 
-    @Subscribe(tags = {
-            @Tag(EVENT_METADATA_UPDATED),
-            @Tag(EVENT_ON_GET_METADATA),
-            @Tag(EVENT_NEXT_AUDIO_METADATA),
-            @Tag(EVENT_PREV_AUDIO_METADATA)
-    })
+    private void applyAlphaToSmallViews(float smallAlpha){
+        if(smallViewContainer != null)
+            smallViewContainer.setAlpha(smallAlpha);
+
+    }
+
+    private void prepareScreenUpdater() {
+
+        screenUpdater = Observable.<List<Pair<String, Object>>>create(emitter -> {
+            while (true) {
+
+                List<Pair<String, Object>> actions = new ArrayList<>();
+                if (prevBtn.isPressed()) {
+                    actions.add(new Pair<>(ACTION_REWIND, 250));
+                    delayedTime = 100;
+                } else if (nextBtn.isPressed()) {
+                    actions.add(new Pair<>(ACTION_FAST_FORWARD, 250));
+                    delayedTime = 100;
+                } else {
+                    delayedTime = 1000;
+                }
+                actions.add(new Pair<>(ACTION_GET_AUDIO_POSITION, this));
+                emitter.onNext(actions);
+                try {
+                    Thread.sleep(delayedTime);
+                } catch (InterruptedException ex) {
+
+                }
+            }
+        })
+                .subscribeOn(Schedulers.newThread())
+                .flatMap(Observable::fromIterable)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(pair -> rxBus.post(pair.first, pair.second));
+    }
+
+    @Subscribe(tags = {@Tag(EVENT_METADATA_UPDATED), @Tag(EVENT_ON_GET_METADATA)})
     public void onMetadataEvents(HashMap<String, Object> state) {
-        updateView(state, container);
+        updateView(state);
+    }
+
+    @Subscribe(tags = {@Tag(EVENT_PREV_AUDIO_METADATA)})
+    public void onPrevAudioEvent(HashMap<String, Object> state) {
+        updateView(state);
     }
 
     @Subscribe(tags = {@Tag(EVENT_AUDIO_IS_PLAYING), @Tag(EVENT_AUDIO_IS_PAUSED)})
     public void onPlayPauseEvents(Boolean isPlaying) {
-        if (isPlaying)
-            playBtn.setImageResource(R.drawable.ic_pause_noti);
-        else
-            playBtn.setImageResource(R.drawable.ic_play_noti);
+
+        if (isPlaying) {
+            smallPlayBtn.setImageResource(R.drawable.ic_pause_noti);
+            playBtn.setImageResource(R.drawable.ic_pause);
+        } else {
+            smallPlayBtn.setImageResource(R.drawable.ic_play_noti);
+            playBtn.setImageResource(R.drawable.ic_play);
+        }
     }
 
-    @Subscribe(tags = {@Tag(EVENT_ON_POSITION_CHANGED), @Tag(EVENT_ON_GET_AUDIO_POSITION)})
+    @Subscribe(tags = {@Tag(EVENT_NEXT_AUDIO_METADATA)})
+    public void onNextAudioEvent(HashMap<String, Object> state) {
+        updateView(state);
+    }
+
+    @Subscribe(tags = {@Tag(EVENT_ON_GET_AUDIO_POSITION)})
     public void onPositionChangedEvents(Integer pos) {
-        songProgress.setProgress(pos);
+        smallProgress.setProgress(pos);
+        playbackProgress.setProgress(pos);
     }
 
-    private void initAnimation() {
-
-        botTop = AnimationUtils.loadAnimation(getActivity(), R.anim.bot_top);
-        topBotDiss = AnimationUtils.loadAnimation(getActivity(), R.anim.top_bot_dissapear);
-        botTop.setDuration(animDuration);
-        topBotDiss.setDuration(animDuration);
+    @Subscribe(tags = {@Tag(EVENT_SHUFFLED), @Tag(EVENT_UNSHUFFLED)})
+    public void onShuffleModeEvents(Boolean isShuffled) {
+        if (isShuffled) {
+            shuffleBtn.setImageResource(R.drawable.ic_shuffle);
+        } else {
+            shuffleBtn.setImageResource(R.drawable.ic_shuffle_disabled);
+        }
     }
 
+    @Subscribe(tags = {@Tag(EVENT_RP_MODE_CHANGED), @Tag(EVENT_ON_GET_RP_MODE)})
+    public void onRepeatModeEvents(Integer repeatMode) {
+        switch (repeatMode) {
+            case 0:
+                repeatBtn.setImageResource(R.drawable.ic_repeat_off);
+                break;
+            case 1:
+                repeatBtn.setImageResource(R.drawable.ic_repeat);
+                break;
+            case 2:
+                repeatBtn.setImageResource(R.drawable.ic_repeat_once);
+        }
+    }
 }

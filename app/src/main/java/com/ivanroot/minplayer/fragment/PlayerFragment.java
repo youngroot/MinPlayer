@@ -104,7 +104,7 @@ public class PlayerFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.player_fragment, container, false);
+        View view = inflater.inflate(R.layout.main_controller_layout, container, false);
         prepareViews(view);
         prepareListeners();
         initAnimations();
@@ -139,9 +139,7 @@ public class PlayerFragment extends Fragment {
                 emitter.onNext(actions);
                 try {
                     Thread.sleep(delayedTime);
-                } catch (InterruptedException ex) {
-
-                }
+                } catch (InterruptedException ex) {}
             }
         })
                 .subscribeOn(Schedulers.newThread())
