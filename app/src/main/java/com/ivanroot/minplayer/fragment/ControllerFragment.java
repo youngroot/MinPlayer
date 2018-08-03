@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -23,10 +22,12 @@ import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.player.constants.PlayerActions;
+import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.*;
+import static com.ivanroot.minplayer.player.constants.PlayerKeys.*;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
@@ -62,7 +63,7 @@ public class ControllerFragment extends Fragment {
     private TextView album;
     private ImageButton nextBtn;
     private ImageButton playBtn;
-    private  ImageButton prevBtn;
+    private ImageButton prevBtn;
     private ImageButton shuffleBtn;
     private ImageButton repeatBtn;
     private SlidingUpPanelLayout panelLayout;
@@ -89,7 +90,7 @@ public class ControllerFragment extends Fragment {
         if(savedInstanceState != null)
             applyAlphaToSmallViews(savedInstanceState.getFloat("smallAlpha",1));
 
-        rxBus.post(ACTION_GET_METADATA, this);
+        rxBus.post(PlayerActions.ACTION_GET_METADATA, this);
 //        rxBus.post(ACTION_IS_PLAYING,this);
 //        rxBus.post(ACTION_IS_SHUFFLED,this);
 //        rxBus.post(ACTION_GET_RP_MODE,this);
@@ -124,9 +125,9 @@ public class ControllerFragment extends Fragment {
     }
 
     private void prepareListeners(){
-        smallPrevBtn.setOnClickListener(view -> rxBus.post(ACTION_PREV_AUDIO,this));
-        smallPlayBtn.setOnClickListener(view -> rxBus.post(ACTION_PLAY_OR_PAUSE,this));
-        smallNextBtn.setOnClickListener(view -> rxBus.post(ACTION_NEXT_AUDIO,this));
+        smallPrevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO,this));
+        smallPlayBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE,this));
+        smallNextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO,this));
 
         playbackProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -141,16 +142,16 @@ public class ControllerFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                rxBus.post(ACTION_SEEK_TO, seekBar.getProgress());
+                rxBus.post(PlayerActions.ACTION_SEEK_TO, seekBar.getProgress());
             }
         });
-        prevBtn.setOnClickListener(view -> rxBus.post(ACTION_PREV_AUDIO,this));
+        prevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO,this));
         prevBtn.setOnLongClickListener(v -> true);
-        playBtn.setOnClickListener(view -> rxBus.post(ACTION_PLAY_OR_PAUSE,this));
-        nextBtn.setOnClickListener(view -> rxBus.post(ACTION_NEXT_AUDIO,this));
+        playBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE,this));
+        nextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO,this));
         nextBtn.setOnLongClickListener(v -> true);
-        shuffleBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_SHUFFLE_MODE, this));
-        repeatBtn.setOnClickListener(v -> rxBus.post(ACTION_CHANGE_RP_MODE, this));
+        shuffleBtn.setOnClickListener(v -> rxBus.post(PlayerActions.ACTION_CHANGE_SHUFFLE_MODE, this));
+        repeatBtn.setOnClickListener(v -> rxBus.post(PlayerActions.ACTION_CHANGE_RP_MODE, this));
 
 
     }
@@ -172,8 +173,7 @@ public class ControllerFragment extends Fragment {
 //                                    .getWindow()
 //                                    .setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
 //                                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-//                        else getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-//                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//                        else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
 
 
@@ -273,15 +273,15 @@ public class ControllerFragment extends Fragment {
 
                 List<Pair<String, Object>> actions = new ArrayList<>();
                 if (prevBtn.isPressed()) {
-                    actions.add(new Pair<>(ACTION_REWIND, 250));
+                    actions.add(new Pair<>(PlayerActions.ACTION_REWIND, 250));
                     delayedTime = 100;
                 } else if (nextBtn.isPressed()) {
-                    actions.add(new Pair<>(ACTION_FAST_FORWARD, 250));
+                    actions.add(new Pair<>(PlayerActions.ACTION_FAST_FORWARD, 250));
                     delayedTime = 100;
                 } else {
                     delayedTime = 1000;
                 }
-                actions.add(new Pair<>(ACTION_GET_AUDIO_POSITION, this));
+                actions.add(new Pair<>(PlayerActions.ACTION_GET_AUDIO_POSITION, this));
                 emitter.onNext(actions);
                 try {
                     Thread.sleep(delayedTime);
@@ -296,17 +296,17 @@ public class ControllerFragment extends Fragment {
                 .subscribe(pair -> rxBus.post(pair.first, pair.second));
     }
 
-    @Subscribe(tags = {@Tag(EVENT_METADATA_UPDATED), @Tag(EVENT_ON_GET_METADATA)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_METADATA_UPDATED), @Tag(PlayerEvents.EVENT_ON_GET_METADATA)})
     public void onMetadataEvents(HashMap<String, Object> state) {
         updateView(state);
     }
 
-    @Subscribe(tags = {@Tag(EVENT_PREV_AUDIO_METADATA)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PREV_AUDIO_METADATA)})
     public void onPrevAudioEvent(HashMap<String, Object> state) {
         updateView(state);
     }
 
-    @Subscribe(tags = {@Tag(EVENT_AUDIO_IS_PLAYING), @Tag(EVENT_AUDIO_IS_PAUSED)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})
     public void onPlayPauseEvents(Boolean isPlaying) {
 
         if (isPlaying) {
@@ -318,18 +318,18 @@ public class ControllerFragment extends Fragment {
         }
     }
 
-    @Subscribe(tags = {@Tag(EVENT_NEXT_AUDIO_METADATA)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_NEXT_AUDIO_METADATA)})
     public void onNextAudioEvent(HashMap<String, Object> state) {
         updateView(state);
     }
 
-    @Subscribe(tags = {@Tag(EVENT_ON_GET_AUDIO_POSITION)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_ON_GET_AUDIO_POSITION)})
     public void onPositionChangedEvents(Integer pos) {
         smallProgress.setProgress(pos);
         playbackProgress.setProgress(pos);
     }
 
-    @Subscribe(tags = {@Tag(EVENT_SHUFFLED), @Tag(EVENT_UNSHUFFLED)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_SHUFFLED), @Tag(PlayerEvents.EVENT_UNSHUFFLED)})
     public void onShuffleModeEvents(Boolean isShuffled) {
         if (isShuffled) {
             shuffleBtn.setImageResource(R.drawable.ic_shuffle);
@@ -338,7 +338,7 @@ public class ControllerFragment extends Fragment {
         }
     }
 
-    @Subscribe(tags = {@Tag(EVENT_RP_MODE_CHANGED), @Tag(EVENT_ON_GET_RP_MODE)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_RP_MODE_CHANGED), @Tag(PlayerEvents.EVENT_ON_GET_RP_MODE)})
     public void onRepeatModeEvents(Integer repeatMode) {
         switch (repeatMode) {
             case 0:

@@ -25,9 +25,11 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.session.MediaButtonReceiver;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.Toast;
 
 import com.hwangjr.rxbus.Bus;
@@ -35,31 +37,32 @@ import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.MainActivity;
-import com.ivanroot.minplayer.activity.PlayerActivity;
 import com.ivanroot.minplayer.activity.StartupActivity;
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.player.constants.PlayerActions;
+import com.ivanroot.minplayer.player.constants.PlayerEvents;
+import com.ivanroot.minplayer.player.constants.PlayerKeys;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 
-public class PlayerService
-
-        extends Service
-        implements MediaPlayer.OnPreparedListener,
+public class PlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnInfoListener,
         AudioManager.OnAudioFocusChangeListener {
-
 
     public static final String SERVICE_NAME = "PlayerService";
     private final int permissionDenied = PackageManager.PERMISSION_DENIED;
@@ -80,13 +83,13 @@ public class PlayerService
     private PhoneStateListener phoneStateListener;
     private TelephonyManager telephonyManager;
     private boolean wasPlaying;
-    private String nextEvent = PlayerActionsEvents.EVENT_METADATA_UPDATED;
+    private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
     private boolean isNextQueueUsing = false;
     private int mpError = 0;
     private Disposable playlistSubscription;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.getInstance();
-
+    private ArrayList<Long> clicks = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -140,7 +143,7 @@ public class PlayerService
     @Override
     public IBinder onBind(Intent intent) {
         Log.i("PlayerService", "onBind");
-        rxBus.post(PlayerActionsEvents.EVENT_METADATA_UPDATED,getCurrentStateMap());
+        rxBus.post(PlayerEvents.EVENT_METADATA_UPDATED, getCurrentStateMap());
         return localBinder;
     }
 
@@ -205,7 +208,7 @@ public class PlayerService
         sendBroadcast(equalizerIntent);
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_SET_PLAYLIST)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
     public void setPlaylist(String playlistName) {
 
         if (playlist != null)
@@ -215,7 +218,7 @@ public class PlayerService
             playlistSubscription.dispose();
 
         //PlaylistManager.writePlaylist(this,playlist);
-        playlistSubscription = playlistManager.getPlaylistObservable(this,playlistName)
+        playlistSubscription = playlistManager.getPlaylistObservable(this, playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 
@@ -228,14 +231,14 @@ public class PlayerService
             currAudio = playlist.getCurrentAudio();
             updateMetaData();
             prepareToPlay();
-            rxBus.post(PlayerActionsEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
+            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
         }
 
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_PLAYLIST)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_PLAYLIST)})
     public Playlist getPlaylist(Object object) {
-        rxBus.post(PlayerActionsEvents.ACTION_GET_PLAYLIST, playlist);
+        rxBus.post(PlayerActions.ACTION_GET_PLAYLIST, playlist);
         return playlist;
     }
 
@@ -271,31 +274,34 @@ public class PlayerService
     public HashMap<String, Object> getCurrentStateMap() {
 
         HashMap<String, Object> state = new HashMap<>();
-        state.put(PlayerActionsEvents.KEY_AUDIO, getCurrAudio());
-        state.put(PlayerActionsEvents.KEY_IS_SHUFFLED, isShuffled());
-        state.put(PlayerActionsEvents.KEY_IS_PLAYING, wasPlaying);
-        state.put(PlayerActionsEvents.KEY_RP_MODE, getRepeatMode());
-        state.put(PlayerActionsEvents.KEY_DURATION, getAudioDuration());
-        state.put(PlayerActionsEvents.KEY_POSITION,getAudioPosition());
+        state.put(PlayerKeys.KEY_AUDIO, getCurrAudio());
+        state.put(PlayerKeys.KEY_IS_SHUFFLED, isShuffled());
+        state.put(PlayerKeys.KEY_IS_PLAYING, wasPlaying);
+        state.put(PlayerKeys.KEY_RP_MODE, getRepeatMode());
+        state.put(PlayerKeys.KEY_DURATION, getAudioDuration());
+        state.put(PlayerKeys.KEY_POSITION, getAudioPosition());
         return state;
     }
 
-    private void buildAndSetPlaybackState(boolean isPlaying){
-
+    private void buildAndSetPlaybackState(boolean isPlaying) {
         int state = (isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
 
+        if(!mediaSession.isActive())
+            mediaSession.setActive(true);
+
         mediaSession.setPlaybackState(new PlaybackState.Builder()
-                .setActions(
-                        PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
-                        PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
-                .setState(state,getAudioPosition(),1)
+                .setActions(PlaybackState.ACTION_PLAY |
+                                PlaybackState.ACTION_PAUSE |
+                                PlaybackState.ACTION_SKIP_TO_NEXT |
+                                PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+                .setState(state, getAudioPosition(), 1)
                 .build());
 
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_METADATA)})
-    public void onGetMetadata(Object object){
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_METADATA,getCurrentStateMap());
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_METADATA)})
+    public void onGetMetadata(Object object) {
+        rxBus.post(PlayerEvents.EVENT_ON_GET_METADATA, getCurrentStateMap());
     }
 
     @Override
@@ -305,7 +311,7 @@ public class PlayerService
             case AudioManager.AUDIOFOCUS_GAIN:
                 if (wasPlaying) {
                     mediaPlayer.start();
-                    rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING, true);
+                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
                 }
                 buildNotification(wasPlaying, true);
                 mediaPlayer.setVolume(1.0f, 1.0f);
@@ -313,7 +319,7 @@ public class PlayerService
             case AudioManager.AUDIOFOCUS_LOSS:
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
-                    rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED, false);
+                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                 }
                 removeAudioFocus();
                 buildNotification(false, false);
@@ -321,7 +327,7 @@ public class PlayerService
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
-                    rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED, false);
+                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                 }
                 buildNotification(false, false);
                 break;
@@ -354,13 +360,13 @@ public class PlayerService
         return false;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_IS_PLAYING)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_IS_PLAYING)})
     public boolean isPlaying(Object object) {
         boolean isPlaying = isPlaying();
         if (isPlaying)
-            rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING, true);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
         else
-            rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED, false);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
         return isPlaying;
     }
 
@@ -372,13 +378,13 @@ public class PlayerService
             return false;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_IS_SHUFFLED)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_IS_SHUFFLED)})
     public boolean isShuffled(Object object) {
         boolean isShuffled = isShuffled();
         if (isShuffled)
-            rxBus.post(PlayerActionsEvents.EVENT_SHUFFLED, true);
+            rxBus.post(PlayerEvents.EVENT_SHUFFLED, true);
         else
-            rxBus.post(PlayerActionsEvents.EVENT_UNSHUFFLED, false);
+            rxBus.post(PlayerEvents.EVENT_UNSHUFFLED, false);
         return isShuffled;
     }
 
@@ -402,7 +408,7 @@ public class PlayerService
         return nextQueue;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_PLAY_OR_PAUSE)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_PLAY_OR_PAUSE)})
     public void playOrPause(Object object) {
         if (isPlaying())
             pause();
@@ -410,10 +416,10 @@ public class PlayerService
             play();
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_PLAY_AUDIO)})
-    public void play(Object object){
-        if(object instanceof Audio)
-            play((Audio)object);
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_PLAY_AUDIO)})
+    public void play(Object object) {
+        if (object instanceof Audio)
+            play((Audio) object);
         else play();
     }
 
@@ -424,14 +430,14 @@ public class PlayerService
                 requestAudioFocus();
                 buildNotification(true, true);
                 mediaPlayer.start();
-                rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING, true);
+                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
             }
             wasPlaying = mediaPlayer.isPlaying();
             buildAndSetPlaybackState(wasPlaying);
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_SET_AND_PLAY_AUDIO)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_AND_PLAY_AUDIO)})
     public void play(Audio audio) {
         Log.i("PlayerService", "play(Audio Audio)");
         if (mediaPlayer != null && playlist != null) {
@@ -442,7 +448,7 @@ public class PlayerService
                     nextQueue.offer(audio);
                     currAudio = nextQueue.poll();
                 }
-                nextEvent = PlayerActionsEvents.EVENT_METADATA_UPDATED;
+                nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
                 wasPlaying = true;
                 prepareToPlay();
             }
@@ -450,8 +456,8 @@ public class PlayerService
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_PAUSE_AUDIO)})
-    public void pause(Object object){
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_PAUSE_AUDIO)})
+    public void pause(Object object) {
         pause();
     }
 
@@ -461,14 +467,27 @@ public class PlayerService
             if (mediaPlayer.isPlaying()) {
                 buildNotification(false, true);
                 mediaPlayer.pause();
-                rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED, false);
+                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
             }
             wasPlaying = mediaPlayer.isPlaying();
             buildAndSetPlaybackState(wasPlaying);
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_NEXT_AUDIO)})
+    public void stop(){
+        removeNotification();
+        if(mediaPlayer != null){
+            if(mediaPlayer.isPlaying()){
+                mediaPlayer.pause();
+                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED);
+            }
+            wasPlaying = mediaPlayer.isPlaying();
+        }
+        mediaSession.setActive(false);
+        mediaSession.setPlaybackState(new PlaybackState.Builder().setState(PlaybackState.STATE_STOPPED, getAudioPosition(), 1).build());
+    }
+
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_NEXT_AUDIO)})
     public void playNextTrack(Object object) {
         playNextTrack();
     }
@@ -480,14 +499,14 @@ public class PlayerService
 
             if (playlist.setToNextAudio()) {
 
-                nextEvent = PlayerActionsEvents.EVENT_NEXT_AUDIO_METADATA;
+                nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
                 currAudio = playlist.getCurrentAudio();
                 prepareToPlay();
 
             } else {
 
                 if (playlist.getRepeatMode() == Playlist.REPEAT_ONE) {
-                    nextEvent = PlayerActionsEvents.EVENT_NONE;
+                    nextEvent = PlayerEvents.EVENT_NONE;
                     prepareToPlay();
                 }
 
@@ -495,13 +514,13 @@ public class PlayerService
         } else {
             currAudio = nextQueue.poll();
             isNextQueueUsing = true;
-            nextEvent = PlayerActionsEvents.EVENT_NEXT_AUDIO_METADATA;
+            nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
             prepareToPlay();
         }
 
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_PREV_AUDIO)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_PREV_AUDIO)})
     public void playPrevTrack(Object object) {
         playPrevTrack();
     }
@@ -509,20 +528,20 @@ public class PlayerService
     public void playPrevTrack() {
         Log.i("PlayerService", "playPrevTrack");
         if (getAudioPosition() > 6000) {
-            nextEvent = PlayerActionsEvents.EVENT_REPLAYING_CURR_AUDIO;
+            nextEvent = PlayerEvents.EVENT_REPLAYING_CURR_AUDIO;
             prepareToPlay();
         } else {
             boolean result = playlist.setToPrevAudio();
             if (isNextQueueUsing) {
 
                 if (result) playlist.setToNextAudio();
-                nextEvent = PlayerActionsEvents.EVENT_PREV_AUDIO_METADATA;
+                nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
             } else {
 
                 if (result) {
-                    nextEvent = PlayerActionsEvents.EVENT_PREV_AUDIO_METADATA;
+                    nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
                 } else {
-                    nextEvent = PlayerActionsEvents.EVENT_NONE;
+                    nextEvent = PlayerEvents.EVENT_NONE;
                 }
             }
             currAudio = playlist.getCurrentAudio();
@@ -530,25 +549,25 @@ public class PlayerService
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_FAST_FORWARD)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_FAST_FORWARD)})
     public void fastForward(Integer forwardShift) {
         Log.i("PlayerService", "fastForward");
         mediaPlayer.seekTo(mediaPlayer.getCurrentPosition() + forwardShift);
-        rxBus.post(PlayerActionsEvents.EVENT_FAST_FORWARD,forwardShift);
-        rxBus.post(PlayerActionsEvents.EVENT_ON_POSITION_CHANGED,getAudioPosition());
+        rxBus.post(PlayerEvents.EVENT_FAST_FORWARD, forwardShift);
+        rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, getAudioPosition());
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_REWIND)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_REWIND)})
     public void fastRewind(Integer backwardShift) {
         Log.i("PlayerService", "fastRewind");
         mediaPlayer.seekTo(mediaPlayer.getCurrentPosition() - backwardShift);
-        rxBus.post(PlayerActionsEvents.EVENT_REWIND,backwardShift);
-        rxBus.post(PlayerActionsEvents.EVENT_ON_POSITION_CHANGED,getAudioPosition());
+        rxBus.post(PlayerEvents.EVENT_REWIND, backwardShift);
+        rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, getAudioPosition());
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_CURR_AUDIO)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_CURR_AUDIO)})
     public void getCurrAudio(Object object) {
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_CURR_AUDIO, getCurrAudio());
+        rxBus.post(PlayerEvents.EVENT_ON_GET_CURR_AUDIO, getCurrAudio());
     }
 
     public Audio getCurrAudio() {
@@ -556,9 +575,9 @@ public class PlayerService
         return currAudio;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_AUDIO_SESSION_ID)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_AUDIO_SESSION_ID)})
     public void getAudioSessionId(Object object) {
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_AUDIO_SESSION_ID, getAudioSessionId());
+        rxBus.post(PlayerEvents.EVENT_ON_GET_AUDIO_SESSION_ID, getAudioSessionId());
     }
 
     public int getAudioSessionId() {
@@ -568,9 +587,9 @@ public class PlayerService
         return 0;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_AUDIO_DURATION)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_AUDIO_DURATION)})
     public void getAudioDuration(Object object) {
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_AUDIO_DURATION, getAudioDuration());
+        rxBus.post(PlayerEvents.EVENT_ON_GET_AUDIO_DURATION, getAudioDuration());
     }
 
     public int getAudioDuration() {
@@ -581,9 +600,9 @@ public class PlayerService
         return 0;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_AUDIO_POSITION)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_AUDIO_POSITION)})
     public void getAudioPosition(Object object) {
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_AUDIO_POSITION, getAudioPosition());
+        rxBus.post(PlayerEvents.EVENT_ON_GET_AUDIO_POSITION, getAudioPosition());
     }
 
     public int getAudioPosition() {
@@ -595,17 +614,17 @@ public class PlayerService
         return 0;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_SEEK_TO)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_SEEK_TO)})
     public void seekTo(Integer pos) {
         Log.i("PlayerService", "seekTo");
         if (mediaPlayer != null) {
 
             mediaPlayer.seekTo(pos);
-            rxBus.post(PlayerActionsEvents.EVENT_ON_POSITION_CHANGED, pos);
+            rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, pos);
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_CHANGE_RP_MODE)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_CHANGE_RP_MODE)})
     public void changeRepeatMode(Object object) {
         if (object instanceof Integer) {
             setRepeatMode((Integer) object);
@@ -619,13 +638,13 @@ public class PlayerService
         Log.i("PlayerService", "setRepeatMode");
         if (playlist != null) {
             playlist.setRepeatMode(repeatMode);
-            rxBus.post(PlayerActionsEvents.EVENT_RP_MODE_CHANGED,getRepeatMode());
+            rxBus.post(PlayerEvents.EVENT_RP_MODE_CHANGED, getRepeatMode());
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_GET_RP_MODE)})
-    public void getRepeatMode(Object object){
-        rxBus.post(PlayerActionsEvents.EVENT_ON_GET_RP_MODE,getRepeatMode());
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_RP_MODE)})
+    public void getRepeatMode(Object object) {
+        rxBus.post(PlayerEvents.EVENT_ON_GET_RP_MODE, getRepeatMode());
     }
 
     public int getRepeatMode() {
@@ -636,7 +655,7 @@ public class PlayerService
             return Playlist.NOT_REPEAT;
     }
 
-    @Subscribe(tags = {@Tag(PlayerActionsEvents.ACTION_CHANGE_SHUFFLE_MODE)})
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_CHANGE_SHUFFLE_MODE)})
     public void shuffleOrUnShuffle(Object object) {
         boolean isShuffled;
         if (object instanceof Boolean)
@@ -655,7 +674,7 @@ public class PlayerService
         Log.i("PlayerService", "shufflePlaylist");
         if (playlist != null) {
             playlist.shuffle();
-            rxBus.post(PlayerActionsEvents.EVENT_SHUFFLED, true);
+            rxBus.post(PlayerEvents.EVENT_SHUFFLED, true);
         }
     }
 
@@ -663,7 +682,7 @@ public class PlayerService
         Log.i("PlayerService", "unShufflePlaylist");
         if (playlist != null) {
             playlist.unShuffle();
-            rxBus.post(PlayerActionsEvents.EVENT_UNSHUFFLED, false);
+            rxBus.post(PlayerEvents.EVENT_UNSHUFFLED, false);
         }
     }
 
@@ -714,7 +733,7 @@ public class PlayerService
                         if (mediaPlayer != null) {
                             if (mediaPlayer.isPlaying()) {
                                 mediaPlayer.pause();
-                                rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PAUSED,false);
+                                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                             }
                             buildNotification(false, false);
                             ongoingCall = true;
@@ -727,7 +746,7 @@ public class PlayerService
                                 ongoingCall = false;
                                 if (wasPlaying) {
                                     mediaPlayer.start();
-                                    rxBus.post(PlayerActionsEvents.EVENT_AUDIO_IS_PLAYING,true);
+                                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
                                     buildNotification(true, true);
                                 }
                             }
@@ -745,62 +764,20 @@ public class PlayerService
 
     private void initMediaSession() {
         Log.i("PlayerService", "initMediaSession");
+        Context appContext = getApplicationContext();
+        Intent activityIntent = new Intent(appContext, MainActivity.class);
+        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null, appContext, MediaButtonReceiver.class);
+
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+
         mediaSession = new MediaSession(getApplicationContext(), SERVICE_NAME);
-        transportControls = mediaSession.getController().getTransportControls();
-        mediaSession.setCallback(new MediaSession.Callback() {
-
-            @Override
-            public void onPlay() {
-                super.onPlay();
-                play();
-            }
-
-            @Override
-            public void onPause() {
-                super.onPause();
-                pause();
-            }
-
-            @Override
-            public void onSkipToNext() {
-                super.onSkipToNext();
-                playNextTrack();
-            }
-
-            @Override
-            public void onSkipToPrevious() {
-                super.onSkipToPrevious();
-                playPrevTrack();
-            }
-
-            @Override
-            public void onFastForward() {
-                super.onFastForward();
-                fastForward(250);
-            }
-
-            @Override
-            public void onRewind() {
-                super.onRewind();
-                fastRewind(250);
-            }
-
-            @Override
-            public void onStop() {
-                super.onStop();
-                removeNotification();
-                stopSelf();
-            }
-
-            @Override
-            public void onSeekTo(long position) {
-                seekTo((int) position);
-                super.onSeekTo(position);
-            }
-        });
+        mediaSession.setSessionActivity(PendingIntent.getActivity(appContext, 0, activityIntent, 0));
+        mediaSession.setMediaButtonReceiver(PendingIntent.getBroadcast(appContext, 0, mediaButtonIntent, 0));
+        mediaSession.setCallback(new MediaSessionCallback());
         mediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
         mediaSession.setActive(true);
+
+        transportControls = mediaSession.getController().getTransportControls();
     }
 
 
@@ -809,13 +786,13 @@ public class PlayerService
         if (playbackAction == null || playbackAction.getAction() == null) return;
 
         String actionString = playbackAction.getAction();
-        if (actionString.equalsIgnoreCase(PlayerActionsEvents.ACTION_PLAY_AUDIO) && !mediaPlayer.isPlaying()) {
+        if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PLAY_AUDIO) && !mediaPlayer.isPlaying()) {
             transportControls.play();
-        } else if (actionString.equalsIgnoreCase(PlayerActionsEvents.ACTION_PAUSE_AUDIO) && mediaPlayer.isPlaying()) {
+        } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PAUSE_AUDIO) && mediaPlayer.isPlaying()) {
             transportControls.pause();
-        } else if (actionString.equalsIgnoreCase(PlayerActionsEvents.ACTION_NEXT_AUDIO)) {
+        } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_NEXT_AUDIO)) {
             transportControls.skipToNext();
-        } else if (actionString.equalsIgnoreCase(PlayerActionsEvents.ACTION_PREV_AUDIO)) {
+        } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PREV_AUDIO)) {
             transportControls.skipToPrevious();
         }
     }
@@ -870,19 +847,19 @@ public class PlayerService
         switch (actionNumber) {
             case 0:
                 // Play
-                playbackAction.setAction(PlayerActionsEvents.ACTION_PLAY_AUDIO);
+                playbackAction.setAction(PlayerActions.ACTION_PLAY_AUDIO);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             case 1:
                 // Pause
-                playbackAction.setAction(PlayerActionsEvents.ACTION_PAUSE_AUDIO);
+                playbackAction.setAction(PlayerActions.ACTION_PAUSE_AUDIO);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             case 2:
                 // Next track
-                playbackAction.setAction(PlayerActionsEvents.ACTION_NEXT_AUDIO);
+                playbackAction.setAction(PlayerActions.ACTION_NEXT_AUDIO);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             case 3:
                 // Previous track
-                playbackAction.setAction(PlayerActionsEvents.ACTION_PREV_AUDIO);
+                playbackAction.setAction(PlayerActions.ACTION_PREV_AUDIO);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             default:
                 break;
@@ -897,11 +874,10 @@ public class PlayerService
     }
 
     private void updateMetaData() {
-
         Log.i("PlayerService", "updateMetadata");
         if (currAudio != null) {
             Bitmap albumArt = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
-                    BitmapFactory.decodeResource(getResources(),R.drawable.default_album_art));
+                    BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art));
 
             mediaSession.setMetadata(new MediaMetadata.Builder()
                     .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)
@@ -915,25 +891,118 @@ public class PlayerService
     public class PlayerBinder extends Binder {
 
         public PlayerService getService() {
-
             return PlayerService.this;
-
         }
 
         public MediaController.TransportControls getController() {
-
             return transportControls;
         }
 
     }
 
     private boolean checkPermissions() {
-
         int readStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         int writeStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int readPhoneState = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
         if (readStorage == permissionGranted && writeStorage == permissionGranted && readPhoneState == permissionGranted)
             return true;
         return false;
+    }
+
+    private class MediaSessionCallback extends MediaSession.Callback {
+
+        private final MediaSessionCallback callback = this;
+        private final int delay = 500;
+        private ArrayList<KeyEvent> keyEvents;
+        private Disposable keyEventDisposable;
+
+        @Override
+        public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
+            KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            if(keyEvent == null || keyEvent.getKeyCode() != KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && keyEvent.getKeyCode() != KeyEvent.KEYCODE_HEADSETHOOK)
+                return false;
+
+            if (keyEventDisposable == null || keyEventDisposable.isDisposed()) {
+                keyEvents = new ArrayList<>();
+                keyEvents.add(keyEvent);
+                keyEventDisposable = Completable.create(emitter -> {
+                    Thread.sleep(delay);
+                    emitter.onComplete();
+                }).subscribeOn(Schedulers.newThread())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .doOnComplete(() -> {
+                            int taps = 0;
+                            for (int i = 1; i < keyEvents.size(); i++)
+                                if (keyEvents.get(i - 1).getAction() == KeyEvent.ACTION_DOWN && keyEvents.get(i).getAction() == KeyEvent.ACTION_UP)
+                                    taps++;
+
+                            switch (taps) {
+                                case 1:
+                                    if (isPlaying()) callback.onPause();
+                                    else callback.onPlay();
+                                    break;
+
+                                case 2:
+                                    callback.onSkipToNext();
+                                    break;
+
+                                case 3:
+                                    callback.onSkipToPrevious();
+                                    break;
+                            }
+                        }).subscribe();
+
+            } else keyEvents.add(keyEvent);
+
+            return true;
+        }
+
+        @Override
+        public void onPlay() {
+            super.onPlay();
+            play();
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            pause();
+        }
+
+        @Override
+        public void onSkipToNext() {
+            super.onSkipToNext();
+            playNextTrack();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            super.onSkipToPrevious();
+            playPrevTrack();
+        }
+
+        @Override
+        public void onFastForward() {
+            super.onFastForward();
+            fastForward(250);
+        }
+
+        @Override
+        public void onRewind() {
+            super.onRewind();
+            fastRewind(250);
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+            stop();
+        }
+
+        @Override
+        public void onSeekTo(long position) {
+            seekTo((int) position);
+            super.onSeekTo(position);
+        }
     }
 }

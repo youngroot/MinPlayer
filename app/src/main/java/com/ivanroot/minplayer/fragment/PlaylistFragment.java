@@ -30,8 +30,8 @@ import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateCh
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.squareup.picasso.Picasso;
 
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_PLAY_AUDIO;
-import static com.ivanroot.minplayer.player.PlayerActionsEvents.ACTION_SET_PLAYLIST;
+import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
+import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
 
 /**
  * Created by Ivan Root on 17.12.2017.
