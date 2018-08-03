@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBlue"
+    android:background="@color/colorSilver"
     tools:activity="com.ivanroot.minplayer.activity.StartupActivity">
 
     <ImageView
         android:id="@+id/imageView2"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        app:srcCompat="@drawable/music_big"
+        app:srcCompat="@drawable/min_player_logo_ultra_high_res"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="8dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -37,6 +37,5 @@
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textSize="40sp"
-        android:textColor="@color/colorWhite"/>
+        android:textSize="40sp"/>
 </android.support.constraint.ConstraintLayout>
