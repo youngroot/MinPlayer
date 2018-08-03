@@ -919,8 +919,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         @Override
         public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
             KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+
             if(keyEvent == null || keyEvent.getKeyCode() != KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && keyEvent.getKeyCode() != KeyEvent.KEYCODE_HEADSETHOOK)
-                return false;
+                return super.onMediaButtonEvent(mediaButtonIntent);
 
             if (keyEventDisposable == null || keyEventDisposable.isDisposed()) {
                 keyEvents = new ArrayList<>();

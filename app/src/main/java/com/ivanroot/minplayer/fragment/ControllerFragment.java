@@ -71,6 +71,7 @@ public class ControllerFragment extends Fragment {
     private int delayedTime = 1000;
     private Bus rxBus = RxBus.getInstance();
     private Disposable screenUpdater;
+    private Audio currAudio;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -174,9 +175,8 @@ public class ControllerFragment extends Fragment {
 //                                    .setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
 //                                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 //                        else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-
-
-
+                    if(currAudio == null)
+                        ((SlidingUpPanelLayout)panel).setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
                 }
             });
         }
@@ -216,7 +216,7 @@ public class ControllerFragment extends Fragment {
     }
 
     private void updateView(HashMap<String, Object> state){
-        Audio currAudio = (Audio) state.get(KEY_AUDIO);
+        currAudio = (Audio) state.get(KEY_AUDIO);
         if(currAudio != null) {
             if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
                 panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);

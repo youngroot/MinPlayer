@@ -77,10 +77,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         rxBus.register(this);
         setContentView(R.layout.activity_main);
-        panelLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
         bindService(new Intent(this, PlayerService.class), conn, Context.BIND_AUTO_CREATE);
         initItemId();
         setupDrawer();
+        setupSlidingPanel();
 
         if (savedInstanceState == null) {
             startPlayerService();
@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity
             //getSupportActionBar().setTitle(savedInstanceState.getString("title", getResources().getString(R.string.app_name)));
         }
     }
-
 
     private void startPlayerService() {
         if (!wasStarted) {
@@ -121,6 +120,8 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
+            panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         } else {
 
             Fragment fragment = getFragmentManager()
@@ -128,8 +129,8 @@ public class MainActivity extends AppCompatActivity
 
             switch (fragment.getTag()) {
                 case PlaylistFragment.NAME:
-                    String name = ((PlaylistFragment)fragment).getPlaylistName();
-                    if(!name.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+                    String name = ((PlaylistFragment) fragment).getPlaylistName();
+                    if (!name.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
                         fragmentLauncher(R.id.playlists);
                         navigationView.setCheckedItem(R.id.playlists);
                     }
@@ -200,18 +201,37 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         drawerToggle =
                 new ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
-            // Called when drawer is opened
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                invalidateOptionsMenu();
+                    // Called when drawer is opened
+                    public void onDrawerOpened(View drawerView) {
+                        super.onDrawerOpened(drawerView);
+                        invalidateOptionsMenu();
+                    }
+
+                    // Called when drawer is closed
+                    public void onDrawerClosed(View view) {
+                        super.onDrawerClosed(view);
+                        invalidateOptionsMenu();
+                    }
+                };
+    }
+
+    private void setupSlidingPanel() {
+        panelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        panelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+
             }
 
-            // Called when drawer is closed
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                invalidateOptionsMenu();
+            @Override
+            public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+                Log.i("PanelState", newState.name());
+                if (newState != SlidingUpPanelLayout.PanelState.COLLAPSED && newState != SlidingUpPanelLayout.PanelState.HIDDEN)
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+                else
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
-        };
+        });
     }
 
     @Override
@@ -256,7 +276,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public SlidingUpPanelLayout getPanelLayout(){
+    public SlidingUpPanelLayout getPanelLayout() {
         return panelLayout;
     }
 
