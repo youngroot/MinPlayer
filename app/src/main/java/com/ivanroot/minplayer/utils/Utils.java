@@ -1,12 +1,18 @@
 package com.ivanroot.minplayer.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
+import com.ivanroot.minplayer.R;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +21,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 /**
  * Created by Ivan Root on 07.07.2017.
@@ -123,5 +133,21 @@ public class Utils {
             e.printStackTrace();
             return new File("");
         }
+    }
+
+    public static Observable<Boolean> getNightModeObservableAndApplyTheme(AppCompatActivity activity){
+        final String nmKey = "pref_key_night_mode";
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
+        final boolean nightMode = preferences.getBoolean(nmKey, false);
+        RxSharedPreferences rxPreferences = RxSharedPreferences.create(preferences);
+
+        activity.setTheme(nightMode ? R.style.MinPlayerNightTheme : R.style.MinPlayerOriginalTheme);
+
+        return rxPreferences.getBoolean(nmKey)
+                .asObservable()
+                .skip(1)
+                .delay(200, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(val -> activity.recreate());
     }
 }

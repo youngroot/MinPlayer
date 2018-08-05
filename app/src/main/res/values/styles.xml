@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="OriginalPurpleGreyTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="MinPlayerOriginalTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- enable window content transitions -->
         <item name="android:windowActivityTransitions">false</item>
 
@@ -11,6 +11,10 @@
         <item name="colorAccent">@color/colorOriginalPurple</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:textColor">@color/colorBlack</item>
+        <item name="colorCheckedMenuItem">@color/colorOriginalPurple</item>
+        <item name="colorUncheckedMenuItem">@color/colorGrey</item>
+        <item name="colorCheckedMenuText">@color/colorOriginalPurple</item>
+        <item name="colorUncheckedMenuText">@color/colorGrey</item>
         <!-- specify enter and exit transitions -->
         <!--item name="android:windowEnterTransition">@transition/explode</item-->
         <!--item name="android:windowExitTransition">@transition/explode</item-->
@@ -23,7 +27,33 @@
 
     </style>
 
-    <style name="CollapsingToolbarLayoutExpandedTextStyle" parent="OriginalPurpleGreyTheme">
+    <style name="MinPlayerNightTheme" parent="Theme.AppCompat.NoActionBar">
+        <!-- enable window content transitions -->
+        <item name="android:windowActivityTransitions">false</item>
+
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorLightBlack</item>
+        <item name="colorPrimaryDark">@color/colorOriginalPurple</item>
+        <item name="colorAccent">@color/colorOriginalPurple</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="colorCheckedMenuItem">@color/colorOriginalPurple</item>
+        <item name="colorUncheckedMenuItem">@color/colorWhite</item>
+        <item name="colorCheckedMenuText">@color/colorOriginalPurple</item>
+        <item name="colorUncheckedMenuText">@color/colorWhite</item>
+        <!-- specify enter and exit transitions -->
+        <!--item name="android:windowEnterTransition">@transition/explode</item-->
+        <!--item name="android:windowExitTransition">@transition/explode</item-->
+
+        <!-- specify shared element transitions -->
+        <item name="android:windowSharedElementEnterTransition">
+            @transition/change_image_transform</item>
+        <item name="android:windowSharedElementExitTransition">
+            @transition/change_image_transform</item>
+    </style>
+
+
+    <style name="CollapsingToolbarLayoutExpandedTextStyle" parent="MinPlayerOriginalTheme">
         <item name="android:textColor">@android:color/transparent</item>
         <item name="android:textSize">0sp</item>
     </style>

@@ -7,6 +7,11 @@
     <declare-styleable name="ButtonBarContainerTheme">
         <attr name="metaButtonBarStyle" format="reference" />
         <attr name="metaButtonBarButtonStyle" format="reference" />
+        <attr name="colorBackground" format="color"/>
+        <attr name="colorCheckedMenuItem" format="color"/>
+        <attr name="colorUncheckedMenuItem" format="color"/>
+        <attr name="colorCheckedMenuText" format="color"/>
+        <attr name="colorUncheckedMenuText" format="color"/>
     </declare-styleable>
 
 </resources>

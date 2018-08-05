@@ -10,6 +10,7 @@
     <color name="colorWhite">#ffffff</color>
     <color name="colorBlack">#000000</color>
     <color name="colorBlackTransparent">#8F000000</color>
+    <color name="colorLightBlack">#212121</color>
     <color name="colorDarkMagenta">#8B008B</color>
     <color name="colorPurple">#800080</color>
     <color name="colorOriginalPurple">#c14bd3</color>

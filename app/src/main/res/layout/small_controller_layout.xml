@@ -4,7 +4,7 @@
     android:id="@+id/small_controller_layout"
     android:layout_width="match_parent"
     android:layout_height="70dp"
-    android:background="@color/colorWhite">
+    android:background="?android:attr/colorBackground">
     <LinearLayout
         android:id="@+id/buttonPanel"
         android:layout_width="wrap_content"
@@ -18,6 +18,7 @@
             android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_prev_noti"
+            android:tint="?android:attr/textColor"
             android:background="?android:attr/selectableItemBackgroundBorderless"  />
 
         <ImageButton
@@ -27,6 +28,7 @@
             android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_play_noti"
+            android:tint="?android:attr/textColor"
             android:background="?android:attr/selectableItemBackgroundBorderless"  />
 
 
@@ -37,6 +39,7 @@
             android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_next_noti"
+            android:tint="?android:attr/textColor"
             android:background="?android:attr/selectableItemBackgroundBorderless"  />
     </LinearLayout>
 
@@ -64,7 +67,6 @@
         android:layout_height="wrap_content"
         android:singleLine="true"
         android:text="@string/app_name"
-        android:textColor="@color/colorBlack"
         android:textSize="15sp"
         android:layout_below="@+id/smallProgress"
         android:layout_marginStart="4dp"

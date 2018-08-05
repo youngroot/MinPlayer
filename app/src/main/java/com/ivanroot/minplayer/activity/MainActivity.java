@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
@@ -28,10 +29,13 @@ import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.ivanroot.minplayer.utils.Utils;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import io.reactivex.disposables.Disposable;
 
 
 public class MainActivity extends AppCompatActivity
@@ -49,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     private ControllerFragment controllerFragment;
     private PlayerFragment playerFragment;
     private Bus rxBus = RxBus.getInstance();
+    private Disposable prefDisposable;
 
     private ServiceConnection conn = new ServiceConnection() {
 
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        prefDisposable = Utils.getNightModeObservableAndApplyTheme(this).subscribe();
         super.onCreate(savedInstanceState);
         rxBus.register(this);
         setContentView(R.layout.activity_main);
@@ -173,6 +179,8 @@ public class MainActivity extends AppCompatActivity
         rxBus.unregister(this);
         unbindService(conn);
         stopPlayerService();
+        if(prefDisposable != null)
+            prefDisposable.dispose();
     }
 
     @Override
@@ -264,6 +272,7 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.settings:
                 fragment = null;
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }
 

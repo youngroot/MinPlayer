@@ -42,6 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_below="@id/audioList"
+        android:textColor="?android:attr/colorAccent"
         android:background="?android:attr/selectableItemBackground"
         android:layout_marginStart="10dp"
         android:text="@string/cancel" />
@@ -53,6 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_below="@id/audioList"
+        android:textColor="?android:attr/colorAccent"
         android:background="?android:attr/selectableItemBackground"
         android:layout_marginEnd="10dp"
         android:text="@string/ok" />

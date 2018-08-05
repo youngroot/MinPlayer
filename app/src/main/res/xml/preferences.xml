@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_category_appearance">
+        <SwitchPreference
+            android:key="pref_key_night_mode"
+            android:title="@string/pref_night_mode"
+            android:defaultValue="false"/>
+    </PreferenceCategory>
+</PreferenceScreen>
