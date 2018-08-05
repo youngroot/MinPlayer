@@ -140,7 +140,7 @@ public class PlaylistAddDialog extends DialogFragment {
 
             if (view == null) {
                 LayoutInflater inflater = activity.getLayoutInflater();
-                view = inflater.inflate(R.layout.audio_item_playlist_add_dialog, null);
+                view = inflater.inflate(R.layout.audio_item_add_playtlist_dialog, null);
             }
 
             title = (TextView) view.findViewById(R.id.songTitle);

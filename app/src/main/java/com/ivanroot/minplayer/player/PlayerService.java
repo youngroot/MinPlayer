@@ -29,7 +29,6 @@ import android.support.v4.media.session.MediaButtonReceiver;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.widget.Toast;
 
 import com.hwangjr.rxbus.Bus;
@@ -52,10 +51,8 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 
 public class PlayerService extends Service implements MediaPlayer.OnPreparedListener,
@@ -111,7 +108,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             }
         };
         registerBecomingNoisy();
-        callStateListener();
+        setupCallStateListener();
         loadSettings();
         prepareToPlay();
 
@@ -286,14 +283,14 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private void buildAndSetPlaybackState(boolean isPlaying) {
         int state = (isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
 
-        if(!mediaSession.isActive())
+        if (!mediaSession.isActive())
             mediaSession.setActive(true);
 
         mediaSession.setPlaybackState(new PlaybackState.Builder()
                 .setActions(PlaybackState.ACTION_PLAY |
-                                PlaybackState.ACTION_PAUSE |
-                                PlaybackState.ACTION_SKIP_TO_NEXT |
-                                PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+                        PlaybackState.ACTION_PAUSE |
+                        PlaybackState.ACTION_SKIP_TO_NEXT |
+                        PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                 .setState(state, getAudioPosition(), 1)
                 .build());
 
@@ -306,7 +303,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     @Override
     public void onAudioFocusChange(int focusChange) {
-        Log.i("PlayerService", "onAudioFocusChange");
+        Log.i("onAudioFocusChange", String.valueOf(focusChange));
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 if (wasPlaying) {
@@ -316,6 +313,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 buildNotification(wasPlaying, true);
                 mediaPlayer.setVolume(1.0f, 1.0f);
                 break;
+
             case AudioManager.AUDIOFOCUS_LOSS:
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
@@ -324,13 +322,17 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 removeAudioFocus();
                 buildNotification(false, false);
                 break;
+
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
+                if(!ongoingCall) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                        rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
+                    }
+                    buildNotification(false, false);
                 }
-                buildNotification(false, false);
                 break;
+
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 if (mediaPlayer.isPlaying()) mediaPlayer.setVolume(0.1f, 0.1f);
                 break;
@@ -474,10 +476,10 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         }
     }
 
-    public void stop(){
+    public void stop() {
         removeNotification();
-        if(mediaPlayer != null){
-            if(mediaPlayer.isPlaying()){
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
                 rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED);
             }
@@ -606,12 +608,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public int getAudioPosition() {
-        //Log.i("PlayerService","getAudioPosition");
-        if (mediaPlayer != null) {
-
-            return mediaPlayer.getCurrentPosition();
-        }
-        return 0;
+        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SEEK_TO)})
@@ -717,14 +714,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         registerReceiver(becomingNoisyReceiver, filter);
     }
 
-    private void callStateListener() {
-        Log.i("PlayerService", "callStateListener");
+    private void setupCallStateListener() {
+        Log.i("PlayerService", "setupCallStateListener");
         // Get the telephony manager
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         //Starting listening for PhoneState changes
         phoneStateListener = new PhoneStateListener() {
             @Override
             public void onCallStateChanged(int state, String incomingNumber) {
+                Log.i("onCallStateChanged",String.valueOf(state));
                 switch (state) {
                     //if at least one call exists or the phone is ringing
                     //pause the MediaPlayer
@@ -735,21 +733,20 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                                 mediaPlayer.pause();
                                 rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                             }
-                            buildNotification(false, false);
+                            removeNotification();
                             ongoingCall = true;
                         }
                         break;
+
                     case TelephonyManager.CALL_STATE_IDLE:
                         // Phone idle. Start playing.
-                        if (mediaPlayer != null) {
-                            if (ongoingCall) {
-                                ongoingCall = false;
-                                if (wasPlaying) {
-                                    mediaPlayer.start();
-                                    rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
-                                    buildNotification(true, true);
-                                }
+                        if (mediaPlayer != null && ongoingCall) {
+                            ongoingCall = false;
+                            if (wasPlaying) {
+                                mediaPlayer.start();
+                                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
                             }
+                            buildNotification(wasPlaying, true);
                         }
                         break;
                 }
@@ -773,7 +770,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         mediaSession = new MediaSession(getApplicationContext(), SERVICE_NAME);
         mediaSession.setSessionActivity(PendingIntent.getActivity(appContext, 0, activityIntent, 0));
         mediaSession.setMediaButtonReceiver(PendingIntent.getBroadcast(appContext, 0, mediaButtonIntent, 0));
-        mediaSession.setCallback(new MediaSessionCallback());
+        mediaSession.setCallback(new MediaSessionCallback(this));
         mediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
         mediaSession.setActive(true);
 
@@ -909,101 +906,4 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return false;
     }
 
-    private class MediaSessionCallback extends MediaSession.Callback {
-
-        private final MediaSessionCallback callback = this;
-        private final int delay = 500;
-        private ArrayList<KeyEvent> keyEvents;
-        private Disposable keyEventDisposable;
-
-        @Override
-        public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
-            KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
-
-            if(keyEvent == null || keyEvent.getKeyCode() != KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && keyEvent.getKeyCode() != KeyEvent.KEYCODE_HEADSETHOOK)
-                return super.onMediaButtonEvent(mediaButtonIntent);
-
-            if (keyEventDisposable == null || keyEventDisposable.isDisposed()) {
-                keyEvents = new ArrayList<>();
-                keyEvents.add(keyEvent);
-                keyEventDisposable = Completable.create(emitter -> {
-                    Thread.sleep(delay);
-                    emitter.onComplete();
-                }).subscribeOn(Schedulers.newThread())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .doOnComplete(() -> {
-                            int taps = 0;
-                            for (int i = 1; i < keyEvents.size(); i++)
-                                if (keyEvents.get(i - 1).getAction() == KeyEvent.ACTION_DOWN && keyEvents.get(i).getAction() == KeyEvent.ACTION_UP)
-                                    taps++;
-
-                            switch (taps) {
-                                case 1:
-                                    if (isPlaying()) callback.onPause();
-                                    else callback.onPlay();
-                                    break;
-
-                                case 2:
-                                    callback.onSkipToNext();
-                                    break;
-
-                                case 3:
-                                    callback.onSkipToPrevious();
-                                    break;
-                            }
-                        }).subscribe();
-
-            } else keyEvents.add(keyEvent);
-
-            return true;
-        }
-
-        @Override
-        public void onPlay() {
-            super.onPlay();
-            play();
-        }
-
-        @Override
-        public void onPause() {
-            super.onPause();
-            pause();
-        }
-
-        @Override
-        public void onSkipToNext() {
-            super.onSkipToNext();
-            playNextTrack();
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            super.onSkipToPrevious();
-            playPrevTrack();
-        }
-
-        @Override
-        public void onFastForward() {
-            super.onFastForward();
-            fastForward(250);
-        }
-
-        @Override
-        public void onRewind() {
-            super.onRewind();
-            fastRewind(250);
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-            stop();
-        }
-
-        @Override
-        public void onSeekTo(long position) {
-            seekTo((int) position);
-            super.onSeekTo(position);
-        }
-    }
 }

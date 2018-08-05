@@ -8,13 +8,29 @@
     android:layout_marginTop="4dp"
     android:background="?android:attr/selectableItemBackground">
 
-    <ImageView
-        android:id="@+id/albumArt"
+    <android.support.v7.widget.CardView
+        android:id="@+id/albumArtCardOuter"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginStart="5dp"
-        android:scaleType="fitXY"
-        app:srcCompat="@drawable/default_album_art" />
+        card_view:cardCornerRadius="10dp"
+        card_view:cardElevation="2dp">
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/albumArtCardInner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            card_view:cardCornerRadius="10dp"
+            card_view:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/albumArt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/default_album_art" />
+        </android.support.v7.widget.CardView>
+    </android.support.v7.widget.CardView>
 
     <LinearLayout
         android:id="@+id/infoLayout"
@@ -22,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
-        android:layout_toEndOf="@id/albumArt"
+        android:layout_toEndOf="@id/albumArtCardOuter"
         android:orientation="vertical">
 
         <TextView

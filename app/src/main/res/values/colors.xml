@@ -12,7 +12,7 @@
     <color name="colorBlackTransparent">#8F000000</color>
     <color name="colorDarkMagenta">#8B008B</color>
     <color name="colorPurple">#800080</color>
-    <color name="colorOriginalPurple">#a52cc0</color>
+    <color name="colorOriginalPurple">#c14bd3</color>
     <color name="colorMediumPurple">#9370DB</color>
     <color name="colorBlackOverlay">#66000000</color>
 </resources>
