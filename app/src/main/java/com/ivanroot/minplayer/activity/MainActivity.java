@@ -12,13 +12,11 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
@@ -29,16 +27,13 @@ import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.utils.Utils;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import io.reactivex.disposables.Disposable;
 
-
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends NightModeResponsibleActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private PlayerService player;
@@ -53,7 +48,6 @@ public class MainActivity extends AppCompatActivity
     private ControllerFragment controllerFragment;
     private PlayerFragment playerFragment;
     private Bus rxBus = RxBus.getInstance();
-    private Disposable prefDisposable;
 
     private ServiceConnection conn = new ServiceConnection() {
 
@@ -79,7 +73,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        prefDisposable = Utils.getNightModeObservableAndApplyTheme(this).subscribe();
         super.onCreate(savedInstanceState);
         rxBus.register(this);
         setContentView(R.layout.activity_main);
@@ -179,8 +172,6 @@ public class MainActivity extends AppCompatActivity
         rxBus.unregister(this);
         unbindService(conn);
         stopPlayerService();
-        if(prefDisposable != null)
-            prefDisposable.dispose();
     }
 
     @Override

@@ -135,19 +135,4 @@ public class Utils {
         }
     }
 
-    public static Observable<Boolean> getNightModeObservableAndApplyTheme(AppCompatActivity activity){
-        final String nmKey = "pref_key_night_mode";
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
-        final boolean nightMode = preferences.getBoolean(nmKey, false);
-        RxSharedPreferences rxPreferences = RxSharedPreferences.create(preferences);
-
-        activity.setTheme(nightMode ? R.style.MinPlayerNightTheme : R.style.MinPlayerOriginalTheme);
-
-        return rxPreferences.getBoolean(nmKey)
-                .asObservable()
-                .skip(1)
-                .delay(200, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(val -> activity.recreate());
-    }
 }

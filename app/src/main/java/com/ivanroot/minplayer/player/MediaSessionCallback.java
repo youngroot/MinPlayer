@@ -12,7 +12,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-class MediaSessionCallback extends MediaSession.Callback {
+public class MediaSessionCallback extends MediaSession.Callback {
 
     private PlayerService playerService;
     private final MediaSessionCallback callback = this;
