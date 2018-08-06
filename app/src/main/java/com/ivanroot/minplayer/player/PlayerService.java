@@ -15,21 +15,47 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadata;
-import android.media.MediaPlayer;
 import android.media.audiofx.AudioEffect;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.Surface;
+
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.analytics.AnalyticsListener;
+import com.google.android.exoplayer2.decoder.DecoderCounters;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
+import com.google.android.exoplayer2.metadata.Metadata;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.MediaSourceEventListener;
+import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
@@ -53,26 +79,31 @@ import java.util.Queue;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import okhttp3.OkHttpClient;
 
 
-public class PlayerService extends Service implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnErrorListener,
-        MediaPlayer.OnInfoListener,
+public class PlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener {
 
     public static final String SERVICE_NAME = "PlayerService";
     private final int permissionDenied = PackageManager.PERMISSION_DENIED;
     private final int permissionGranted = PackageManager.PERMISSION_GRANTED;
     private static final int NOTIFICATION_ID = 101;
+    private int audioSessionId = 0;
     private PlayerBinder localBinder = new PlayerBinder();
     private SharedPreferences settings;
     private Playlist playlist;
     private Queue<Audio> nextQueue;
     private BroadcastReceiver becomingNoisyReceiver;
     private Audio currAudio;
-    private MediaPlayer mediaPlayer;
     private AudioManager audioManager;
+    private TrackSelection.Factory trackSelectionFactory;
+    private TrackSelector trackSelector;
+    private BandwidthMeter bandwidthMeter;
+    private DefaultDataSourceFactory defaultDataSourceFactory;
+    private OkHttpDataSourceFactory okHttpDataSourceFactory;
+    private SimpleExoPlayer exoPlayer;
+    private PlayerAnalyticsListener playerAnalyticsListener;
     private MediaSessionManager mediaSessionManager;
     private MediaSession mediaSession;
     private MediaController.TransportControls transportControls;
@@ -82,7 +113,6 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private boolean wasPlaying;
     private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
     private boolean isNextQueueUsing = false;
-    private int mpError = 0;
     private Disposable playlistSubscription;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.getInstance();
@@ -92,26 +122,14 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     public void onCreate() {
         Log.i("PlayerService", "onCreate");
         super.onCreate();
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnPreparedListener(this);
-        mediaPlayer.setOnCompletionListener(this);
-        mediaPlayer.setOnErrorListener(this);
-        mediaPlayer.setOnInfoListener(this);
         nextQueue = new PriorityQueue<>();
         rxBus.register(this);
-        enableEqualizer();
+        initExoPlayer();
         initMediaSession();
-        becomingNoisyReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                pause();
-            }
-        };
         registerBecomingNoisy();
         setupCallStateListener();
         loadSettings();
         prepareToPlay();
-
     }
 
     @Override
@@ -129,7 +147,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         disableEqualizer();
         removeNotification();
         mediaSession.release();
-        mediaPlayer.stop();
+        exoPlayer.stop();
+        exoPlayer.release();
         if (playlistSubscription != null) {
             playlistSubscription.dispose();
         }
@@ -146,52 +165,44 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     @Override
     public boolean onUnbind(Intent intent) {
-
         Log.i("PlayerService", "onUnbind");
         return super.onUnbind(intent);
     }
 
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        Log.i("PlayerService", "onCompletion");
-        //removeAudioFocus();
-        if (getAudioPosition() != 0 && mpError == 0) {
-            playNextTrack();
-        }
+    void initExoPlayer() {
+        bandwidthMeter = new DefaultBandwidthMeter();
+        trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+        trackSelector = new DefaultTrackSelector(trackSelectionFactory);
+        playerAnalyticsListener = new PlayerAnalyticsListener();
+        exoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
+        exoPlayer.addAnalyticsListener(playerAnalyticsListener);
+
+        String userAgent = Util.getUserAgent(this, "MinPlayer");
+        defaultDataSourceFactory = new DefaultDataSourceFactory(this, userAgent);
+        okHttpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, null);
+
     }
 
     private void prepareToPlay() {
         Log.i("PlayerService", "prepareToPlay");
-        if (mediaPlayer != null) {
-            mediaPlayer.reset();
-            if (currAudio != null) {
-                if (playlist.size() > 0) {
 
-                    try {
-                        mediaPlayer.setDataSource(currAudio.getData());
-                    } catch (IOException ex) {
-
-                        Log.e(SERVICE_NAME, ex.getMessage());
-                        removeNotification();
-                        stopSelf();
-                    }
-                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    try {
-                        mediaPlayer.prepareAsync();
-                    } catch (IllegalStateException ex) {
-                        Toast.makeText(this, "prepareToPlay() " + ex.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.e(SERVICE_NAME, "prepareToPlay() " + ex.getMessage());
-                    }
-                }
+        if (currAudio != null) {
+            if (playlist.size() > 0) {
+                //TODO Add online playing
+                MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
+                        .createMediaSource(Uri.parse(currAudio.getData()));
+                exoPlayer.prepare(mediaSource);
+                exoPlayer.setPlayWhenReady(wasPlaying);
             }
         }
+
     }
 
     private void enableEqualizer() {
-        Log.i("PlayerService", "enableEqualizer");
+        Log.i("Enable Equaliser",String.valueOf(exoPlayer.getAudioSessionId()));
         Intent equalizerIntent = new Intent();
         equalizerIntent.setAction(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
-        equalizerIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, mediaPlayer.getAudioSessionId());
+        equalizerIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, audioSessionId);
         equalizerIntent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, getPackageName());
         sendBroadcast(equalizerIntent);
     }
@@ -200,7 +211,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         Log.i("PlayerService", "disableEqualizer");
         Intent equalizerIntent = new Intent();
         equalizerIntent.setAction(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION);
-        equalizerIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, mediaPlayer.getAudioSessionId());
+        equalizerIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, audioSessionId);
         equalizerIntent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, getPackageName());
         sendBroadcast(equalizerIntent);
     }
@@ -240,36 +251,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
 
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.i("PlayerService", "onError");
-        mpError = what;
-        return false;
-    }
-
-    @Override
-    public boolean onInfo(MediaPlayer mp, int what, int extra) {
-        Log.i("PlayerService", "onInfo");
-        return false;
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        Log.i("PlayerService", "onPrepared");
-        requestAudioFocus();
-        buildNotification(wasPlaying, true);
-        mpError = 0;
-        if (wasPlaying)
-            mediaPlayer.start();
-
-        updateMetaData();
-        rxBus.post(nextEvent, getCurrentStateMap());
-        buildAndSetPlaybackState(wasPlaying);
-    }
-
     @NonNull
     public HashMap<String, Object> getCurrentStateMap() {
-
         HashMap<String, Object> state = new HashMap<>();
         state.put(PlayerKeys.KEY_AUDIO, getCurrAudio());
         state.put(PlayerKeys.KEY_IS_SHUFFLED, isShuffled());
@@ -307,16 +290,16 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 if (wasPlaying) {
-                    mediaPlayer.start();
+                    exoPlayer.setPlayWhenReady(true);
                     rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
                 }
                 buildNotification(wasPlaying, true);
-                mediaPlayer.setVolume(1.0f, 1.0f);
+                exoPlayer.setVolume(1f);
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS:
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
+                if (isPlaying()) {
+                    exoPlayer.setPlayWhenReady(false);
                     rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                 }
                 removeAudioFocus();
@@ -324,9 +307,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if(!ongoingCall) {
-                    if (mediaPlayer.isPlaying()) {
-                        mediaPlayer.pause();
+                if (!ongoingCall) {
+                    if (isPlaying()) {
+                        exoPlayer.setPlayWhenReady(false);
                         rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                     }
                     buildNotification(false, false);
@@ -334,7 +317,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                if (mediaPlayer.isPlaying()) mediaPlayer.setVolume(0.1f, 0.1f);
+                if (isPlaying()) exoPlayer.setVolume(0.1f);
                 break;
         }
     }
@@ -357,9 +340,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public boolean isPlaying() {
         Log.i("PlayerService", "isPlaying");
-        if (mediaPlayer != null)
-            return mediaPlayer.isPlaying();
-        return false;
+        return exoPlayer.getPlayWhenReady();
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_IS_PLAYING)})
@@ -427,22 +408,21 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public void play() {
         Log.i("PlayerService", "play()");
-        if (mediaPlayer != null) {
-            if (!mediaPlayer.isPlaying()) {
-                requestAudioFocus();
-                buildNotification(true, true);
-                mediaPlayer.start();
-                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
-            }
-            wasPlaying = mediaPlayer.isPlaying();
-            buildAndSetPlaybackState(wasPlaying);
+        if (!isPlaying()) {
+            requestAudioFocus();
+            buildNotification(true, true);
+            exoPlayer.setPlayWhenReady(true);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
         }
+        wasPlaying = isPlaying();
+        buildAndSetPlaybackState(wasPlaying);
+
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_AND_PLAY_AUDIO)})
     public void play(Audio audio) {
         Log.i("PlayerService", "play(Audio Audio)");
-        if (mediaPlayer != null && playlist != null) {
+        if (playlist != null) {
             if (!audio.equals(currAudio)) {
                 if (playlist.checkAndSetAudio(audio)) {
                     currAudio = audio;
@@ -465,26 +445,24 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public void pause() {
         Log.i("PlayerService", "pause");
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                buildNotification(false, true);
-                mediaPlayer.pause();
-                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
-            }
-            wasPlaying = mediaPlayer.isPlaying();
-            buildAndSetPlaybackState(wasPlaying);
+        if (isPlaying()) {
+            buildNotification(false, true);
+            exoPlayer.setPlayWhenReady(false);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
         }
+        wasPlaying = isPlaying();
+        buildAndSetPlaybackState(wasPlaying);
+
     }
 
     public void stop() {
         removeNotification();
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
-                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED);
-            }
-            wasPlaying = mediaPlayer.isPlaying();
+
+        if (isPlaying()) {
+            exoPlayer.setPlayWhenReady(false);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED);
         }
+        wasPlaying = isPlaying();
         mediaSession.setActive(false);
         mediaSession.setPlaybackState(new PlaybackState.Builder().setState(PlaybackState.STATE_STOPPED, getAudioPosition(), 1).build());
     }
@@ -554,7 +532,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_FAST_FORWARD)})
     public void fastForward(Integer forwardShift) {
         Log.i("PlayerService", "fastForward");
-        mediaPlayer.seekTo(mediaPlayer.getCurrentPosition() + forwardShift);
+        exoPlayer.seekTo(exoPlayer.getCurrentPosition() + forwardShift);
         rxBus.post(PlayerEvents.EVENT_FAST_FORWARD, forwardShift);
         rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, getAudioPosition());
     }
@@ -562,7 +540,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_REWIND)})
     public void fastRewind(Integer backwardShift) {
         Log.i("PlayerService", "fastRewind");
-        mediaPlayer.seekTo(mediaPlayer.getCurrentPosition() - backwardShift);
+        exoPlayer.seekTo(exoPlayer.getCurrentPosition() - backwardShift);
         rxBus.post(PlayerEvents.EVENT_REWIND, backwardShift);
         rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, getAudioPosition());
     }
@@ -583,10 +561,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public int getAudioSessionId() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getAudioSessionId();
-        }
-        return 0;
+        return exoPlayer.getAudioSessionId();
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_AUDIO_DURATION)})
@@ -596,10 +571,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public int getAudioDuration() {
         Log.i("PlayerService", "getAudioDuration");
-        if (mediaPlayer != null) {
-            return mediaPlayer.getDuration();
-        }
-        return 0;
+        return (int) exoPlayer.getDuration();
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_AUDIO_POSITION)})
@@ -608,17 +580,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public int getAudioPosition() {
-        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
+        return (int) exoPlayer.getCurrentPosition();
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SEEK_TO)})
     public void seekTo(Integer pos) {
         Log.i("PlayerService", "seekTo");
-        if (mediaPlayer != null) {
+        exoPlayer.seekTo(pos);
+        rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, pos);
 
-            mediaPlayer.seekTo(pos);
-            rxBus.post(PlayerEvents.EVENT_ON_POSITION_CHANGED, pos);
-        }
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_CHANGE_RP_MODE)})
@@ -710,6 +680,12 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     private void registerBecomingNoisy() {
         Log.i("PlayerService", "registerBecomingNoisy");
+        becomingNoisyReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                pause();
+            }
+        };
         IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         registerReceiver(becomingNoisyReceiver, filter);
     }
@@ -722,28 +698,27 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         phoneStateListener = new PhoneStateListener() {
             @Override
             public void onCallStateChanged(int state, String incomingNumber) {
-                Log.i("onCallStateChanged",String.valueOf(state));
+                Log.i("onCallStateChanged", String.valueOf(state));
                 switch (state) {
                     //if at least one call exists or the phone is ringing
                     //pause the MediaPlayer
                     case TelephonyManager.CALL_STATE_OFFHOOK:
                     case TelephonyManager.CALL_STATE_RINGING:
-                        if (mediaPlayer != null) {
-                            if (mediaPlayer.isPlaying()) {
-                                mediaPlayer.pause();
+                            if (isPlaying()) {
+                                exoPlayer.setPlayWhenReady(false);
                                 rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                             }
                             removeNotification();
                             ongoingCall = true;
-                        }
+
                         break;
 
                     case TelephonyManager.CALL_STATE_IDLE:
                         // Phone idle. Start playing.
-                        if (mediaPlayer != null && ongoingCall) {
+                        if (ongoingCall) {
                             ongoingCall = false;
                             if (wasPlaying) {
-                                mediaPlayer.start();
+                                exoPlayer.setPlayWhenReady(true);
                                 rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PLAYING, true);
                             }
                             buildNotification(wasPlaying, true);
@@ -783,9 +758,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         if (playbackAction == null || playbackAction.getAction() == null) return;
 
         String actionString = playbackAction.getAction();
-        if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PLAY_AUDIO) && !mediaPlayer.isPlaying()) {
+        if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PLAY_AUDIO) && !isPlaying()) {
             transportControls.play();
-        } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PAUSE_AUDIO) && mediaPlayer.isPlaying()) {
+        } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_PAUSE_AUDIO) && isPlaying()) {
             transportControls.pause();
         } else if (actionString.equalsIgnoreCase(PlayerActions.ACTION_NEXT_AUDIO)) {
             transportControls.skipToNext();
@@ -906,4 +881,204 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return false;
     }
 
+    private class PlayerAnalyticsListener extends Player.DefaultEventListener implements AnalyticsListener {
+
+        @Override
+        public void onPlayerStateChanged(EventTime eventTime, boolean playWhenReady, int playbackState) {
+            switch (playbackState) {
+                case Player.STATE_ENDED:
+                    if (exoPlayer.getCurrentPosition() != 0) PlayerService.this.playNextTrack();
+                    break;
+
+                case Player.STATE_READY:
+                    requestAudioFocus();
+                    buildNotification(playWhenReady, true);
+                    updateMetaData();
+                    rxBus.post(nextEvent, getCurrentStateMap());
+                    buildAndSetPlaybackState(playWhenReady);
+                    break;
+            }
+        }
+
+        @Override
+        public void onTimelineChanged(EventTime eventTime, int reason) {
+
+        }
+
+        @Override
+        public void onPositionDiscontinuity(EventTime eventTime, int reason) {
+
+        }
+
+        @Override
+        public void onSeekStarted(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onSeekProcessed(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onPlaybackParametersChanged(EventTime eventTime, PlaybackParameters playbackParameters) {
+
+        }
+
+        @Override
+        public void onRepeatModeChanged(EventTime eventTime, int repeatMode) {
+
+        }
+
+        @Override
+        public void onShuffleModeChanged(EventTime eventTime, boolean shuffleModeEnabled) {
+
+        }
+
+        @Override
+        public void onLoadingChanged(EventTime eventTime, boolean isLoading) {
+
+        }
+
+        @Override
+        public void onPlayerError(EventTime eventTime, ExoPlaybackException error) {
+
+        }
+
+        @Override
+        public void onTracksChanged(EventTime eventTime, TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+
+        }
+
+        @Override
+        public void onLoadStarted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
+
+        }
+
+        @Override
+        public void onLoadCompleted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
+
+        }
+
+        @Override
+        public void onLoadCanceled(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
+
+        }
+
+        @Override
+        public void onLoadError(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData, IOException error, boolean wasCanceled) {
+
+        }
+
+        @Override
+        public void onDownstreamFormatChanged(EventTime eventTime, MediaSourceEventListener.MediaLoadData mediaLoadData) {
+
+        }
+
+        @Override
+        public void onUpstreamDiscarded(EventTime eventTime, MediaSourceEventListener.MediaLoadData mediaLoadData) {
+
+        }
+
+        @Override
+        public void onMediaPeriodCreated(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onMediaPeriodReleased(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onReadingStarted(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
+
+        }
+
+        @Override
+        public void onViewportSizeChange(EventTime eventTime, int width, int height) {
+
+        }
+
+        @Override
+        public void onNetworkTypeChanged(EventTime eventTime, @Nullable NetworkInfo networkInfo) {
+
+        }
+
+        @Override
+        public void onMetadata(EventTime eventTime, Metadata metadata) {
+
+        }
+
+        @Override
+        public void onDecoderEnabled(EventTime eventTime, int trackType, DecoderCounters decoderCounters) {
+
+        }
+
+        @Override
+        public void onDecoderInitialized(EventTime eventTime, int trackType, String decoderName, long initializationDurationMs) {
+
+        }
+
+        @Override
+        public void onDecoderInputFormatChanged(EventTime eventTime, int trackType, Format format) {
+
+        }
+
+        @Override
+        public void onDecoderDisabled(EventTime eventTime, int trackType, DecoderCounters decoderCounters) {
+
+        }
+
+        @Override
+        public void onAudioSessionId(EventTime eventTime, int audioSessionId) {
+            PlayerService.this.audioSessionId = audioSessionId;
+            enableEqualizer();
+        }
+
+        @Override
+        public void onAudioUnderrun(EventTime eventTime, int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs) {
+
+        }
+
+        @Override
+        public void onDroppedVideoFrames(EventTime eventTime, int droppedFrames, long elapsedMs) {
+
+        }
+
+        @Override
+        public void onVideoSizeChanged(EventTime eventTime, int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+
+        }
+
+        @Override
+        public void onRenderedFirstFrame(EventTime eventTime, Surface surface) {
+
+        }
+
+        @Override
+        public void onDrmKeysLoaded(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onDrmSessionManagerError(EventTime eventTime, Exception error) {
+
+        }
+
+        @Override
+        public void onDrmKeysRestored(EventTime eventTime) {
+
+        }
+
+        @Override
+        public void onDrmKeysRemoved(EventTime eventTime) {
+
+        }
+    }
 }
