@@ -14,14 +14,19 @@
                 android:icon="@drawable/ic_playlist"
                 android:title="@string/playlists" />
             <item
-                android:id="@+id/spectrum"
+                android:id="@+id/disk"
                 android:checkable="true"
-                android:icon="@drawable/ic_spectrum"
-                android:title="@string/spectrum" />
+                android:icon="@drawable/ic_yandex_disk"
+                android:title="@string/yandex_disk" />
         </menu>
     </item>
-    <item android:title="@string/options">
+    <item android:title="@string/advanced">
         <menu>
+            <item
+            android:id="@+id/spectrum"
+            android:checkable="true"
+            android:icon="@drawable/ic_spectrum"
+            android:title="@string/spectrum" />
             <item
                 android:id="@+id/settings"
                 android:checkable="true"

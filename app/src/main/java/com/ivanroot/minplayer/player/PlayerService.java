@@ -24,6 +24,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +34,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Surface;
 
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
@@ -56,20 +58,23 @@ import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.activity.StartupActivity;
+import com.ivanroot.minplayer.activity.TokenActivity;
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.disk.RestClientUtil;
 import com.ivanroot.minplayer.player.constants.PlayerActions;
 import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.player.constants.PlayerKeys;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Utils;
+import com.yandex.disk.rest.Credentials;
+import com.yandex.disk.rest.RestClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,8 +82,12 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 
 
@@ -90,6 +99,7 @@ public class PlayerService extends Service implements
     private final int permissionGranted = PackageManager.PERMISSION_GRANTED;
     private static final int NOTIFICATION_ID = 101;
     private int audioSessionId = 0;
+    private RestClient restClient;
     private PlayerBinder localBinder = new PlayerBinder();
     private SharedPreferences settings;
     private Playlist playlist;
@@ -113,7 +123,9 @@ public class PlayerService extends Service implements
     private boolean wasPlaying;
     private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
     private boolean isNextQueueUsing = false;
-    private Disposable playlistSubscription;
+    private Disposable playlistDisposable;
+    private Disposable prefDisposable;
+    private CompositeDisposable compositeDisposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.getInstance();
     private ArrayList<Long> clicks = new ArrayList<>();
@@ -124,6 +136,7 @@ public class PlayerService extends Service implements
         super.onCreate();
         nextQueue = new PriorityQueue<>();
         rxBus.register(this);
+        setupRestClient();
         initExoPlayer();
         initMediaSession();
         registerBecomingNoisy();
@@ -149,9 +162,15 @@ public class PlayerService extends Service implements
         mediaSession.release();
         exoPlayer.stop();
         exoPlayer.release();
-        if (playlistSubscription != null) {
-            playlistSubscription.dispose();
+
+        if (playlistDisposable != null) {
+            playlistDisposable.dispose();
         }
+
+        if (prefDisposable != null) {
+            prefDisposable.dispose();
+        }
+
         writeSettings();
         rxBus.unregister(this);
     }
@@ -179,8 +198,18 @@ public class PlayerService extends Service implements
 
         String userAgent = Util.getUserAgent(this, "MinPlayer");
         defaultDataSourceFactory = new DefaultDataSourceFactory(this, userAgent);
-        okHttpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, null);
+        okHttpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient(), "Android.ExoPlayer", null);
 
+    }
+
+    void setupRestClient() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        RxSharedPreferences rxPreferences = RxSharedPreferences.create(preferences);
+        prefDisposable = rxPreferences.getString(TokenActivity.PREF_ACCESS_TOKEN)
+                .asObservable()
+                .filter(token -> token != null)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(token -> restClient = RestClientUtil.getInstance(new Credentials("", token)));
     }
 
     private void prepareToPlay() {
@@ -188,18 +217,31 @@ public class PlayerService extends Service implements
 
         if (currAudio != null) {
             if (playlist.size() > 0) {
-                //TODO Add online playing
-                MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
-                        .createMediaSource(Uri.parse(currAudio.getData()));
-                exoPlayer.prepare(mediaSource);
-                exoPlayer.setPlayWhenReady(wasPlaying);
+
+                if (currAudio.getData() != null) {
+                    MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
+                            .createMediaSource(Uri.parse(currAudio.getData()));
+                    exoPlayer.prepare(mediaSource);
+                    exoPlayer.setPlayWhenReady(wasPlaying);
+                } else if (currAudio.getCloudPath() != null && restClient != null) {
+                    Disposable dis = Single.<Uri>create(emitter -> emitter.onSuccess(Uri.parse(restClient.getDownloadLink(currAudio.getCloudPath()).getHref())))
+                            .subscribeOn(Schedulers.newThread())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(uri -> {
+                                MediaSource mediaSource = new ExtractorMediaSource.Factory(okHttpDataSourceFactory)
+                                        .createMediaSource(uri);
+                                exoPlayer.prepare(mediaSource);
+                                exoPlayer.setPlayWhenReady(wasPlaying);
+                            });
+                }
+
             }
         }
 
     }
 
     private void enableEqualizer() {
-        Log.i("Enable Equaliser",String.valueOf(exoPlayer.getAudioSessionId()));
+        Log.i("Enable Equaliser", String.valueOf(exoPlayer.getAudioSessionId()));
         Intent equalizerIntent = new Intent();
         equalizerIntent.setAction(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
         equalizerIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, audioSessionId);
@@ -222,11 +264,11 @@ public class PlayerService extends Service implements
         if (playlist != null)
             if (playlistName.equals(playlist.getName())) return;
 
-        if (playlistSubscription != null)
-            playlistSubscription.dispose();
+        if (playlistDisposable != null)
+            playlistDisposable.dispose();
 
         //PlaylistManager.writePlaylist(this,playlist);
-        playlistSubscription = playlistManager.getPlaylistObservable(this, playlistName)
+        playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
 
@@ -421,20 +463,17 @@ public class PlayerService extends Service implements
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_AND_PLAY_AUDIO)})
     public void play(Audio audio) {
-        Log.i("PlayerService", "play(Audio Audio)");
-        if (playlist != null) {
-            if (!audio.equals(currAudio)) {
-                if (playlist.checkAndSetAudio(audio)) {
-                    currAudio = audio;
-                } else {
-                    nextQueue.offer(audio);
-                    currAudio = nextQueue.poll();
-                }
-                nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
-                wasPlaying = true;
-                prepareToPlay();
+        Log.i("PlayerService", "play(Audio)");
+        if (playlist != null && audio != null && !audio.equals(currAudio)) {
+            if (playlist.checkAndSetAudio(audio)) {
+                currAudio = audio;
+            } else {
+                nextQueue.offer(audio);
+                currAudio = nextQueue.poll();
             }
-
+            nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
+            wasPlaying = true;
+            prepareToPlay();
         }
     }
 
@@ -704,12 +743,12 @@ public class PlayerService extends Service implements
                     //pause the MediaPlayer
                     case TelephonyManager.CALL_STATE_OFFHOOK:
                     case TelephonyManager.CALL_STATE_RINGING:
-                            if (isPlaying()) {
-                                exoPlayer.setPlayWhenReady(false);
-                                rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
-                            }
-                            removeNotification();
-                            ongoingCall = true;
+                        if (isPlaying()) {
+                            exoPlayer.setPlayWhenReady(false);
+                            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
+                        }
+                        removeNotification();
+                        ongoingCall = true;
 
                         break;
 
@@ -891,11 +930,13 @@ public class PlayerService extends Service implements
                     break;
 
                 case Player.STATE_READY:
-                    requestAudioFocus();
-                    buildNotification(playWhenReady, true);
-                    updateMetaData();
-                    rxBus.post(nextEvent, getCurrentStateMap());
-                    buildAndSetPlaybackState(playWhenReady);
+                    if (exoPlayer.getCurrentPosition() == 0) {
+                        requestAudioFocus();
+                        buildNotification(playWhenReady, true);
+                        updateMetaData();
+                        rxBus.post(nextEvent, getCurrentStateMap());
+                        buildAndSetPlaybackState(playWhenReady);
+                    }
                     break;
             }
         }

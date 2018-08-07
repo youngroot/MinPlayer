@@ -9,6 +9,8 @@ import java.io.Serializable;
 public class Audio implements Serializable {
     private long id;
     private String data;
+    private String cloudPath;
+    private String md5Hash;
     private String title;
     private String album;
     private String artist;
@@ -19,7 +21,7 @@ public class Audio implements Serializable {
 
     @Override
     public String toString() {
-        return id + "\n" + data + "\n" + title + "\n" + album + "\n" + artist;
+        return id + "\n" + data + "\n" + cloudPath + "\n" + md5Hash + "\n" + title + "\n" + album + "\n" + artist;
     }
 
     public Audio(long id, String data, String title, String album, String artist) {
@@ -44,6 +46,21 @@ public class Audio implements Serializable {
 
     public void setData(String data) {
         this.data = data;
+    }
+
+    public String getCloudPath() {
+        return cloudPath;
+    }
+
+    public void setMd5Hash(String md5Hash){
+        this.md5Hash = md5Hash;
+    }
+
+    public String getMd5Hash(){
+        return md5Hash;
+    }
+    public void setCloudPath(String cloudPath) {
+        this.cloudPath = cloudPath;
     }
 
     public String getTitle() {
@@ -94,11 +111,15 @@ public class Audio implements Serializable {
         if(object != null && object instanceof Audio){
 
             Audio audio = (Audio) object;
-
-            if(!data.equals(audio.data))  return false;
-            if(!title.equals(audio.title))  return false;
-            if(!album.equals(audio.album))  return false;
-            if(!artist.equals(audio.artist))  return false;
+            try {
+                if(md5Hash.equals(audio.md5Hash)) return true;
+                if (!data.equals(audio.data)) return false;
+                if (!title.equals(audio.title)) return false;
+                if (!album.equals(audio.album)) return false;
+                if (!artist.equals(audio.artist)) return false;
+            }catch (NullPointerException ex){
+                return false;
+            }
 
             return true;
         }

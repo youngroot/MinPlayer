@@ -43,7 +43,7 @@ import jp.wasabeef.blurry.Blurry;
 
 
 public class ControllerFragment extends Fragment {
-    public static final String NAME = "controllerFragment";
+    public static final String NAME = "ControllerFragment";
 
     private ProgressBar smallProgress;
     private ImageView smallAlbumArt;

@@ -20,6 +20,7 @@ import android.view.View;
 import com.hwangjr.rxbus.Bus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
+import com.ivanroot.minplayer.fragment.DiskFragment;
 import com.ivanroot.minplayer.fragment.PlayerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
@@ -141,8 +142,8 @@ public class MainActivity extends NightModeResponsibleActivity
                     break;
 
                 case VisFragment.NAME:
-                    fragmentLauncher(R.id.spectrum);
-                    navigationView.setCheckedItem(R.id.spectrum);
+                    fragmentLauncher(R.id.all_audio);
+                    navigationView.setCheckedItem(R.id.all_audio);
                     break;
 
                 default:
@@ -254,6 +255,10 @@ public class MainActivity extends NightModeResponsibleActivity
             case R.id.playlists:
                 fragment = new PlaylistSelectorFragment();
                 tag = PlaylistSelectorFragment.NAME;
+                break;
+            case R.id.disk:
+                fragment = new DiskFragment();
+                tag = DiskFragment.NAME;
                 break;
 
             case R.id.spectrum:
