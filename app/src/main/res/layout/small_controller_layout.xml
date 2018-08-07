@@ -43,13 +43,23 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"  />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/smallAlbumArt"
+    <FrameLayout
+        android:id="@+id/smallAlbumArtHolder"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_alignParentStart="true"
-        android:scaleType="fitXY"
-        app:srcCompat="@drawable/default_album_art"/>
+        android:layout_alignParentStart="true">
+        <ImageView
+            android:id="@+id/smallAlbumArt"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/default_album_art"/>
+        <ProgressBar
+            android:id="@+id/loadProgress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="invisible"/>
+    </FrameLayout>
 
     <ProgressBar
         android:id="@+id/smallProgress"
@@ -71,7 +81,7 @@
         android:layout_below="@+id/smallProgress"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:layout_toEndOf="@id/smallAlbumArt"
+        android:layout_toEndOf="@id/smallAlbumArtHolder"
         android:layout_toStartOf="@+id/buttonPanel" />
 
     <TextView
@@ -83,7 +93,7 @@
         android:layout_below="@+id/smallTitle"
         android:layout_marginStart="4dp"
         android:layout_marginTop="0dp"
-        android:layout_toEndOf="@id/smallAlbumArt"
+        android:layout_toEndOf="@id/smallAlbumArtHolder"
         android:visibility="gone"
         android:layout_toStartOf="@+id/buttonPanel"/>
 
@@ -96,7 +106,7 @@
         android:layout_below="@+id/smallTitle"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:layout_toEndOf="@id/smallAlbumArt"
+        android:layout_toEndOf="@id/smallAlbumArtHolder"
         android:layout_toStartOf="@+id/buttonPanel"/>
 
 

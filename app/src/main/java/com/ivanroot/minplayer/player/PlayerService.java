@@ -121,7 +121,7 @@ public class PlayerService extends Service implements
     private PhoneStateListener phoneStateListener;
     private TelephonyManager telephonyManager;
     private boolean wasPlaying;
-    private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
+    //private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
     private boolean isNextQueueUsing = false;
     private Disposable playlistDisposable;
     private Disposable prefDisposable;
@@ -279,9 +279,9 @@ public class PlayerService extends Service implements
 
         if (!playlist.checkAndSetAudio(currAudio)) {
             currAudio = playlist.getCurrentAudio();
+            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
             updateMetaData();
             prepareToPlay();
-            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
         }
 
     }
@@ -471,7 +471,7 @@ public class PlayerService extends Service implements
                 nextQueue.offer(audio);
                 currAudio = nextQueue.poll();
             }
-            nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
+            rxBus.post(PlayerEvents.EVENT_METADATA_UPDATED, getCurrentStateMap());
             wasPlaying = true;
             prepareToPlay();
         }
@@ -486,8 +486,8 @@ public class PlayerService extends Service implements
         Log.i("PlayerService", "pause");
         if (isPlaying()) {
             buildNotification(false, true);
-            exoPlayer.setPlayWhenReady(false);
             rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
+            exoPlayer.setPlayWhenReady(false);
         }
         wasPlaying = isPlaying();
         buildAndSetPlaybackState(wasPlaying);
@@ -496,10 +496,9 @@ public class PlayerService extends Service implements
 
     public void stop() {
         removeNotification();
-
         if (isPlaying()) {
             exoPlayer.setPlayWhenReady(false);
-            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED);
+            rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
         }
         wasPlaying = isPlaying();
         mediaSession.setActive(false);
@@ -517,15 +516,15 @@ public class PlayerService extends Service implements
             isNextQueueUsing = false;
 
             if (playlist.setToNextAudio()) {
-
-                nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
+                //nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
                 currAudio = playlist.getCurrentAudio();
+                rxBus.post(PlayerEvents.EVENT_NEXT_AUDIO_METADATA, getCurrentStateMap());
                 prepareToPlay();
 
             } else {
 
                 if (playlist.getRepeatMode() == Playlist.REPEAT_ONE) {
-                    nextEvent = PlayerEvents.EVENT_NONE;
+                    //nextEvent = PlayerEvents.EVENT_NONE;
                     prepareToPlay();
                 }
 
@@ -533,10 +532,11 @@ public class PlayerService extends Service implements
         } else {
             currAudio = nextQueue.poll();
             isNextQueueUsing = true;
-            nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
+            //nextEvent = PlayerEvents.EVENT_NEXT_AUDIO_METADATA;
+            rxBus.post(PlayerEvents.EVENT_NEXT_AUDIO_METADATA, getCurrentStateMap());
             prepareToPlay();
         }
-
+        buildNotification(false, true);
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_PREV_AUDIO)})
@@ -547,23 +547,26 @@ public class PlayerService extends Service implements
     public void playPrevTrack() {
         Log.i("PlayerService", "playPrevTrack");
         if (getAudioPosition() > 6000) {
-            nextEvent = PlayerEvents.EVENT_REPLAYING_CURR_AUDIO;
+            //nextEvent = PlayerEvents.EVENT_REPLAYING_CURR_AUDIO;
+            rxBus.post(PlayerEvents.EVENT_REPLAYING_CURR_AUDIO, getCurrentStateMap());
             prepareToPlay();
         } else {
             boolean result = playlist.setToPrevAudio();
             if (isNextQueueUsing) {
-
                 if (result) playlist.setToNextAudio();
-                nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
+                //nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
+                currAudio = playlist.getCurrentAudio();
+                rxBus.post(PlayerEvents.EVENT_PREV_AUDIO_METADATA, getCurrentStateMap());
             } else {
-
                 if (result) {
-                    nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
+                    //nextEvent = PlayerEvents.EVENT_PREV_AUDIO_METADATA;
+                    currAudio = playlist.getCurrentAudio();
+                    rxBus.post(PlayerEvents.EVENT_PREV_AUDIO_METADATA, getCurrentStateMap());
                 } else {
-                    nextEvent = PlayerEvents.EVENT_NONE;
+                    //nextEvent = PlayerEvents.EVENT_NONE;
                 }
             }
-            currAudio = playlist.getCurrentAudio();
+            buildNotification(false, true);
             prepareToPlay();
         }
     }
@@ -934,9 +937,13 @@ public class PlayerService extends Service implements
                         requestAudioFocus();
                         buildNotification(playWhenReady, true);
                         updateMetaData();
-                        rxBus.post(nextEvent, getCurrentStateMap());
+                        rxBus.post(PlayerEvents.EVENT_PLAYER_READY, getCurrentStateMap());
                         buildAndSetPlaybackState(playWhenReady);
                     }
+                    break;
+
+                case Player.STATE_BUFFERING:
+                    rxBus.post(PlayerEvents.EVENT_PLAYER_PREPAIRING);
                     break;
             }
         }
@@ -1078,6 +1085,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onAudioSessionId(EventTime eventTime, int audioSessionId) {
+            Log.i("AudioSesionId",String.valueOf(audioSessionId));
             PlayerService.this.audioSessionId = audioSessionId;
             enableEqualizer();
         }

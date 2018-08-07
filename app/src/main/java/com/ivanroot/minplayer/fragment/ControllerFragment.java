@@ -66,6 +66,7 @@ public class ControllerFragment extends Fragment {
     private ImageButton prevBtn;
     private ImageButton shuffleBtn;
     private ImageButton repeatBtn;
+    private ProgressBar loadProgress;
     private SlidingUpPanelLayout panelLayout;
 
     private int delayedTime = 1000;
@@ -110,6 +111,7 @@ public class ControllerFragment extends Fragment {
         smallViewContainer = (ViewGroup) view.findViewById(R.id.small_controller_layout);
 
         playbackProgress = (SeekBar) view.findViewById(R.id.songProgress);
+        loadProgress = (ProgressBar)view.findViewById(R.id.loadProgress);
         bigAlbumArt = (ImageView) view.findViewById(R.id.bigAlbumArt);
         albumArt = (ImageView) view.findViewById(R.id.albumArt);
         title = (TextView) view.findViewById(R.id.txtTitle);
@@ -220,17 +222,17 @@ public class ControllerFragment extends Fragment {
         if(currAudio != null) {
             if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
                 panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-            smallProgress.setMax((int) state.get(KEY_DURATION));
+            //smallProgress.setMax((int) state.get(KEY_DURATION));
             smallTitle.setText(currAudio.getTitle());
             smallAlbum.setText(currAudio.getAlbum());
             smallArtist.setText(currAudio.getArtist());
 
-            playbackProgress.setMax((int) state.get(KEY_DURATION));
+            //playbackProgress.setMax((int) state.get(KEY_DURATION));
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
 
-            onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+            //onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
             onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
             onRepeatModeEvents((int)state.get(KEY_RP_MODE));
 
@@ -267,7 +269,6 @@ public class ControllerFragment extends Fragment {
     }
 
     private void prepareScreenUpdater() {
-
         screenUpdater = Observable.<List<Pair<String, Object>>>create(emitter -> {
             while (true) {
 
@@ -296,17 +297,30 @@ public class ControllerFragment extends Fragment {
                 .subscribe(pair -> rxBus.post(pair.first, pair.second));
     }
 
-    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_METADATA_UPDATED), @Tag(PlayerEvents.EVENT_ON_GET_METADATA)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYER_PREPAIRING)})
+    public void onPlayerPrepairingEvent(Object o){
+        onPlayPauseEvents(false);
+        loadProgress.setVisibility(View.VISIBLE);
+        smallProgress.setProgress(0);
+        playbackProgress.setProgress(0);
+    }
+
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYER_READY)})
+    public void onPlayerReadyEvent(HashMap<String, Object> state){
+        loadProgress.setVisibility(View.INVISIBLE);
+        onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+        smallProgress.setMax((int)state.get(KEY_DURATION));
+        playbackProgress.setMax((int)state.get(KEY_DURATION));
+    }
+
+    @Subscribe(tags = {
+            @Tag(PlayerEvents.EVENT_METADATA_UPDATED), @Tag(PlayerEvents.EVENT_ON_GET_METADATA),
+            @Tag(PlayerEvents.EVENT_PREV_AUDIO_METADATA), @Tag(PlayerEvents.EVENT_NEXT_AUDIO_METADATA)})
     public void onMetadataEvents(HashMap<String, Object> state) {
         updateView(state);
     }
 
-    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PREV_AUDIO_METADATA)})
-    public void onPrevAudioEvent(HashMap<String, Object> state) {
-        updateView(state);
-    }
-
-    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})
+    @Subscribe(tags = {@Tag (PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})
     public void onPlayPauseEvents(Boolean isPlaying) {
 
         if (isPlaying) {
@@ -316,11 +330,6 @@ public class ControllerFragment extends Fragment {
             smallPlayBtn.setImageResource(R.drawable.ic_play_noti);
             playBtn.setImageResource(R.drawable.ic_play);
         }
-    }
-
-    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_NEXT_AUDIO_METADATA)})
-    public void onNextAudioEvent(HashMap<String, Object> state) {
-        updateView(state);
     }
 
     @Subscribe(tags = {@Tag(PlayerEvents.EVENT_ON_GET_AUDIO_POSITION)})

@@ -22,4 +22,6 @@ public class PlayerEvents {
     public static final String EVENT_ON_GET_AUDIO_POSITION = "com.ivanroot.minplayer.event_on_get_audio_position";
     public static final String EVENT_ON_POSITION_CHANGED = "com.ivanroot.minplayer.event_on_position_changed";
     public static final String EVENT_ON_GET_METADATA = "com.ivanroot.minplayer.event_on_get_metadata";
+    public static final String EVENT_PLAYER_READY = "com.ivanroot.minplayer.event_player_ready";
+    public static final String EVENT_PLAYER_PREPAIRING = "com.ivanroot.minplayer.event_player_prepairing";
 }

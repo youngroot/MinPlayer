@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.player.constants.PlayerStatus;
+import com.ivanroot.minplayer.disk.AudioStatus;
 
 public class DiskAudioViewHolder extends AudioViewHolder {
 
@@ -26,12 +26,12 @@ public class DiskAudioViewHolder extends AudioViewHolder {
     }
 
     public void representItem(Context context, Audio audio, int status){
-        if(audio.getData() != null && status == PlayerStatus.STATUS_AUDIO_DOWNLOADED) {
+        if(audio.getData() != null && status == AudioStatus.STATUS_AUDIO_DOWNLOADED) {
             super.representItem(context, audio);
             loadProgress.setVisibility(View.INVISIBLE);
             moreBtn.setVisibility(View.VISIBLE);
             moreBtn.setImageResource(R.drawable.ic_done);
-        } else if(status == PlayerStatus.STATUS_AUDIO_DOWNLOADING){
+        } else if(status == AudioStatus.STATUS_AUDIO_DOWNLOADING){
             moreBtn.setVisibility(View.INVISIBLE);
             loadProgress.setVisibility(View.VISIBLE);
         } else {
