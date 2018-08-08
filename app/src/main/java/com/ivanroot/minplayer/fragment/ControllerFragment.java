@@ -217,17 +217,17 @@ public class ControllerFragment extends Fragment {
         this.panelLayout = panelLayout;
     }
 
-    private void updateView(HashMap<String, Object> state){
+    private void updateViewMetadata(HashMap<String, Object> state){
         currAudio = (Audio) state.get(KEY_AUDIO);
         if(currAudio != null) {
             if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
                 panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-            //smallProgress.setMax((int) state.get(KEY_DURATION));
+            smallProgress.setProgress(0);
             smallTitle.setText(currAudio.getTitle());
             smallAlbum.setText(currAudio.getAlbum());
             smallArtist.setText(currAudio.getArtist());
 
-            //playbackProgress.setMax((int) state.get(KEY_DURATION));
+            playbackProgress.setProgress(0);
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
@@ -307,8 +307,8 @@ public class ControllerFragment extends Fragment {
 
     @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYER_READY)})
     public void onPlayerReadyEvent(HashMap<String, Object> state){
-        loadProgress.setVisibility(View.INVISIBLE);
         onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+        loadProgress.setVisibility(View.INVISIBLE);
         smallProgress.setMax((int)state.get(KEY_DURATION));
         playbackProgress.setMax((int)state.get(KEY_DURATION));
     }
@@ -317,7 +317,7 @@ public class ControllerFragment extends Fragment {
             @Tag(PlayerEvents.EVENT_METADATA_UPDATED), @Tag(PlayerEvents.EVENT_ON_GET_METADATA),
             @Tag(PlayerEvents.EVENT_PREV_AUDIO_METADATA), @Tag(PlayerEvents.EVENT_NEXT_AUDIO_METADATA)})
     public void onMetadataEvents(HashMap<String, Object> state) {
-        updateView(state);
+        updateViewMetadata(state);
     }
 
     @Subscribe(tags = {@Tag (PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})

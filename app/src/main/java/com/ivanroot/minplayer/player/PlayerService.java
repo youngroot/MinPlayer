@@ -929,7 +929,8 @@ public class PlayerService extends Service implements
         public void onPlayerStateChanged(EventTime eventTime, boolean playWhenReady, int playbackState) {
             switch (playbackState) {
                 case Player.STATE_ENDED:
-                    if (exoPlayer.getCurrentPosition() != 0) PlayerService.this.playNextTrack();
+                    if (exoPlayer.getCurrentPosition() != 0)
+                        playNextTrack();
                     break;
 
                 case Player.STATE_READY:
@@ -1085,7 +1086,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onAudioSessionId(EventTime eventTime, int audioSessionId) {
-            Log.i("AudioSesionId",String.valueOf(audioSessionId));
+            Log.i("AudioSessionId",String.valueOf(audioSessionId));
             PlayerService.this.audioSessionId = audioSessionId;
             enableEqualizer();
         }

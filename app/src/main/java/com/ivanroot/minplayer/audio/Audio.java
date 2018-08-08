@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 public class Audio implements Serializable {
     private long id;
-    private String data;
+    private String localPath;
     private String cloudPath;
     private String md5Hash;
     private String title;
@@ -21,12 +21,12 @@ public class Audio implements Serializable {
 
     @Override
     public String toString() {
-        return id + "\n" + data + "\n" + cloudPath + "\n" + md5Hash + "\n" + title + "\n" + album + "\n" + artist;
+        return id + "\n" + localPath + "\n" + cloudPath + "\n" + md5Hash + "\n" + title + "\n" + album + "\n" + artist;
     }
 
-    public Audio(long id, String data, String title, String album, String artist) {
+    public Audio(long id, String localPath, String title, String album, String artist) {
         this.id = id;
-        this.data = data;
+        this.localPath = localPath;
         this.title = title;
         this.album = album;
         this.artist = artist;
@@ -41,11 +41,11 @@ public class Audio implements Serializable {
     }
 
     public String getData() {
-        return data;
+        return localPath;
     }
 
     public void setData(String data) {
-        this.data = data;
+        this.localPath = data;
     }
 
     public String getCloudPath() {
@@ -59,6 +59,7 @@ public class Audio implements Serializable {
     public String getMd5Hash(){
         return md5Hash;
     }
+
     public void setCloudPath(String cloudPath) {
         this.cloudPath = cloudPath;
     }
@@ -111,9 +112,10 @@ public class Audio implements Serializable {
         if(object != null && object instanceof Audio){
 
             Audio audio = (Audio) object;
+            if(md5Hash != null && audio.md5Hash != null && md5Hash.equals(audio.md5Hash)) return true;
             try {
-                if(md5Hash.equals(audio.md5Hash)) return true;
-                if (!data.equals(audio.data)) return false;
+
+                if (!localPath.equals(audio.localPath)) return false;
                 if (!title.equals(audio.title)) return false;
                 if (!album.equals(audio.album)) return false;
                 if (!artist.equals(audio.artist)) return false;
