@@ -18,10 +18,10 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -55,7 +55,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private CardView playlistHeaderCard;
     private TextView playlistNameView;
     private TextView playlistSizeView;
-    private Bus rxBus = RxBus.getInstance();
+    private Bus rxBus = RxBus.get();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
 

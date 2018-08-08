@@ -17,10 +17,10 @@ import com.squareup.picasso.Picasso;
 
 public class AudioViewHolder extends BaseItemViewHolder<Audio> {
 
-    private TextView title;
-    private TextView album;
-    private TextView artist;
-    private ImageView albumArt;
+    protected TextView title;
+    protected TextView album;
+    protected TextView artist;
+    protected ImageView albumArt;
 
     public AudioViewHolder(View itemView) {
         super(itemView);

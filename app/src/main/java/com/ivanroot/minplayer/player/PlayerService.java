@@ -59,6 +59,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
@@ -127,7 +128,7 @@ public class PlayerService extends Service implements
     private Disposable prefDisposable;
     private CompositeDisposable compositeDisposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
-    private Bus rxBus = RxBus.getInstance();
+    private Bus rxBus = RxBus.get();
     private ArrayList<Long> clicks = new ArrayList<>();
 
     @Override
@@ -525,7 +526,8 @@ public class PlayerService extends Service implements
 
                 if (playlist.getRepeatMode() == Playlist.REPEAT_ONE) {
                     //nextEvent = PlayerEvents.EVENT_NONE;
-                    prepareToPlay();
+                    rxBus.post(PlayerEvents.EVENT_REPLAYING_CURR_AUDIO, getCurrentStateMap());
+                    seekTo(0);
                 }
 
             }
@@ -549,7 +551,7 @@ public class PlayerService extends Service implements
         if (getAudioPosition() > 6000) {
             //nextEvent = PlayerEvents.EVENT_REPLAYING_CURR_AUDIO;
             rxBus.post(PlayerEvents.EVENT_REPLAYING_CURR_AUDIO, getCurrentStateMap());
-            prepareToPlay();
+            seekTo(0);
         } else {
             boolean result = playlist.setToPrevAudio();
             if (isNextQueueUsing) {
@@ -934,6 +936,7 @@ public class PlayerService extends Service implements
                     break;
 
                 case Player.STATE_READY:
+                    Log.i("PlayerState","Ready");
                     if (exoPlayer.getCurrentPosition() == 0) {
                         requestAudioFocus();
                         buildNotification(playWhenReady, true);
@@ -944,6 +947,7 @@ public class PlayerService extends Service implements
                     break;
 
                 case Player.STATE_BUFFERING:
+                    Log.i("PlayerState","Buffering");
                     rxBus.post(PlayerEvents.EVENT_PLAYER_PREPAIRING);
                     break;
             }
@@ -986,7 +990,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onLoadingChanged(EventTime eventTime, boolean isLoading) {
-
+            Log.i("PlayerState","onLoadingChanged " + String.valueOf(isLoading));
         }
 
         @Override
@@ -1001,12 +1005,12 @@ public class PlayerService extends Service implements
 
         @Override
         public void onLoadStarted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
-
+            Log.i("PlayerState","onLoadStarted");
         }
 
         @Override
         public void onLoadCompleted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
-
+            Log.i("PlayerState","onLoadCompleted");
         }
 
         @Override
@@ -1031,17 +1035,17 @@ public class PlayerService extends Service implements
 
         @Override
         public void onMediaPeriodCreated(EventTime eventTime) {
-
+            Log.i("PlayerState","onMediaPeriodCreated");
         }
 
         @Override
         public void onMediaPeriodReleased(EventTime eventTime) {
-
+            Log.i("PlayerState","onMediaPeriodReleased");
         }
 
         @Override
         public void onReadingStarted(EventTime eventTime) {
-
+            Log.i("PlayerState","onReadingStarted");
         }
 
         @Override
@@ -1061,7 +1065,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onMetadata(EventTime eventTime, Metadata metadata) {
-
+            Log.i("PlayerState","onMetadata " + metadata.toString());
         }
 
         @Override

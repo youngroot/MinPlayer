@@ -17,6 +17,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
@@ -24,7 +25,6 @@ import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.player.constants.PlayerActions;
 import com.ivanroot.minplayer.player.constants.PlayerEvents;
-import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
 import static com.ivanroot.minplayer.player.constants.PlayerKeys.*;
@@ -70,9 +70,10 @@ public class ControllerFragment extends Fragment {
     private SlidingUpPanelLayout panelLayout;
 
     private int delayedTime = 1000;
-    private Bus rxBus = RxBus.getInstance();
+    private Bus rxBus = RxBus.get();
     private Disposable screenUpdater;
     private Audio currAudio;
+    private boolean initState = true;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -222,6 +223,13 @@ public class ControllerFragment extends Fragment {
         if(currAudio != null) {
             if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
                 panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            if(initState){
+                smallProgress.setMax((int)state.get(KEY_DURATION));
+                playbackProgress.setMax((int)state.get(KEY_DURATION));
+                onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+            }
+            initState = false;
+
             smallProgress.setProgress(0);
             smallTitle.setText(currAudio.getTitle());
             smallAlbum.setText(currAudio.getAlbum());
@@ -232,7 +240,7 @@ public class ControllerFragment extends Fragment {
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
 
-            //onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+
             onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
             onRepeatModeEvents((int)state.get(KEY_RP_MODE));
 

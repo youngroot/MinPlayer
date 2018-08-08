@@ -1,12 +1,10 @@
 package com.ivanroot.minplayer.fragment;
 
-import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -15,20 +13,20 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
+import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.activity.TokenActivity;
-import com.ivanroot.minplayer.adapter.BasePlaylistAdapter;
 import com.ivanroot.minplayer.adapter.DiskPlaylistAdapter;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.audio.OnAudioClickListener;
+import com.ivanroot.minplayer.disk.AudioDownloadService;
+import com.ivanroot.minplayer.disk.AudioStatus;
 import com.ivanroot.minplayer.disk.RestClientUtil;
-import com.ivanroot.minplayer.player.RxBus;
-import com.ivanroot.minplayer.playlist.Playlist;
-import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.RestClient;
-import com.ivanroot.minplayer.R;
 
 import java.util.List;
 
@@ -43,7 +41,7 @@ public class DiskFragment extends NavFragmentBase {
     private DiskPlaylistAdapter adapter;
     private List<Audio> downloading;
     private MainActivity activity;
-    private Bus rxBus = RxBus.getInstance();
+    private Bus rxBus = RxBus.get();
 
 
     @Override
@@ -69,7 +67,7 @@ public class DiskFragment extends NavFragmentBase {
         View view = inflater.inflate(R.layout.all_tracks_playlist_fragment, container, false);
         setupDrawer(view);
         setupRecycler(view);
-        prepareListeners(view);
+        prepareListeners();
         return view;
     }
 
@@ -112,9 +110,14 @@ public class DiskFragment extends NavFragmentBase {
         audioRecycler.setAdapter(adapter);
     }
 
-    private void prepareListeners(View view) {
+    private void prepareListeners() {
         adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> {
-
+            Audio audio = playlist.getAudio(i);
+            Intent intent = new Intent(activity, AudioDownloadService.class);
+            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudPath());
+            intent.putExtra(AudioDownloadService.EXTRA_MD5_HASH, audio.getMd5Hash());
+            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_TITLE, audio.getTitle());
+            activity.startService(intent);
         });
 
         adapter.setAudioClickListener((audio, playlistName) -> {
@@ -122,6 +125,15 @@ public class DiskFragment extends NavFragmentBase {
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
+    }
 
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})
+    public void setAudioPreparingStatus(String md5Hash){
+        adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_PREPARING);
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
+    public void setAudioDownloadedStatus(String md5Hash){
+        adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_DOWNLOADED);
     }
 }

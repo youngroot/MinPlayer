@@ -8,10 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.viewholder.DiskAudioViewHolder;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.player.RxBus;
+import com.ivanroot.minplayer.disk.AudioStatus;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Pair;
@@ -29,13 +32,10 @@ import io.reactivex.subjects.Subject;
 
 public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioViewHolder>{
     private RestClient restClient;
-    private Bus rxBus = RxBus.getInstance();
-    private PublishSubject<Pair<String, Integer>> statusSubject = PublishSubject.create();
-    private Map<String, Integer> statuses = new HashMap<>();
+    private Map<String, String> statuses = new HashMap<>();
 
     public DiskPlaylistAdapter(Activity activity) {
         super(activity);
-        rxBus.register(this);
     }
 
     @NonNull
@@ -68,20 +68,17 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
     @Override
     public void onBindViewHolder(DiskAudioViewHolder holder, int position) {
         Audio audio = playlist.getAudio(position);
-        int status = -1;
-        if(statuses.get(audio.getMd5Hash()) != null) status = statuses.get(audio.getMd5Hash());
+        String status = AudioStatus.STATUS_AUDIO_ONLY_ONLINE;
+
+        if(statuses.get(audio.getMd5Hash()) != null)
+            status = statuses.get(audio.getMd5Hash());
+
         holder.representItem(activity, audio, status);
         holder.itemView.setOnClickListener(v -> audioClickListener.OnAudioClick(audio, playlist.getName()));
         holder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, position));
     }
 
-    @Override
-    public void dispose() {
-        rxBus.unregister(this);
-        super.dispose();
-    }
-
-    public void setStatus(String md5Hash, int status){
+    public  void setStatus(String md5Hash, String status){
         statuses.put(md5Hash, status);
     }
 }

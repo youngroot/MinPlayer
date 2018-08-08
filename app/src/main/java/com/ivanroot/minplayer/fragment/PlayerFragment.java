@@ -17,11 +17,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hwangjr.rxbus.Bus;
+import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.player.RxBus;
 import com.ivanroot.minplayer.utils.Utils;
 import com.squareup.picasso.Picasso;
 
@@ -90,7 +90,7 @@ public class PlayerFragment extends Fragment {
     private Animation fadeIn;
     private Animation fadeOut;
     private Disposable screenUpdater;
-    private Bus rxBus = RxBus.getInstance();
+    private Bus rxBus = RxBus.get();
     private int delayedTime = 1000;
     private static final int animDuration = 500;
 

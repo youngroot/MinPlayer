@@ -56,6 +56,9 @@
             android:launchMode="singleTask"/>
 
         <activity android:name=".activity.TokenActivity"/>
+        <service
+            android:name=".disk.AudioDownloadService"
+            android:exported="false"/>
     </application>
 
 </manifest>
