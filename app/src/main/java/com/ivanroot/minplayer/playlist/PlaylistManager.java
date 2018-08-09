@@ -90,7 +90,7 @@ public class PlaylistManager {
 
         if (playlist == null) return;
 
-        if (Objects.equals(playlist.getName(), ALL_TRACKS_PLAYLIST))
+        if (Objects.equals(playlist.getName(), ALL_TRACKS_PLAYLIST) || Objects.equals(playlist.getName(), DISK_ALL_TRACKS_PLAYLIST))
             //playlist.setAudioList(new ArrayList<>());
             return;
 
@@ -159,7 +159,7 @@ public class PlaylistManager {
     }
 
     public synchronized void removePlaylist(Context context, String name) {
-        if (!Objects.equals(name, ALL_TRACKS_PLAYLIST)) {
+        if (!Objects.equals(name, ALL_TRACKS_PLAYLIST) && !Objects.equals(name, DISK_ALL_TRACKS_PLAYLIST)) {
             StorIOContentResolverFactory.get(context)
                     .delete()
                     .byQuery(DeleteQuery
@@ -222,7 +222,7 @@ public class PlaylistManager {
     }
 
     public BehaviorSubject<List<Audio>> getDiskAllTracksSubject(Context context, RestClient restClient) {
-        if (diskObservable == null) {
+        if (diskObservable == null && restClient != null) {
             diskObservable = getDiskAllTracksObservable(context, restClient);
             diskObservable.subscribe(diskSubject);
         }

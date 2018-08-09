@@ -80,5 +80,6 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
 
     public  void setStatus(String md5Hash, String status){
         statuses.put(md5Hash, status);
+        notifyDataSetChanged();
     }
 }

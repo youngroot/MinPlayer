@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
@@ -121,7 +122,6 @@ public class DiskFragment extends NavFragmentBase {
         });
 
         adapter.setAudioClickListener((audio, playlistName) -> {
-            Log.i("Clicked", playlistName + " " + audio.getCloudPath());
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
@@ -135,5 +135,6 @@ public class DiskFragment extends NavFragmentBase {
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
     public void setAudioDownloadedStatus(String md5Hash){
         adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_DOWNLOADED);
+        Toast.makeText(activity, getResources().getString(R.string.download_complete), Toast.LENGTH_SHORT).show();
     }
 }

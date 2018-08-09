@@ -14,12 +14,17 @@ import android.util.Log;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.ivanroot.minplayer.R;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -135,4 +140,41 @@ public class Utils {
         }
     }
 
+
+    public static byte[] getFileBytes(File file){
+        int size = (int) file.length();
+        byte[] bytes = new byte[size];
+        try {
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
+            buf.read(bytes, 0, bytes.length);
+            buf.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return bytes;
+    }
+
+    public static String getMd5Hash(final byte[] bytes) {
+        try {
+            // Create MD5 Hash
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(bytes);
+            byte messageDigest[] = digest.digest();
+
+            // Create Hex String
+            StringBuilder hexString = new StringBuilder();
+            for (byte aMessageDigest : messageDigest) {
+                StringBuilder h = new StringBuilder(Integer.toHexString(0xFF & aMessageDigest));
+                while (h.length() < 2)
+                    h.insert(0, "0");
+                hexString.append(h);
+            }
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
 }

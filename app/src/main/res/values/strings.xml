@@ -34,4 +34,5 @@
     <string name="pref_night_mode">Night Mode</string>
     <string name="yandex_disk">Yandex.Disk</string>
     <string name="advanced">Advanced</string>
+    <string name="download_complete">Download complete!</string>
 </resources>
