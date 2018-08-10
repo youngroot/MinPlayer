@@ -29,7 +29,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.PublishSubject;
 
 
 /**
@@ -212,7 +211,7 @@ public class PlaylistManager {
                         if (audio == null) {
                             audio = new Audio();
                             audio.setTitle(res.getName());
-                            audio.setCloudPath(res.getPath().getPath());
+                            audio.setCloudData(res.getPath().getPath());
                         }
                         audio.setMd5Hash(res.getMd5());
                         audioList.add(audio);

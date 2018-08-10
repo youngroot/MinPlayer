@@ -225,7 +225,7 @@ public class PlayerFragment extends Fragment {
         artist.setText(currAudio.getArtist());
 
 
-        /*Bitmap bitmap = Utils.extractAudioAlbumArt(currAudio.getData());
+        /*Bitmap bitmap = Utils.extractAudioAlbumArt(currAudio.getLocalData());
         if (bitmap != null)
             albumArt.setImageBitmap(bitmap);
         else

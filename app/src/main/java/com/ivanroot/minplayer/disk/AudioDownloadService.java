@@ -39,6 +39,7 @@ public class AudioDownloadService extends Service {
 
     @Override
     public void onCreate() {
+        Log.i("AudioDownloadService","onCreate");
         rxBus.register(this);
         rxPreferences = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(this));
         prefDisposable = rxPreferences.getString(TokenActivity.PREF_ACCESS_TOKEN)
@@ -48,7 +49,9 @@ public class AudioDownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i("AudioDownloadService","onStartCommand");
         if(intent == null) {
+            Log.i("AudioDownloadService","intent == null");
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -62,7 +65,6 @@ public class AudioDownloadService extends Service {
                 rxBus.post(AudioStatus.STATUS_AUDIO_PREPARING, md5Hash);
                 File saveTo =  new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), title);
                 String saveToMd5Hash = Utils.getMd5Hash(Utils.getFileBytes(saveTo));
-                Log.i("Hashes", md5Hash + " " + saveToMd5Hash);
                 if(!saveToMd5Hash.equals(md5Hash)) {
                     restClient.downloadFile(path, saveTo, new ProgressListener() {
 
@@ -97,6 +99,7 @@ public class AudioDownloadService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.i("AudioDownloadService","onDestroy");
         rxBus.unregister(this);
         if (prefDisposable != null)
             prefDisposable.dispose();

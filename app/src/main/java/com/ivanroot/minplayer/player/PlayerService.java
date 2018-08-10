@@ -83,7 +83,6 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -219,13 +218,13 @@ public class PlayerService extends Service implements
         if (currAudio != null) {
             if (playlist.size() > 0) {
 
-                if (currAudio.getData() != null) {
+                if (currAudio.getLocalData() != null) {
                     MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
-                            .createMediaSource(Uri.parse(currAudio.getData()));
+                            .createMediaSource(Uri.parse(currAudio.getLocalData()));
                     exoPlayer.prepare(mediaSource);
                     exoPlayer.setPlayWhenReady(wasPlaying);
-                } else if (currAudio.getCloudPath() != null && restClient != null) {
-                    Disposable dis = Single.<Uri>create(emitter -> emitter.onSuccess(Uri.parse(restClient.getDownloadLink(currAudio.getCloudPath()).getHref())))
+                } else if (currAudio.getCloudData() != null && restClient != null) {
+                    Disposable dis = Single.<Uri>create(emitter -> emitter.onSuccess(Uri.parse(restClient.getDownloadLink(currAudio.getCloudData()).getHref())))
                             .subscribeOn(Schedulers.newThread())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(uri -> {

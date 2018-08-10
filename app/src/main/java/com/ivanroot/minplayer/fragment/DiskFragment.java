@@ -7,7 +7,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +39,6 @@ public class DiskFragment extends NavFragmentBase {
     private RestClient restClient;
     private FastScrollRecyclerView audioRecycler;
     private DiskPlaylistAdapter adapter;
-    private List<Audio> downloading;
     private MainActivity activity;
     private Bus rxBus = RxBus.get();
 
@@ -115,7 +113,7 @@ public class DiskFragment extends NavFragmentBase {
         adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> {
             Audio audio = playlist.getAudio(i);
             Intent intent = new Intent(activity, AudioDownloadService.class);
-            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudPath());
+            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudData());
             intent.putExtra(AudioDownloadService.EXTRA_MD5_HASH, audio.getMd5Hash());
             intent.putExtra(AudioDownloadService.EXTRA_AUDIO_TITLE, audio.getTitle());
             activity.startService(intent);

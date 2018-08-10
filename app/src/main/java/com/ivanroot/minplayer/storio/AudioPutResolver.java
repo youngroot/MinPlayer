@@ -39,7 +39,7 @@ public class AudioPutResolver extends DefaultPutResolver<Audio> {
     protected ContentValues mapToContentValues(@NonNull Audio audio) {
         final ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Audio.Media._ID,audio.getId());
-        contentValues.put(MediaStore.Audio.Media.DATA,audio.getData());
+        contentValues.put(MediaStore.Audio.Media.DATA,audio.getLocalData());
         contentValues.put(MediaStore.Audio.Media.TITLE,audio.getTitle());
         contentValues.put(MediaStore.Audio.Media.ALBUM,audio.getAlbum());
         contentValues.put(MediaStore.Audio.Media.ARTIST,audio.getArtist());
