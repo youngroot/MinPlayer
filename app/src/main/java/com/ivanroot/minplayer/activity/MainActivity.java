@@ -20,6 +20,7 @@ import android.view.View;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
 import com.ivanroot.minplayer.fragment.DiskFragment;
 import com.ivanroot.minplayer.fragment.PlayerFragment;
@@ -32,6 +33,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import io.reactivex.disposables.Disposable;
 
 
 public class MainActivity extends NightModeResponsibleActivity
@@ -64,6 +67,9 @@ public class MainActivity extends NightModeResponsibleActivity
             wasStarted = false;
         }
     };
+
+    public MainActivity() {
+    }
 
     private void initItemId() {
         itemId = new HashMap<>();

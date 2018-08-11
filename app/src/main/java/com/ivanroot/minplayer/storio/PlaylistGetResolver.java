@@ -67,8 +67,8 @@ public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
         }
 
         catch (NullPointerException ex){
-            ex.printStackTrace();
-            Log.e(toString(),ex.getMessage());
+            //ex.printStackTrace();
+            //Log.e(toString(),ex.getMessage());
         }
 
         return playlist;

@@ -31,7 +31,6 @@ import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
 public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioViewHolder>{
-    private RestClient restClient;
     private Map<String, String> statuses = new HashMap<>();
 
     public DiskPlaylistAdapter(Activity activity) {
@@ -40,18 +39,14 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
 
     @NonNull
     private Disposable getPlaylistDisposable(Activity activity, RestClient restClient) {
-        return playlistManager.getDiskAllTracksSubject(activity,restClient)
+        return playlistManager.getDiskAllTracksObservable(activity,restClient)
                 .map(list -> new Playlist(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
                 .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
     }
 
-    public void setRestClient(RestClient restClient){
-        this.restClient = restClient;
-    }
-
-    public void subscribe(){
+    public void subscribeOnDisk(RestClient restClient){
         if(playlistDisposable != null)
             playlistDisposable.dispose();
         if(restClient != null)

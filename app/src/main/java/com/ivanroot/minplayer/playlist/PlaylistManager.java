@@ -28,7 +28,6 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
 
 
 /**
@@ -45,9 +44,6 @@ public class PlaylistManager {
     private static final int period = 10000;
     private static final int limit = 500;
 
-    private BehaviorSubject<List<Audio>> diskSubject = BehaviorSubject.create();
-    private Observable<List<Audio>> diskObservable;
-
     private static final PlaylistManager ourInstance = new PlaylistManager();
 
     private PlaylistManager() {
@@ -58,9 +54,9 @@ public class PlaylistManager {
     }
 
 
-    public Observable<Playlist> getPlaylistObservable(Context context, RestClient restClient, String playlistName) {
+    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, @NonNull String playlistName) {
         if (playlistName.equals(DISK_ALL_TRACKS_PLAYLIST))
-            return getDiskAllTracksSubject(context, restClient)
+            return getDiskAllTracksObservable(context, restClient)
                     .map(list -> new Playlist(DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
                     .distinctUntilChanged();
 
@@ -186,46 +182,39 @@ public class PlaylistManager {
         return title;
     }
 
-    public Observable<List<Audio>>getDiskAllTracksObservable(Context context, RestClient restClient){
-        return  Observable.interval(0, period, TimeUnit.MILLISECONDS)
+    public Observable<List<Audio>> getDiskAllTracksObservable(Context context, RestClient restClient) {
+        return Observable.interval(0, period, TimeUnit.MILLISECONDS)
                 .map(i -> {
-                    List<Resource> resources = restClient.getFlatResourceList(new ResourcesArgs.Builder()
-                            .setPath("/")
-                            .setLimit(limit)
-                            .setMediaType("audio")
-                            .build())
-                            .getItems();
-
                     List<Audio> audioList = new ArrayList<>();
+                    if (restClient != null) {
+                        List<Resource> resources = restClient.getFlatResourceList(new ResourcesArgs.Builder()
+                                .setPath("/")
+                                .setLimit(limit)
+                                .setMediaType("audio")
+                                .build())
+                                .getItems();
 
-                    for (Resource res : resources) {
-                        Audio audio = StorIOContentResolverFactory.get(context)
-                                .get()
-                                .object(Audio.class)
-                                .withQuery(Query.builder()
-                                        .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-                                        .where(MediaStore.Audio.Media.TITLE + " = ?")
-                                        .whereArgs(res.getName()).build()).prepare()
-                                .executeAsBlocking();
+                        for (Resource res : resources) {
+                            Audio audio = StorIOContentResolverFactory.get(context)
+                                    .get()
+                                    .object(Audio.class)
+                                    .withQuery(Query.builder()
+                                            .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                                            .where(MediaStore.Audio.Media.TITLE + " = ?")
+                                            .whereArgs(res.getName()).build()).prepare()
+                                    .executeAsBlocking();
 
-                        if (audio == null) {
-                            audio = new Audio();
-                            audio.setTitle(res.getName());
-                            audio.setCloudData(res.getPath().getPath());
+                            if (audio == null) {
+                                audio = new Audio();
+                                audio.setTitle(res.getName());
+                                audio.setCloudData(res.getPath().getPath());
+                            }
+                            audio.setMd5Hash(res.getMd5());
+                            audioList.add(audio);
                         }
-                        audio.setMd5Hash(res.getMd5());
-                        audioList.add(audio);
                     }
                     return audioList;
                 }).subscribeOn(Schedulers.io());
-    }
-
-    public BehaviorSubject<List<Audio>> getDiskAllTracksSubject(Context context, RestClient restClient) {
-        if (diskObservable == null && restClient != null) {
-            diskObservable = getDiskAllTracksObservable(context, restClient);
-            diskObservable.subscribe(diskSubject);
-        }
-        return diskSubject;
     }
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) {

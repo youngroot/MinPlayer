@@ -47,7 +47,7 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
 
             String albumArt = tempCursor.getString(tempCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
             tempCursor.close();
-            Log.i(toString(),albumArt);
+            //Log.i(toString(),albumArt);
             audio.setAlbumArtPath(albumArt);
 
             Uri genreUri = MediaStore.Audio.Genres.getContentUriForAudioId("external",(int)id);
@@ -63,12 +63,12 @@ public class AudioGetResolver extends DefaultGetResolver<Audio> {
 
             String genre = tempCursor.getString(tempCursor.getColumnIndex(MediaStore.Audio.Genres.NAME));
             tempCursor.close();
-            Log.i(toString(),genre);
+            //Log.i(toString(),genre);
             audio.setGenre(genre);
 
         } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
-            ex.printStackTrace();
-            Log.e(toString(), ex.getMessage());
+            //ex.printStackTrace();
+            //Log.e(toString(), ex.getMessage());
         }
 
         return audio;

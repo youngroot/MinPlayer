@@ -59,6 +59,12 @@
         <service
             android:name=".disk.AudioDownloadService"
             android:exported="false"/>
+        <receiver android:name=".utils.RxNetworkChangeReceiver">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

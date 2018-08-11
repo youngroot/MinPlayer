@@ -73,6 +73,8 @@ import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.player.constants.PlayerKeys;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.ivanroot.minplayer.utils.Pair;
+import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.ivanroot.minplayer.utils.Utils;
 import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.RestClient;
@@ -83,6 +85,7 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -124,7 +127,7 @@ public class PlayerService extends Service implements
     //private String nextEvent = PlayerEvents.EVENT_METADATA_UPDATED;
     private boolean isNextQueueUsing = false;
     private Disposable playlistDisposable;
-    private Disposable prefDisposable;
+    private Disposable restDisposable;
     private CompositeDisposable compositeDisposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.get();
@@ -167,8 +170,8 @@ public class PlayerService extends Service implements
             playlistDisposable.dispose();
         }
 
-        if (prefDisposable != null) {
-            prefDisposable.dispose();
+        if (restDisposable != null) {
+            restDisposable.dispose();
         }
 
         writeSettings();
@@ -205,11 +208,17 @@ public class PlayerService extends Service implements
     void setupRestClient() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         RxSharedPreferences rxPreferences = RxSharedPreferences.create(preferences);
-        prefDisposable = rxPreferences.getString(TokenActivity.PREF_ACCESS_TOKEN)
-                .asObservable()
-                .filter(token -> token != null)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(token -> restClient = RestClientUtil.getInstance(new Credentials("", token)));
+        RxNetworkChangeReceiver changeReceiver = RxNetworkChangeReceiver.create(this).register();
+        restDisposable = RestClientUtil.asObservable(changeReceiver, rxPreferences).subscribe(pair ->{
+            restClient = pair.first;
+            if(playlist != null && playlist.getName().equals(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)) {
+                playlistDisposable.dispose();
+                playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this::setPlaylist);
+            }
+
+        });
     }
 
     private void prepareToPlay() {
@@ -935,7 +944,7 @@ public class PlayerService extends Service implements
                     break;
 
                 case Player.STATE_READY:
-                    Log.i("PlayerState","Ready");
+                    Log.i("PlayerState", "Ready");
                     if (exoPlayer.getCurrentPosition() == 0) {
                         requestAudioFocus();
                         buildNotification(playWhenReady, true);
@@ -946,7 +955,7 @@ public class PlayerService extends Service implements
                     break;
 
                 case Player.STATE_BUFFERING:
-                    Log.i("PlayerState","Buffering");
+                    Log.i("PlayerState", "Buffering");
                     rxBus.post(PlayerEvents.EVENT_PLAYER_PREPAIRING);
                     break;
             }
@@ -989,7 +998,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onLoadingChanged(EventTime eventTime, boolean isLoading) {
-            Log.i("PlayerState","onLoadingChanged " + String.valueOf(isLoading));
+            Log.i("PlayerState", "onLoadingChanged " + String.valueOf(isLoading));
         }
 
         @Override
@@ -1004,12 +1013,12 @@ public class PlayerService extends Service implements
 
         @Override
         public void onLoadStarted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
-            Log.i("PlayerState","onLoadStarted");
+            Log.i("PlayerState", "onLoadStarted");
         }
 
         @Override
         public void onLoadCompleted(EventTime eventTime, MediaSourceEventListener.LoadEventInfo loadEventInfo, MediaSourceEventListener.MediaLoadData mediaLoadData) {
-            Log.i("PlayerState","onLoadCompleted");
+            Log.i("PlayerState", "onLoadCompleted");
         }
 
         @Override
@@ -1034,17 +1043,17 @@ public class PlayerService extends Service implements
 
         @Override
         public void onMediaPeriodCreated(EventTime eventTime) {
-            Log.i("PlayerState","onMediaPeriodCreated");
+            Log.i("PlayerState", "onMediaPeriodCreated");
         }
 
         @Override
         public void onMediaPeriodReleased(EventTime eventTime) {
-            Log.i("PlayerState","onMediaPeriodReleased");
+            Log.i("PlayerState", "onMediaPeriodReleased");
         }
 
         @Override
         public void onReadingStarted(EventTime eventTime) {
-            Log.i("PlayerState","onReadingStarted");
+            Log.i("PlayerState", "onReadingStarted");
         }
 
         @Override
@@ -1064,7 +1073,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onMetadata(EventTime eventTime, Metadata metadata) {
-            Log.i("PlayerState","onMetadata " + metadata.toString());
+            Log.i("PlayerState", "onMetadata " + metadata.toString());
         }
 
         @Override
@@ -1089,7 +1098,7 @@ public class PlayerService extends Service implements
 
         @Override
         public void onAudioSessionId(EventTime eventTime, int audioSessionId) {
-            Log.i("AudioSessionId",String.valueOf(audioSessionId));
+            Log.i("AudioSessionId", String.valueOf(audioSessionId));
             PlayerService.this.audioSessionId = audioSessionId;
             enableEqualizer();
         }
