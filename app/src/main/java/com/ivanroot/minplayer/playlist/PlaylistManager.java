@@ -16,6 +16,7 @@ import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
 import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
+import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
 import com.yandex.disk.rest.json.Resource;
 
 
@@ -187,31 +188,33 @@ public class PlaylistManager {
                 .map(i -> {
                     List<Audio> audioList = new ArrayList<>();
                     if (restClient != null) {
-                        List<Resource> resources = restClient.getFlatResourceList(new ResourcesArgs.Builder()
-                                .setPath("/")
-                                .setLimit(limit)
-                                .setMediaType("audio")
-                                .build())
-                                .getItems();
+                        try {
+                            List<Resource> resources = restClient.getFlatResourceList(new ResourcesArgs.Builder()
+                                    .setPath("/")
+                                    .setLimit(limit)
+                                    .setMediaType("audio")
+                                    .build())
+                                    .getItems();
 
-                        for (Resource res : resources) {
-                            Audio audio = StorIOContentResolverFactory.get(context)
-                                    .get()
-                                    .object(Audio.class)
-                                    .withQuery(Query.builder()
-                                            .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-                                            .where(MediaStore.Audio.Media.TITLE + " = ?")
-                                            .whereArgs(res.getName()).build()).prepare()
-                                    .executeAsBlocking();
+                            for (Resource res : resources) {
+                                Audio audio = StorIOContentResolverFactory.get(context)
+                                        .get()
+                                        .object(Audio.class)
+                                        .withQuery(Query.builder()
+                                                .uri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                                                .where(MediaStore.Audio.Media.TITLE + " = ?")
+                                                .whereArgs(res.getName()).build()).prepare()
+                                        .executeAsBlocking();
 
-                            if (audio == null) {
-                                audio = new Audio();
-                                audio.setTitle(res.getName());
-                                audio.setCloudData(res.getPath().getPath());
+                                if (audio == null) {
+                                    audio = new Audio();
+                                    audio.setTitle(res.getName());
+                                    audio.setCloudData(res.getPath().getPath());
+                                }
+                                audio.setMd5Hash(res.getMd5());
+                                audioList.add(audio);
                             }
-                            audio.setMd5Hash(res.getMd5());
-                            audioList.add(audio);
-                        }
+                        }catch (UnauthorizedException ex){}
                     }
                     return audioList;
                 }).subscribeOn(Schedulers.io());

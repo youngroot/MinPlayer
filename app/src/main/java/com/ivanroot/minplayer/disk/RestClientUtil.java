@@ -12,45 +12,64 @@ import com.squareup.okhttp.OkHttpClient;
 import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.OkHttpClientFactory;
 import com.yandex.disk.rest.RestClient;
+import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
 
+
+import java.util.HashMap;
+import java.util.Map;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public class RestClientUtil {
 
     private static Credentials credentials;
     private static OkHttpClient client;
 
+    public static final String KEY_REST_CLIENT = "com.ivanroot.minplayer.key_rest_client";
+    public static final String KEY_NETWORK_INFO = "com.ivanroot.minplayer.key_network_info";
+    public static final String KEY_ERROR = "com.ivanroot.minplayer.key_error";
+
+
+
     public static RestClient getInstance(final Credentials credentials) {
         RestClientUtil.credentials = credentials;
 
-        if(client == null) {
+        if (client == null) {
             client = OkHttpClientFactory.makeClient();
             client.networkInterceptors().add(new StethoInterceptor());
         }
         return new RestClient(credentials, client);
     }
 
-    public static Observable<Pair<RestClient, NetworkInfo>> asObservable(RxNetworkChangeReceiver changeReceiver, RxSharedPreferences rxPreferences){
-        Observable<String> prefObservable = rxPreferences.getString(TokenActivity.PREF_ACCESS_TOKEN)
-                .asObservable();
+    public static Observable<Map<String, Object>> asObservable(Observable<String> tokenObservable, Observable<NetworkInfo> networkInfoObservable) {
+        return Observable.combineLatest(tokenObservable, networkInfoObservable, (token, networkInfo) -> {
+            Map<String, Object> map = new HashMap<>();
+            if(token != null && networkInfo.isConnected())
+                map.put(KEY_REST_CLIENT, getInstance(new Credentials("", token)));
+            map.put(KEY_NETWORK_INFO, networkInfo);
+            return map;
 
-        Observable<NetworkInfo> connObservable = changeReceiver.asObservable();
+        }).observeOn(Schedulers.io())
+                .map(state -> {
+                    RestClient restClient = (RestClient) state.get(KEY_REST_CLIENT);
+                    try{
+                        if(restClient != null) restClient.getDiskInfo();
 
-        return Observable.combineLatest(prefObservable, connObservable, (token, networkInfo) -> {
-                    if (token != null && networkInfo.isConnected())
-                        return new Pair<>(getInstance(new Credentials("", token)), networkInfo);
-                    else
-                        return new Pair<>(null, networkInfo);
+                    } catch (UnauthorizedException ex){
+                        state.put(KEY_ERROR, ex);
+                        state.remove(KEY_REST_CLIENT);
+                    }
+                    return state;
                 });
     }
 
-    public static OkHttpClient getClient(){
+    public static OkHttpClient getClient() {
         return client;
     }
 
-    public static Credentials getCredentials(){
+    public static Credentials getCredentials() {
         return credentials;
     }
 }

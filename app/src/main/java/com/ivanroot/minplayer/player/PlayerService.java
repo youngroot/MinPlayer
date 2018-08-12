@@ -207,18 +207,26 @@ public class PlayerService extends Service implements
 
     void setupRestClient() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        RxSharedPreferences rxPreferences = RxSharedPreferences.create(preferences);
-        RxNetworkChangeReceiver changeReceiver = RxNetworkChangeReceiver.create(this).register();
-        restDisposable = RestClientUtil.asObservable(changeReceiver, rxPreferences).subscribe(pair ->{
-            restClient = pair.first;
-            if(playlist != null && playlist.getName().equals(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)) {
-                playlistDisposable.dispose();
-                playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(this::setPlaylist);
-            }
 
-        });
+        Observable<String> tokenObservable = RxSharedPreferences.create(preferences)
+                .getString(TokenActivity.PREF_ACCESS_TOKEN)
+                .asObservable();
+
+        Observable<NetworkInfo> networkInfoObservable = RxNetworkChangeReceiver.create(this)
+                .register()
+                .asObservable();
+
+        restDisposable = RestClientUtil.asObservable(tokenObservable, networkInfoObservable)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> {
+                    restClient = (RestClient)state.get(RestClientUtil.KEY_REST_CLIENT);
+                    if (playlist != null && playlist.getName().equals(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)) {
+                        playlistDisposable.dispose();
+                        playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(this::setPlaylist);
+                    }
+                });
     }
 
     private void prepareToPlay() {

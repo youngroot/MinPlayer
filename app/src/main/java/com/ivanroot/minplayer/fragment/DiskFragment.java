@@ -2,6 +2,7 @@ package com.ivanroot.minplayer.fragment;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -31,8 +32,12 @@ import com.ivanroot.minplayer.disk.RestClientUtil;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.yandex.disk.rest.RestClient;
+import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
@@ -45,7 +50,6 @@ public class DiskFragment extends NavFragmentBase {
     private MainActivity activity;
     private Disposable restDisposable;
     private Bus rxBus = RxBus.get();
-    private CoordinatorLayout mainLayout;
     private TextView statusText;
 
 
@@ -65,35 +69,47 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     private void setupRestClient(View view) {
-        mainLayout = (CoordinatorLayout)view.findViewById(R.id.all_tracks_playlist_fragment);
-        statusText = (TextView)view.findViewById(R.id.statusText);
-        RxSharedPreferences rxPreferences = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(getActivity()));
-        RxNetworkChangeReceiver rxNetworkChangeReceiver = RxNetworkChangeReceiver.create(getActivity()).register();
-        restDisposable = RestClientUtil.asObservable(rxNetworkChangeReceiver, rxPreferences).subscribe(pair -> {
-            adapter.subscribeOnDisk(pair.first);
-            if(!pair.second.isConnected()) {
-                mainLayout.setVisibility(View.INVISIBLE);
-                statusText.setText(getResources().getString(R.string.no_internet_connection));
-            }
-            else if(pair.first == null && pair.second.isConnected()){
-                mainLayout.setVisibility(View.INVISIBLE);
-                statusText.setText(getResources().getString(R.string.disk_login_error));
-                getToken();
-            }
-            else {
-                statusText.setVisibility(View.INVISIBLE);
-                mainLayout.setVisibility(View.VISIBLE);
-            }
-        });
+        statusText = (TextView) view.findViewById(R.id.statusText);
+        Observable<String> tokenObservable = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(getActivity()))
+                .getString(TokenActivity.PREF_ACCESS_TOKEN)
+                .asObservable();
+
+        Observable<NetworkInfo> networkInfoObservable = RxNetworkChangeReceiver.create(getActivity())
+                .register()
+                .asObservable();
+
+        restDisposable = RestClientUtil.asObservable(tokenObservable, networkInfoObservable)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> {
+                    RestClient restClient = (RestClient)state.get(RestClientUtil.KEY_REST_CLIENT);
+                    NetworkInfo networkInfo = (NetworkInfo)state.get(RestClientUtil.KEY_NETWORK_INFO);
+                    Object error = state.get(RestClientUtil.KEY_ERROR);
+
+                    if (!networkInfo.isConnected()) {
+                        audioRecycler.setVisibility(View.INVISIBLE);
+                        statusText.setVisibility(View.VISIBLE);
+                        statusText.setText(getResources().getString(R.string.no_internet_connection));
+                    } else if (error != null && error instanceof UnauthorizedException) {
+                        audioRecycler.setVisibility(View.INVISIBLE);
+                        statusText.setVisibility(View.VISIBLE);
+                        statusText.setText(getResources().getString(R.string.disk_login_error));
+                        getToken();
+                    } else {
+                        statusText.setVisibility(View.INVISIBLE);
+                        audioRecycler.setVisibility(View.VISIBLE);
+                    }
+
+                    adapter.subscribeOnDisk(restClient);
+                });
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.disk_fragment_layout, container, false);
-        setupRestClient(view);
         setupDrawer(view);
         setupRecycler(view);
+        setupRestClient(view);
         prepareListeners();
         return view;
     }
@@ -143,12 +159,12 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})
-    public void setAudioPreparingStatus(String md5Hash){
+    public void setAudioPreparingStatus(String md5Hash) {
         adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_PREPARING);
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
-    public void setAudioDownloadedStatus(String md5Hash){
+    public void setAudioDownloadedStatus(String md5Hash) {
         adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_DOWNLOADED);
         Toast.makeText(activity, getResources().getString(R.string.download_complete), Toast.LENGTH_SHORT).show();
     }
