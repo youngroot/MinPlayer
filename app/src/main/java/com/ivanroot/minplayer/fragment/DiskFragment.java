@@ -115,12 +115,6 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        activity.getSupportActionBar().setTitle(getResources().getString(R.string.yandex_disk));
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
         rxBus.unregister(this);
@@ -167,5 +161,10 @@ public class DiskFragment extends NavFragmentBase {
     public void setAudioDownloadedStatus(String md5Hash) {
         adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_DOWNLOADED);
         Toast.makeText(activity, getResources().getString(R.string.download_complete), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected String getActionBarTitle() {
+        return getResources().getString(R.string.yandex_disk);
     }
 }

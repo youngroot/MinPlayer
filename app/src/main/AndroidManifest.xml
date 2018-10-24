@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.ivanroot.minplayer">
 
 
@@ -19,13 +20,20 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+        android:name="android.software.live_wallpaper"
+        android:required="true" >
+    </uses-feature>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/min_player_ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/min_player_ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/MinPlayerOriginalTheme">
+        android:theme="@style/MinPlayerOriginalTheme"
+        tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".activity.PlayerActivity"
             android:launchMode="singleTask"
@@ -59,6 +67,23 @@
         <service
             android:name=".disk.AudioDownloadService"
             android:exported="false"/>
+        <service android:name=".visualization.wallpapers.WaveInWallpaperService"
+            android:enabled="true"
+            android:label="MinPlayer: Cleveroad - WaveIn"
+            android:permission="android.permission.BIND_WALLPAPER">
+
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" >
+                </action>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/wave_in_wallpaper" >
+            </meta-data>
+
+        </service>
+
         <receiver android:name=".utils.RxNetworkChangeReceiver">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>

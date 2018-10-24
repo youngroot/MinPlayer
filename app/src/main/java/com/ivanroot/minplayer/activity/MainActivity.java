@@ -20,21 +20,20 @@ import android.view.View;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.ivanroot.minplayer.R;
-import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
 import com.ivanroot.minplayer.fragment.DiskFragment;
 import com.ivanroot.minplayer.fragment.PlayerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
+import com.ivanroot.minplayer.fragment.VisRecyclerFragment;
+import com.ivanroot.minplayer.fragment.VisSelectorFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import io.reactivex.disposables.Disposable;
 
 
 public class MainActivity extends NightModeResponsibleActivity
@@ -75,7 +74,7 @@ public class MainActivity extends NightModeResponsibleActivity
         itemId = new HashMap<>();
         itemId.put(PlaylistFragment.NAME, R.id.all_audio);
         itemId.put(PlaylistSelectorFragment.NAME, R.id.playlists);
-        itemId.put(VisFragment.NAME, R.id.spectrum);
+        itemId.put(VisFragment.NAME, R.id.visualizer);
     }
 
     @Override
@@ -267,9 +266,9 @@ public class MainActivity extends NightModeResponsibleActivity
                 tag = DiskFragment.NAME;
                 break;
 
-            case R.id.spectrum:
-                fragment = new VisFragment(0);
-                tag = VisFragment.NAME;
+            case R.id.visualizer:
+                fragment = new VisSelectorFragment();
+                tag = VisSelectorFragment.NAME;
                 break;
 
             case R.id.settings:

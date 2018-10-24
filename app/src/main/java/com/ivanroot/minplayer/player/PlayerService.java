@@ -180,7 +180,7 @@ public class PlayerService extends Service implements
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i("PlayerService", "onBind");
+        Log.i("PlayerService", "bindVisualization");
         rxBus.post(PlayerEvents.EVENT_METADATA_UPDATED, getCurrentStateMap());
         return localBinder;
     }
@@ -1109,6 +1109,7 @@ public class PlayerService extends Service implements
             Log.i("AudioSessionId", String.valueOf(audioSessionId));
             PlayerService.this.audioSessionId = audioSessionId;
             enableEqualizer();
+            rxBus.post(PlayerEvents.EVENT_ON_GET_AUDIO_SESSION_ID, audioSessionId);
         }
 
         @Override

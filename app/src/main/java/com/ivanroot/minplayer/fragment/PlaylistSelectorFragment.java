@@ -43,16 +43,13 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         setupRecycler(view);
         prepareListeners(view);
 
-
         return view;
     }
 
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        String title = getResources().getString(R.string.playlists);
-        activity.getSupportActionBar().setTitle(title);
+    protected String getActionBarTitle() {
+        return getResources().getString(R.string.playlists);
     }
 
     private void setupRecycler(View view) {

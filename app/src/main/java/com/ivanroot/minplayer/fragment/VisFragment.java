@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.visualization.BandVisualization;
-import com.ivanroot.minplayer.visualization.VisualizerSurface;
+import com.ivanroot.minplayer.visualization.surfaceview.VisualizerSurface;
 
 /**
  * Created by Ivan Root on 02.11.2017.

@@ -227,10 +227,13 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     @Override
+    protected String getActionBarTitle() {
+        return playlistManager.getTitleFromPlaylistName(getActivity(),playlistName);
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        String title = playlistManager.getTitleFromPlaylistName(getActivity(),playlistName);
-        activity.getSupportActionBar().setTitle(title);
 
         if(savedInstanceState != null){
             selectorDialogIsActive = savedInstanceState.getBoolean("selector_dialog_is_active");

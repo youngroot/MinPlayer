@@ -22,7 +22,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="about_short">Simple Music Player</string>
-    <string name="spectrum">Spectrum</string>
+    <string name="visualizer">Visualizer</string>
     <string name="remove_playlist">Remove</string>
     <string name="remove_playlist_question">Remove this playlist?</string>
     <string name="title_activity_startup">StartupActivity</string>

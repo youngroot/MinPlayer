@@ -23,10 +23,10 @@
     <item android:title="@string/advanced">
         <menu>
             <item
-            android:id="@+id/spectrum"
+            android:id="@+id/visualizer"
             android:checkable="true"
             android:icon="@drawable/ic_spectrum"
-            android:title="@string/spectrum" />
+            android:title="@string/visualizer" />
             <item
                 android:id="@+id/settings"
                 android:checkable="true"

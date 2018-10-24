@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.visualization;
+package com.ivanroot.minplayer.visualization.surfaceview;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
@@ -6,6 +6,8 @@ import android.media.audiofx.Visualizer;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.ivanroot.minplayer.visualization.BaseVisualization;
 
 import java.util.concurrent.TimeUnit;
 
