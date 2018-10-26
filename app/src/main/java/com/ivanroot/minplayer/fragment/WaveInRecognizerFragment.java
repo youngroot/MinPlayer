@@ -1,6 +1,8 @@
 package com.ivanroot.minplayer.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import com.ivanroot.minplayer.R;
 public class WaveInRecorderFragment extends Fragment {
 
     private GLAudioVisualizationView visualizationView;
+    private SpeechRecognizerDbmHandler dbmHandler;
 
     @Nullable
     @Override
@@ -37,11 +40,16 @@ public class WaveInRecorderFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        SpeechRecognizerDbmHandler speechRecHandler = DbmHandler.Factory.newSpeechRecognizerHandler(getContext());
-        //speechRecHandler.innerRecognitionListener();
-        visualizationView.linkTo(speechRecHandler);
+        dbmHandler = DbmHandler.Factory.newSpeechRecognizerHandler(getContext());
+        dbmHandler.innerRecognitionListener();
+        visualizationView.linkTo(dbmHandler);
+        dbmHandler.startListening(getRecognizerIntent());
+
     }
 
+    private Intent getRecognizerIntent(){
+
+    }
 
     @Override
     public void onResume() {
@@ -59,5 +67,52 @@ public class WaveInRecorderFragment extends Fragment {
     public void onDestroyView() {
         visualizationView.release();
         super.onDestroyView();
+    }
+
+    private static class SimpleRecognitionListener implements RecognitionListener{
+        @Override
+        public void onReadyForSpeech(Bundle bundle) {
+
+        }
+
+        @Override
+        public void onBeginningOfSpeech() {
+
+        }
+
+        @Override
+        public void onRmsChanged(float v) {
+
+        }
+
+        @Override
+        public void onBufferReceived(byte[] bytes) {
+
+        }
+
+        @Override
+        public void onEndOfSpeech() {
+
+        }
+
+        @Override
+        public void onError(int i) {
+
+        }
+
+        @Override
+        public void onResults(Bundle bundle) {
+
+        }
+
+        @Override
+        public void onPartialResults(Bundle bundle) {
+
+        }
+
+        @Override
+        public void onEvent(int i, Bundle bundle) {
+
+        }
     }
 }
