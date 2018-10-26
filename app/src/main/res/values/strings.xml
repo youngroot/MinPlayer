@@ -37,4 +37,12 @@
     <string name="download_complete">Download complete!</string>
     <string name="no_internet_connection">No Internet Connection!</string>
     <string name="disk_login_error">Disk Login Error!</string>
+    <string name="wave_in">Wave In</string>
+    <string name="wave_in_wallpaper">Wave In Wallpaper</string>
+    <string name="colors">Colors</string>
+    <string name="layer_1_color">Layer 1</string>
+    <string name="layer_2_color">Layer 2</string>
+    <string name="layer_3_color">Layer 3</string>
+    <string name="background_color">Background </string>
+    <string name="wallpapers">Wallpapers</string>
 </resources>

@@ -3,6 +3,7 @@ package com.ivanroot.minplayer.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -14,7 +15,7 @@ import com.cleveroad.audiovisualization.GLAudioVisualizationView;
 import com.cleveroad.audiovisualization.SpeechRecognizerDbmHandler;
 import com.ivanroot.minplayer.R;
 
-public class WaveInRecorderFragment extends Fragment {
+public class WaveInRecognizerFragment extends Fragment {
 
     private GLAudioVisualizationView visualizationView;
     private SpeechRecognizerDbmHandler dbmHandler;
@@ -41,14 +42,17 @@ public class WaveInRecorderFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         dbmHandler = DbmHandler.Factory.newSpeechRecognizerHandler(getContext());
-        dbmHandler.innerRecognitionListener();
+        dbmHandler.innerRecognitionListener(new SimpleRecognitionListener());
         visualizationView.linkTo(dbmHandler);
         dbmHandler.startListening(getRecognizerIntent());
 
     }
 
     private Intent getRecognizerIntent(){
-
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getContext().getPackageName());
+        return intent;
     }
 
     @Override

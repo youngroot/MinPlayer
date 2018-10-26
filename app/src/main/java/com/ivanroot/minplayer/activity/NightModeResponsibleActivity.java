@@ -32,7 +32,8 @@ public class NightModeResponsibleActivity extends AppCompatActivity {
                 .skip(1)
                 .delay(200, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(val -> activity.recreate()).subscribe();
+                .doOnNext(val -> activity.recreate())
+                .subscribe();
 
         super.onCreate(savedInstanceState);
     }

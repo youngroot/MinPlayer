@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="@string/colors">
+
+        <com.flask.colorpicker.ColorPickerPreference
+            android:title="@string/background_color"
+            android:key="wave_in_background_color"
+            android:defaultValue="#8f367c"
+            app:wheelType="CIRCLE"/>
+
+        <com.flask.colorpicker.ColorPickerPreference
+            android:title="@string/layer_1_color"
+            android:key="wave_in_layer_1_color"
+            android:defaultValue="#bc428b"
+            app:wheelType="CIRCLE"/>
+
+        <com.flask.colorpicker.ColorPickerPreference
+            android:title="@string/layer_2_color"
+            android:key="wave_in_layer_2_color"
+            android:defaultValue="#e36a97"
+            app:wheelType="CIRCLE"/>
+
+        <com.flask.colorpicker.ColorPickerPreference
+            android:title="@string/layer_3_color"
+            android:key="wave_in_layer_3_color"
+            android:defaultValue="#f0979b"
+            app:wheelType="CIRCLE"/>
+
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -60,13 +60,16 @@
 
         <activity
             android:name=".activity.SettingsActivity"
-            android:label="@string/settings"
-            android:launchMode="singleTask"/>
+            android:exported="true"
+            android:label="@string/settings"/>
+            <!--android:launchMode="singleTask"/>-->
 
         <activity android:name=".activity.TokenActivity"/>
+
         <service
             android:name=".disk.AudioDownloadService"
             android:exported="false"/>
+
         <service android:name=".visualization.wallpapers.WaveInWallpaperService"
             android:enabled="true"
             android:label="MinPlayer: Cleveroad - WaveIn"

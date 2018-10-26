@@ -16,4 +16,17 @@
     <color name="colorOriginalPurple">#c14bd3</color>
     <color name="colorMediumPurple">#9370DB</color>
     <color name="colorBlackOverlay">#66000000</color>
+
+    <color name="colorWaveInBgDefault">#8f367c</color>
+    <color name="colorWaveInLayer1Default">#bc428b</color>
+    <color name="colorWaveInLayer2Default">#e36a97</color>
+    <color name="colorWaveInLayer3Default">#f0979b</color>
+    <color name="colorWaveInLayer4Default">#f7b09e</color>
+
+    <array name="colorsWaveInDefault">
+        <item >@color/colorWaveInLayer1Default</item>
+        <item >@color/colorWaveInLayer2Default</item>
+        <item >@color/colorWaveInLayer3Default</item>
+    </array>
+
 </resources>
