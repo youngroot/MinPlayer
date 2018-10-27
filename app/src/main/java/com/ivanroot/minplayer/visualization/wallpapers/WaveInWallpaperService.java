@@ -12,12 +12,8 @@ import com.cleveroad.audiovisualization.GLAudioVisualizationView;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.ivanroot.minplayer.R;
 
-import java.util.concurrent.TimeUnit;
-
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class WaveInWallpaperService extends WallpaperService {
 
@@ -51,6 +47,8 @@ public class WaveInWallpaperService extends WallpaperService {
         private DbmHandler dbmHandler;
         private GLAudioVisualizationView.AudioVisualizationRenderer renderer;
         private Disposable prefDisposable;
+
+        private boolean handlerPaused = true;
 
         private int colorBgDefault = service.getResources().getColor(R.color.colorWaveInBgDefault);
         private int colorLayer1Default = service.getResources().getColor(R.color.colorWaveInLayer1Default);
@@ -117,8 +115,8 @@ public class WaveInWallpaperService extends WallpaperService {
             audioVisualizationView.setEGLContextClientVersion(2);
             audioVisualizationView.setRenderer(renderer);
 
-            audioVisualizationView.onResume();
-            dbmHandler.onResume();
+            //audioVisualizationView.onResume();
+            //dbmHandler.onResume();
 
             prefDisposable = getColorsBuilderObservable()
                     .skip(1)
@@ -137,11 +135,14 @@ public class WaveInWallpaperService extends WallpaperService {
         @Override
         public void onVisibilityChanged(boolean visible) {
             if (visible) {
-                //audioVisualizationView.onResume();
-                //dbmHandler.onResume();
+                audioVisualizationView.onResume();
+                if(handlerPaused) {
+                    dbmHandler.onResume();
+                    handlerPaused = false;
+                }
             } else {
                 //dbmHandler.onPause();
-                //audioVisualizationView.onPause();
+                audioVisualizationView.onPause();
             }
         }
 

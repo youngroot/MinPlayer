@@ -29,7 +29,7 @@
             android:title="@string/visualizer" />
             <item
                 android:id="@+id/settings"
-                android:checkable="true"
+                android:checkable="false"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/settings" />
         </menu>
