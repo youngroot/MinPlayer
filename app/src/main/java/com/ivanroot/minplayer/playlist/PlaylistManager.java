@@ -208,6 +208,7 @@ public class PlaylistManager {
 
                                 if (audio == null) {
                                     audio = new Audio();
+                                    audio.setSize(res.getSize());
                                     audio.setTitle(res.getName());
                                     audio.setCloudData(res.getPath().getPath());
                                 }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -137,19 +138,22 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     private void prepareListeners() {
-        adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> {
-            Audio audio = playlist.getAudio(i);
-            Intent intent = new Intent(activity, AudioDownloadService.class);
-            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudData());
-            intent.putExtra(AudioDownloadService.EXTRA_MD5_HASH, audio.getMd5Hash());
-            intent.putExtra(AudioDownloadService.EXTRA_AUDIO_TITLE, audio.getTitle());
-            activity.startService(intent);
-        });
+        adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> activity.startService(getIntentFromAudio(playlist.getAudio(i))));
 
         adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
+    }
+
+    @NonNull
+    private Intent getIntentFromAudio(Audio audio) {
+        Intent intent = new Intent(activity, AudioDownloadService.class);
+        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_SIZE, audio.getSize());
+        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudData());
+        intent.putExtra(AudioDownloadService.EXTRA_MD5_HASH, audio.getMd5Hash());
+        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_TITLE, audio.getTitle());
+        return intent;
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})

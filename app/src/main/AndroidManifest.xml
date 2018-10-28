@@ -72,7 +72,7 @@
 
         <service android:name=".visualization.wallpapers.WaveInWallpaperService"
             android:enabled="true"
-            android:label="MinPlayer: Cleveroad - WaveIn"
+            android:label="Cleveroad - WaveIn"
             android:permission="android.permission.BIND_WALLPAPER">
 
             <intent-filter>
@@ -85,6 +85,21 @@
                 android:resource="@xml/wave_in_wallpaper" >
             </meta-data>
 
+        </service>
+
+        <service android:name=".visualization.wallpapers.NierWallpaperService"
+            android:enabled="true"
+            android:label="Boger Chan - Nier Visualizer"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" >
+                </action>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/nier_wallpaper" >
+            </meta-data>
         </service>
 
         <receiver android:name=".utils.RxNetworkChangeReceiver">

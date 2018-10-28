@@ -1,5 +1,7 @@
 package com.ivanroot.minplayer.audio;
 
+import android.support.annotation.NonNull;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -7,8 +9,9 @@ import java.util.Objects;
  * Created by Ivan Root on 02.06.2017.
  */
 
-public class Audio implements Serializable {
+public class Audio implements Serializable, Comparable<Audio> {
     private long id;
+    private long size;
     private String localData;
     private String cloudData;
     private String md5Hash;
@@ -18,8 +21,7 @@ public class Audio implements Serializable {
     private String genre;
     private String albumArtPath;
 
-    public Audio() {
-    }
+    public Audio() {}
 
     @Override
     public String toString() {
@@ -34,8 +36,23 @@ public class Audio implements Serializable {
         this.artist = artist;
     }
 
+    public Audio(long size, String title, String cloudData, String md5Hash){
+        this.size = size;
+        this.title = title;
+        this.cloudData = cloudData;
+        this.md5Hash = md5Hash;
+    }
+
     public long getId() {
         return id;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public void setId(long id) {
@@ -110,9 +127,11 @@ public class Audio implements Serializable {
     @Override
     public boolean equals(Object object) {
 
-        if (object != null && object instanceof Audio) {
+        if (object instanceof Audio) {
             Audio audio = (Audio) object;
-            if (this.md5Hash != null && audio.md5Hash != null && Objects.equals(this.md5Hash, audio.md5Hash)) return true;
+            if (this.md5Hash != null && audio.md5Hash != null && Objects.equals(this.md5Hash, audio.md5Hash))
+                return true;
+
             if (!Objects.equals(this.localData, audio.localData)) return false;
             if (!Objects.equals(this.title, audio.title)) return false;
             if (!Objects.equals(this.album, audio.album)) return false;
@@ -121,5 +140,10 @@ public class Audio implements Serializable {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public int compareTo(@NonNull Audio audio) {
+        return Long.compare(getSize(), audio.getSize());
     }
 }

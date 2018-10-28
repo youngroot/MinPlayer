@@ -13,6 +13,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="25dp"
         android:orientation="vertical"
         android:padding="6dp">
 
@@ -20,28 +21,42 @@
             android:id="@+id/imageView"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
-            android:layout_marginBottom="20dp"
+            android:layout_centerVertical="true"
             app:srcCompat="@drawable/min_player_logo_high_res" />
 
-        <TextView
+        <RelativeLayout
+            android:layout_marginStart="15dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@id/imageView"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="20dp"
-            android:layout_toEndOf="@id/imageView"
-            android:text="@string/app_name"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/imageView">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/imageView"
-            android:layout_marginBottom="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_toEndOf="@id/imageView"
-            android:text="@string/about_short" />
+            <TextView
+                android:id="@+id/appName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="@string/app_name"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+            <TextView
+                android:id="@+id/aboutShort"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_alignStart="@id/appName"
+                android:layout_below="@id/appName"
+                android:text="@string/about_short" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_alignStart="@id/aboutShort"
+                android:layout_below="@id/aboutShort"
+                android:text="@string/created_by"
+                android:textSize="10sp" />
+        </RelativeLayout>
     </RelativeLayout>
 </FrameLayout>

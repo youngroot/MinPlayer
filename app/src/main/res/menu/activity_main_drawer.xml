@@ -5,8 +5,8 @@
         <menu android:checkableBehavior="single">
             <item
                 android:id="@+id/all_audio"
-                android:icon="@drawable/ic_music"
                 android:checkable="true"
+                android:icon="@drawable/ic_music"
                 android:title="@string/all_tracks_playlist" />
             <item
                 android:id="@+id/playlists"
@@ -23,10 +23,11 @@
     <item android:title="@string/advanced">
         <menu>
             <item
-            android:id="@+id/visualizer"
-            android:checkable="true"
-            android:icon="@drawable/ic_spectrum"
-            android:title="@string/visualizer" />
+                android:id="@+id/visualizer"
+                android:checkable="true"
+                android:icon="@drawable/ic_spectrum"
+                android:title="@string/visualizer"
+                android:visible="false" />
             <item
                 android:id="@+id/settings"
                 android:checkable="false"

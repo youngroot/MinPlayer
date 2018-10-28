@@ -7,24 +7,28 @@
             android:title="@string/background_color"
             android:key="wave_in_background_color"
             android:defaultValue="#8f367c"
+            app:initialColor="#8f367c"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_1_color"
             android:key="wave_in_layer_1_color"
             android:defaultValue="#bc428b"
+            app:initialColor="#bc428b"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_2_color"
             android:key="wave_in_layer_2_color"
             android:defaultValue="#e36a97"
+            app:initialColor="#e36a97"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_3_color"
             android:key="wave_in_layer_3_color"
             android:defaultValue="#f0979b"
+            app:initialColor="#f0979b"
             app:wheelType="CIRCLE"/>
 
     </PreferenceCategory>
