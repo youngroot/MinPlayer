@@ -23,6 +23,7 @@ import com.yandex.disk.rest.RestClient;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -30,8 +31,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
-public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioViewHolder>{
-    private Map<String, String> statuses = new HashMap<>();
+public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioViewHolder> {
+    private Map<String, Pair<String, Pair<Long, Long>>> statuses = new HashMap<>();
 
     public DiskPlaylistAdapter(Activity activity) {
         super(activity);
@@ -39,33 +40,33 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
 
     @NonNull
     private Disposable getPlaylistDisposable(Activity activity, RestClient restClient) {
-        return playlistManager.getDiskAllTracksObservable(activity,restClient)
+        return playlistManager.getDiskAllTracksObservable(activity, restClient)
                 .map(list -> new Playlist(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
                 .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
     }
 
-    public void subscribeOnDisk(RestClient restClient){
-        if(playlistDisposable != null)
+    public void subscribeOnDisk(RestClient restClient) {
+        if (playlistDisposable != null)
             playlistDisposable.dispose();
-        if(restClient != null)
+        if (restClient != null)
             playlistDisposable = getPlaylistDisposable(activity, restClient);
     }
 
     @Override
     public DiskAudioViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.audio_item_disk,parent,false);
+                .inflate(R.layout.audio_item_disk, parent, false);
         return new DiskAudioViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(DiskAudioViewHolder holder, int position) {
         Audio audio = playlist.getAudio(position);
-        String status = AudioStatus.STATUS_AUDIO_ONLY_ONLINE;
+        Pair<String, Pair<Long, Long>> status = new Pair<>(AudioStatus.STATUS_AUDIO_ONLY_ONLINE, new Pair<>(0l, 0l));
 
-        if(statuses.get(audio.getMd5Hash()) != null)
+        if (statuses.get(audio.getMd5Hash()) != null)
             status = statuses.get(audio.getMd5Hash());
 
         holder.representItem(activity, audio, status);
@@ -73,8 +74,9 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
         holder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, position));
     }
 
-    public  void setStatus(String md5Hash, String status){
-        statuses.put(md5Hash, status);
+    public void setStatus(Pair<String, Pair<Long, Long>> state, String status) {
+        String md5Hash = state.first;
+        statuses.put(md5Hash, new Pair<>(status, state.second));
         notifyDataSetChanged();
     }
 }

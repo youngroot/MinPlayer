@@ -38,26 +38,11 @@ public class HorizonGLSurfaceView extends GLSurfaceView {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        visualizer.release();
-    }
-
-    @Override
     public void surfaceCreated(SurfaceHolder holder) {
         visualizerSubscription = Observable.interval(160, TimeUnit.MILLISECONDS)
                 .observeOn(Schedulers.newThread())
                 .doOnSubscribe(d -> visualizer.setEnabled(true))
                 .doOnDispose(() -> visualizer.setEnabled(false))
-                .doOnNext(tick -> {
-                    visualizer.getFft(fft);
-                    String s = "fft data: ";
-                    for(int i = 0; i < fft.length; i++)
-                        s += String.valueOf(fft[i]);
-
-                    Log.i("FFT", s);
-                })
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(tick -> horizon.updateView(fft),
                         error -> Log.e("Error!",error.getMessage()));
 
@@ -68,6 +53,12 @@ public class HorizonGLSurfaceView extends GLSurfaceView {
         super.surfaceDestroyed(surfaceHolder);
         if(visualizerSubscription != null)
             visualizerSubscription.dispose();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        visualizer.release();
     }
 
 }

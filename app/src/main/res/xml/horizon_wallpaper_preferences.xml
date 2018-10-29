@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--<PreferenceCategory android:title="@string/colors">-->
+        <!--<com.flask.colorpicker.ColorPickerPreference-->
+            <!--android:title="@string/background_color"-->
+            <!--android:key="horizon_background_color"-->
+            <!--android:defaultValue="@color/colorHorizonBgDefault"-->
+            <!--app:initialColor="@color/colorHorizonBgDefault"-->
+            <!--app:pickerTitle="@string/choose_background_color"-->
+            <!--app:alphaSlider="true"-->
+            <!--app:lightnessSlider="true"-->
+            <!--app:wheelType="CIRCLE"/>-->
+    <!--</PreferenceCategory>-->
+
+    <PreferenceCategory android:title="@string/advanced">
+        <com.majeur.preferencekit.NumberPickerPreference
+            android:title="@string/frame_update_ms"
+            android:defaultValue="45"
+            app:minValue="45"
+            app:maxValue="200"
+            app:showValueInSummary="true"/>
+    </PreferenceCategory>
+</PreferenceScreen>

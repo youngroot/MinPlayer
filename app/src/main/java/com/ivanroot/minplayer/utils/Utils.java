@@ -221,4 +221,8 @@ public class Utils {
 
         return data;
     }
+
+    public static int getLoadedPercentage(long loaded, long total) {
+        return (int) (((double) loaded) / total * 100);
+    }
 }

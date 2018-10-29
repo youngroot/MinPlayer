@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="@string/pref_category_appearance">
+    <PreferenceCategory android:title="@string/appearance">
         <SwitchPreference
             android:key="pref_key_night_mode"
-            android:title="@string/pref_night_mode"
+            android:title="@string/night_mode"
+            android:summary="@string/night_mode_summary"
             android:defaultValue="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/wallpapers">
         <Preference
-            android:title="@string/wave_in">
+            android:title="@string/horizon"
+            android:summary="@string/horizon_summary">
+            <intent
+                android:action="horizon_wallpaper_settings"
+                android:targetClass="com.ivanroot.minplayer.activity.SettingsActivity"
+                android:targetPackage="com.ivanroot.minplayer">
+            </intent>
+        </Preference>
+        <Preference
+            android:title="@string/wave_in"
+            android:summary="@string/wave_in_summary">
             <intent
                 android:action="wave_in_wallpaper_settings"
                 android:targetClass="com.ivanroot.minplayer.activity.SettingsActivity"

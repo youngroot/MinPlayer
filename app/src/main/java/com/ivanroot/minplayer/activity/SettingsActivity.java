@@ -23,7 +23,7 @@ public class SettingsActivity extends NightModeResponsibleActivity {
         super.onSaveInstanceState(outState);
         try {
             outState.putString("ActionBarTitle", getSupportActionBar().getTitle().toString());
-        }catch (NullPointerException ex){
+        } catch (NullPointerException ex) {
             ex.printStackTrace();
         }
     }
@@ -48,11 +48,11 @@ public class SettingsActivity extends NightModeResponsibleActivity {
         Intent intent = getIntent();
         String action = null;
 
-        if(intent != null){
+        if (intent != null) {
             action = intent.getAction();
         }
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
 
             Fragment fragment;
 
@@ -61,8 +61,13 @@ public class SettingsActivity extends NightModeResponsibleActivity {
                         .setTitle(getResources().getString(R.string.wave_in_wallpaper));
                 fragment = new WaveInSettingsFragment();
 
+            } else if (Objects.equals(action, "horizon_wallpaper_settings")) {
+                getSupportActionBar()
+                        .setTitle(getResources().getString(R.string.horizon_wallpaper));
+                fragment = new HorizonSettingsFragment();
+
             } else {
-               fragment = new SettingsFragment();
+                fragment = new SettingsFragment();
             }
 
             getFragmentManager()
@@ -98,6 +103,16 @@ public class SettingsActivity extends NightModeResponsibleActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.wave_in_wallpaper_preferences);
             PreferenceManager.setDefaultValues(getActivity(), R.xml.wave_in_wallpaper_preferences, false);
+        }
+    }
+
+    static public class HorizonSettingsFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.horizon_wallpaper_preferences);
+            PreferenceManager.setDefaultValues(getActivity(), R.xml.horizon_wallpaper_preferences, false);
         }
     }
 }

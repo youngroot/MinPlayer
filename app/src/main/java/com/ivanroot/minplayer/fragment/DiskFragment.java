@@ -30,10 +30,13 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.disk.AudioDownloadService;
 import com.ivanroot.minplayer.disk.AudioStatus;
 import com.ivanroot.minplayer.disk.RestClientUtil;
+import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
+
+import java.util.HashMap;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -157,13 +160,18 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})
-    public void setAudioPreparingStatus(String md5Hash) {
-        adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_PREPARING);
+    public void setAudioPreparingStatus(Pair<String, Pair<Long, Long>> state) {
+        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_PREPARING);
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADING)})
+    public void setAudioDownloadingStatus(Pair<String, Pair<Long, Long>> state){
+        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADING);
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
-    public void setAudioDownloadedStatus(String md5Hash) {
-        adapter.setStatus(md5Hash, AudioStatus.STATUS_AUDIO_DOWNLOADED);
+    public void setAudioDownloadedStatus(Pair<String, Pair<Long, Long>> state) {
+        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADED);
         Toast.makeText(activity, getResources().getString(R.string.download_complete), Toast.LENGTH_SHORT).show();
     }
 

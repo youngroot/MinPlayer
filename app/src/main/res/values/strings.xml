@@ -31,8 +31,9 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="playlist_name_cannot_be_empty">Playlist name cannot be empty!</string>
     <string name="songs">Songs</string>
-    <string name="pref_category_appearance">Appearance</string>
-    <string name="pref_night_mode">Night Mode</string>
+    <string name="appearance">Appearance</string>
+    <string name="night_mode">Night Mode</string>
+    <string name="night_mode_summary">Try it!</string>
     <string name="yandex_disk">Yandex.Disk</string>
     <string name="advanced">Advanced</string>
     <string name="downloading_from_disk">Downloading</string>
@@ -40,7 +41,11 @@
     <string name="no_internet_connection">No Internet Connection!</string>
     <string name="disk_login_error">Disk Login Error!</string>
     <string name="wave_in">Wave In</string>
+    <string name="horizon">Horizon</string>
+    <string name="horizon_wallpaper">Horizon Wallpaper</string>
     <string name="wave_in_wallpaper">Wave In Wallpaper</string>
+    <string name="wave_in_summary">Amazing waves by Cleveroad.</string>
+    <string name="horizon_summary">Nice visualization by Yalantis.</string>
     <string name="colors">Colors</string>
     <string name="layer_1_color">Layer 1</string>
     <string name="layer_2_color">Layer 2</string>
@@ -52,4 +57,5 @@
     <string name="choose_background_color">Choose background color</string>
     <string name="wallpapers">Wallpapers</string>
     <string name="set_as_wallpaper">Set as wallpaper</string>
+    <string name="frame_update_ms">Frame update time in ms.</string>
 </resources>

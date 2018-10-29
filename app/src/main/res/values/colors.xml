@@ -29,4 +29,6 @@
         <item >@color/colorWaveInLayer3Default</item>
     </array>
 
+    <color name="colorHorizonBgDefault">#354852</color>
+
 </resources>

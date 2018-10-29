@@ -15,32 +15,14 @@ import com.ivanroot.minplayer.R;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 
-public class WaveInWallpaperService extends WallpaperService {
-
-    private SharedPreferences sharedPreferences;
-    private RxSharedPreferences rxPreferences;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        rxPreferences = RxSharedPreferences.create(sharedPreferences);
-    }
-
-    public RxSharedPreferences getRxSharedPreferences() {
-        return rxPreferences;
-    }
-
-    public SharedPreferences getSharedPreferences() {
-        return sharedPreferences;
-    }
+public class WaveInWallpaperService extends WallpaperServiceBase {
 
     @Override
     public Engine onCreateEngine() {
         return new WallpaperEngine();
     }
 
-    private class WallpaperEngine extends Engine {
+    private class WallpaperEngine extends WallpaperEngineBase {
         private Context context = WaveInWallpaperService.this;
         private WaveInWallpaperService service = WaveInWallpaperService.this;
         private WallpaperGLSurfaceView audioVisualizationView;
@@ -56,7 +38,6 @@ public class WaveInWallpaperService extends WallpaperService {
         private int colorLayer3Default = service.getResources().getColor(R.color.colorWaveInLayer3Default);
 
         private GLAudioVisualizationView.Builder getVisualizationViewBuilder() {
-            SharedPreferences sharedPreferences = service.getSharedPreferences();
 
             int colorBg = sharedPreferences.getInt("wave_in_background_color", colorBgDefault);
             int[] layerColors = new int[] {
@@ -79,7 +60,6 @@ public class WaveInWallpaperService extends WallpaperService {
         }
 
         private Observable<GLAudioVisualizationView.ColorsBuilder> getColorsBuilderObservable() {
-            RxSharedPreferences rxPreferences = service.getRxSharedPreferences();
 
             Observable<Integer> bgColorObservable = rxPreferences.getInteger("wave_in_background_color")
                     .asObservable();
@@ -145,22 +125,5 @@ public class WaveInWallpaperService extends WallpaperService {
                 audioVisualizationView.onPause();
             }
         }
-
-        private class WallpaperGLSurfaceView extends GLSurfaceView {
-
-            WallpaperGLSurfaceView(Context context) {
-                super(context);
-            }
-
-            @Override
-            public SurfaceHolder getHolder() {
-                return getSurfaceHolder();
-            }
-
-            public void onDestroy() {
-                super.onDetachedFromWindow();
-            }
-        }
     }
-
 }

@@ -29,12 +29,10 @@ import com.yandex.disk.rest.RestClient;
 
 import java.io.File;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -87,7 +85,7 @@ public class AudioDownloadService extends Service {
         if (isAudioValidForDownloading(taskAudio) && !audioDownloadPq.contains(taskAudio)) {
             audioDownloadPq.add(taskAudio);
             saveTasks();
-            rxBus.post(AudioStatus.STATUS_AUDIO_PREPARING, taskAudio.getMd5Hash());
+            rxBus.post(AudioStatus.STATUS_AUDIO_PREPARING, getStatePair(taskAudio.getMd5Hash(),0,taskAudio.getSize()));
 
             if (currTaskDisposable == null || currTaskDisposable.isDisposed()) {
                 startNewTask(startId);
@@ -139,13 +137,13 @@ public class AudioDownloadService extends Service {
     private void startNewTask(int startId) {
         Audio taskAudio = audioDownloadPq.peek();
 
-        currTaskDisposable = getDownloadStatusObservable(taskAudio)
+        currTaskDisposable = getDownloadObservable(taskAudio)
                 .subscribeOn(Schedulers.newThread())
                 .delay(1000, TimeUnit.MILLISECONDS)
                 //.observeOn(AndroidSchedulers.mainThread())
                 .doOnComplete(() -> {
                     removeNotification();
-                    rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADED, taskAudio.getMd5Hash());
+                    rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADED, getStatePair(taskAudio.getMd5Hash(), taskAudio.getSize(), taskAudio.getSize()));
                     audioDownloadPq.remove(taskAudio);
                     saveTasks();
 
@@ -156,14 +154,12 @@ public class AudioDownloadService extends Service {
 
                 })
                 .subscribe(pair -> {
-                    updateNotification(getLoadedPercentage(pair.first, pair.second));
-                    HashMap<String, Pair<Long, Long>> state = new HashMap<>();
-                    state.put(taskAudio.getMd5Hash(), pair);
-                    rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADING, state);
+                    updateNotification(Utils.getLoadedPercentage(pair.first, pair.second));
+                    rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADING, getStatePair(taskAudio.getMd5Hash(), pair));
                 });
     }
 
-    private Observable<Pair<Long, Long>> getDownloadStatusObservable(Audio taskAudio) {
+    private Observable<Pair<Long, Long>> getDownloadObservable(Audio taskAudio) {
         return Observable.create(emitter -> {
 
             File saveTo = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), taskAudio.getTitle());
@@ -227,7 +223,11 @@ public class AudioDownloadService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    private int getLoadedPercentage(long loaded, long total) {
-        return (int) (((double) loaded) / total * 100);
+    private Pair<String, Pair<Long, Long>> getStatePair(String md5Hash, long loaded, long total) {
+        return new Pair<>(md5Hash, new Pair<>(loaded, total));
+    }
+
+    private Pair<String, Pair<Long, Long>> getStatePair(String md5Hash, Pair<Long, Long> downloadPair) {
+        return new Pair<>(md5Hash, downloadPair);
     }
 }

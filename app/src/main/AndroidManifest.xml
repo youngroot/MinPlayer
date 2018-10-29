@@ -8,23 +8,24 @@
     <permission android:name="android.permission.READ_PHONE_STATE" />
     <permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <permission android:name="android.permission.RECORD_AUDIO"/>
-    <permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <permission android:name="android.permission.RECORD_AUDIO" />
+    <permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
     <uses-feature
         android:name="android.software.live_wallpaper"
-        android:required="true" >
-    </uses-feature>
+        android:required="true"/>
 
     <application
         android:allowBackup="true"
@@ -46,7 +47,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask" />
 
         <activity
             android:name=".activity.StartupActivity"
@@ -61,50 +62,61 @@
         <activity
             android:name=".activity.SettingsActivity"
             android:exported="true"
-            android:label="@string/settings"/>
-            <!--android:launchMode="singleTask"/>-->
+            android:label="@string/settings" />
+        <!--android:launchMode="singleTask"/>-->
 
-        <activity android:name=".activity.TokenActivity"/>
+        <activity android:name=".activity.TokenActivity" />
 
         <service
             android:name=".disk.AudioDownloadService"
-            android:exported="false"/>
+            android:exported="false" />
 
-        <service android:name=".visualization.wallpapers.WaveInWallpaperService"
+        <!--<service android:name=".visualization.wallpapers.NierWallpaperService"-->
+        <!--android:enabled="true"-->
+        <!--android:label="Boger Chan - Nier Visualizer"-->
+        <!--android:permission="android.permission.BIND_WALLPAPER">-->
+        <!--<intent-filter>-->
+        <!--<action android:name="android.service.wallpaper.WallpaperService" >-->
+        <!--</action>-->
+        <!--</intent-filter>-->
+
+        <!--<meta-data-->
+        <!--android:name="android.service.wallpaper"-->
+        <!--android:resource="@xml/nier_wallpaper" >-->
+        <!--</meta-data>-->
+        <!--</service>-->
+        <service
+            android:name=".visualization.wallpapers.HorizonWallpaperService"
+            android:enabled="true"
+            android:label="Yalantis - Horizon"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/horizon_wallpaper" />
+        </service>
+
+        <service
+            android:name=".visualization.wallpapers.WaveInWallpaperService"
             android:enabled="true"
             android:label="Cleveroad - WaveIn"
             android:permission="android.permission.BIND_WALLPAPER">
 
             <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" >
-                </action>
+                <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
 
             <meta-data
                 android:name="android.service.wallpaper"
-                android:resource="@xml/wave_in_wallpaper" >
-            </meta-data>
-
-        </service>
-
-        <service android:name=".visualization.wallpapers.NierWallpaperService"
-            android:enabled="true"
-            android:label="Boger Chan - Nier Visualizer"
-            android:permission="android.permission.BIND_WALLPAPER">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" >
-                </action>
-            </intent-filter>
-
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/nier_wallpaper" >
-            </meta-data>
+                android:resource="@xml/wave_in_wallpaper" />
         </service>
 
         <receiver android:name=".utils.RxNetworkChangeReceiver">
             <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
 
