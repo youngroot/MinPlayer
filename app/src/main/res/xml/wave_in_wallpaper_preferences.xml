@@ -6,29 +6,41 @@
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/background_color"
             android:key="wave_in_background_color"
-            android:defaultValue="#8f367c"
-            app:initialColor="#8f367c"
+            android:defaultValue="@color/colorWaveInBgDefault"
+            app:initialColor="@color/colorWaveInBgDefault"
+            app:pickerTitle="@string/choose_background_color"
+            app:alphaSlider="true"
+            app:lightnessSlider="true"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_1_color"
             android:key="wave_in_layer_1_color"
-            android:defaultValue="#bc428b"
-            app:initialColor="#bc428b"
+            android:defaultValue="@color/colorWaveInLayer1Default"
+            app:initialColor="@color/colorWaveInLayer1Default"
+            app:pickerTitle="@string/choose_layer_1_color"
+            app:alphaSlider="true"
+            app:lightnessSlider="true"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_2_color"
             android:key="wave_in_layer_2_color"
-            android:defaultValue="#e36a97"
-            app:initialColor="#e36a97"
+            android:defaultValue="@color/colorWaveInLayer2Default"
+            app:initialColor="@color/colorWaveInLayer2Default"
+            app:pickerTitle="@string/choose_layer_2_color"
+            app:alphaSlider="true"
+            app:lightnessSlider="true"
             app:wheelType="CIRCLE"/>
 
         <com.flask.colorpicker.ColorPickerPreference
             android:title="@string/layer_3_color"
             android:key="wave_in_layer_3_color"
-            android:defaultValue="#f0979b"
-            app:initialColor="#f0979b"
+            android:defaultValue="@color/colorWaveInLayer3Default"
+            app:initialColor="@color/colorWaveInLayer3Default"
+            app:pickerTitle="@string/choose_layer_3_color"
+            app:alphaSlider="true"
+            app:lightnessSlider="true"
             app:wheelType="CIRCLE"/>
 
     </PreferenceCategory>

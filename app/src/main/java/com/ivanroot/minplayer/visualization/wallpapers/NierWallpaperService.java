@@ -1,9 +1,7 @@
 package com.ivanroot.minplayer.visualization.wallpapers;
 
 import android.content.Context;
-import android.opengl.GLSurfaceView;
 import android.service.wallpaper.WallpaperService;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -34,7 +32,7 @@ public class NierWallpaperService extends WallpaperService {
     }
 
     private class WallpaperEngine extends Engine {
-        private SurfaceView surfaceView;
+        private WallpaperSurfaceView wallpaperSurfaceView;
 
         private IRenderer[] renderers = new IRenderer[]{
                 new CircleBarRenderer(),
@@ -43,16 +41,24 @@ public class NierWallpaperService extends WallpaperService {
 
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
-            surfaceView = new WallpaperSurfaceView(NierWallpaperService.this);
+            wallpaperSurfaceView = new WallpaperSurfaceView(NierWallpaperService.this);
+            visualizerManager.start(wallpaperSurfaceView, renderers);
         }
+
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-                if (visible) {
-                    visualizerManager.start(surfaceView, renderers);
-                } else {
-                    visualizerManager.stop();
-                }
+//                if (visible) {
+//                    visualizerManager.start(wallpaperSurfaceView, renderers);
+//                } else {
+//                    visualizerManager.stop();
+//                }
+        }
+
+        @Override
+        public void onDestroy() {
+            visualizerManager.stop();
+            wallpaperSurfaceView.onDestroy();
         }
 
         private class WallpaperSurfaceView extends SurfaceView {

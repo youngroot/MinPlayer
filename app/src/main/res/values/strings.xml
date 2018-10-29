@@ -46,6 +46,10 @@
     <string name="layer_2_color">Layer 2</string>
     <string name="layer_3_color">Layer 3</string>
     <string name="background_color">Background </string>
+    <string name="choose_layer_1_color">Choose layer 1 color</string>
+    <string name="choose_layer_2_color">Choose layer 2 color</string>
+    <string name="choose_layer_3_color">Choose layer 3 color</string>
+    <string name="choose_background_color">Choose background color</string>
     <string name="wallpapers">Wallpapers</string>
     <string name="set_as_wallpaper">Set as wallpaper</string>
 </resources>
