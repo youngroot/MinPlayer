@@ -13,6 +13,7 @@ import me.bogerchan.niervisualizer.renderer.circle.CircleWaveRenderer;
 public class NierWallpaperService extends WallpaperService {
 
     private NierVisualizerManager visualizerManager = new NierVisualizerManager();
+    private final WallpaperEngine engine = new WallpaperEngine();
 
     @Override
     public void onCreate() {
@@ -28,7 +29,7 @@ public class NierWallpaperService extends WallpaperService {
 
     @Override
     public Engine onCreateEngine() {
-        return new WallpaperEngine();
+        return engine;
     }
 
     private class WallpaperEngine extends Engine {
