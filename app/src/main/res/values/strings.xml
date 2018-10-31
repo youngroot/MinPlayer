@@ -37,8 +37,9 @@
     <string name="yandex_disk">Yandex.Disk</string>
     <string name="advanced">Advanced</string>
     <string name="downloading_from_disk">Downloading</string>
-    <string name="download_complete">Download complete!</string>
-    <string name="all_downloads_complete">All downloads complete!</string>
+    <string name="download_complete">Downloaded</string>
+    <string name="download_canceled">Canceled</string>
+    <string name="all_tracks_downloaded">All tracks downloaded!</string>
     <string name="no_internet_connection">No Internet Connection!</string>
     <string name="disk_login_error">Disk Login Error!</string>
     <string name="wave_in">Wave In</string>

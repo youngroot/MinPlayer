@@ -6,7 +6,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.NetworkInfo;
 import android.os.Environment;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -15,7 +14,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
-import com.github.pwittchen.reactivenetwork.library.rx2.ConnectivityPredicate;
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -35,13 +33,13 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLException;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import retrofit.RestAdapter;
 
 public class AudioDownloadService extends Service {
     private static final int NOTIFICATION_ID = 102;
@@ -53,6 +51,7 @@ public class AudioDownloadService extends Service {
     private SharedPreferences sharedPreferences;
     private RxSharedPreferences rxPreferences;
     private PriorityBlockingQueue<Audio> audioDownloadPq;
+    private Audio taskAudio;
     private Disposable downloadTasksDisposable;
     private Disposable prefDisposable;
     private RestClient restClient;
@@ -83,8 +82,7 @@ public class AudioDownloadService extends Service {
         if (intent == null && !audioDownloadPq.isEmpty()) {
             if (downloadTasksDisposable != null)
                 downloadTasksDisposable.dispose();
-            downloadTasksDisposable = getDownloadTasksObservable()
-                    .subscribe();
+            downloadTasksDisposable = getDownloadTasksDisposable();
             return START_STICKY;
         } else if (intent == null) {
             Log.i("AudioDownloadService", "intent == null");
@@ -99,8 +97,7 @@ public class AudioDownloadService extends Service {
             postAudioPreparingState(new DownloadingAudioBundle(taskAudio, 0));
 
             if (downloadTasksDisposable == null || downloadTasksDisposable.isDisposed()) {
-                downloadTasksDisposable = getDownloadTasksObservable()
-                        .subscribe();
+                downloadTasksDisposable = getDownloadTasksDisposable();
             }
         }
 
@@ -121,7 +118,6 @@ public class AudioDownloadService extends Service {
             prefDisposable.dispose();
 
         writeTasks();
-        removeNotification();
     }
 
     private void writeTasks() {
@@ -147,62 +143,72 @@ public class AudioDownloadService extends Service {
         }
     }
 
-    private Observable getDownloadTasksObservable() {
-        return Observable.<DownloadingAudioBundle>create(emitter -> {
-            Audio taskAudio = audioDownloadPq.peek();
-            File saveTo = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), taskAudio.getTitle());
-            String saveToMd5Hash = Utils.getMd5Hash(Utils.getFileBytes(saveTo));
-
-            if (!Objects.equals(saveToMd5Hash, taskAudio.getMd5Hash())) {
-                //if (saveTo.exists())
-                //  saveTo.delete();
-
-                buildCurrentStateNotification(taskAudio);
-                restClient.downloadFile(taskAudio.getCloudData(), saveTo, new ProgressListener() {
-
-                    @Override
-                    public void updateProgress(long loaded, long total) {
-                        emitter.onNext(new DownloadingAudioBundle(taskAudio, loaded));
-                    }
-
-                    @Override
-                    public boolean hasCancelled() {
-                        return false;
-                    }
-
-                });
-
-            } else {
-                audioDownloadPq.remove(taskAudio);
-            }
-            Log.i(toString(), "before onComplete");
-            emitter.onComplete();
-        })
+    private Disposable getDownloadTasksDisposable() {
+        return ReactiveNetwork.observeInternetConnectivity()
                 .subscribeOn(Schedulers.io())
+                .filter(b -> b)
+                .take(1)
+                .flatMap(connectivity -> Observable.<DownloadingAudioBundle>create(emitter -> {
+                    taskAudio = audioDownloadPq.peek();
+
+                    if(taskAudio != null) {
+                        File saveTo = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), taskAudio.getTitle());
+                        String saveToMd5Hash = Utils.getMd5Hash(Utils.getFileBytes(saveTo));
+
+                        if (!Objects.equals(saveToMd5Hash, taskAudio.getMd5Hash())) {
+                            buildCurrentStateNotification(taskAudio);
+                            restClient.downloadFile(taskAudio.getCloudData(), saveTo, new ProgressListener() {
+
+                                @Override
+                                public void updateProgress(long loaded, long total) {
+                                    emitter.onNext(new DownloadingAudioBundle(taskAudio, loaded));
+                                }
+
+                                @Override
+                                public boolean hasCancelled() {
+                                    return false;
+                                }
+
+                            });
+
+                        } else {
+                            postAudioDownloadedState(new DownloadingAudioBundle(taskAudio, taskAudio.getSize()));
+                            audioDownloadPq.remove(taskAudio);
+                        }
+                    }
+                    emitter.onComplete();
+                }))
                 .doOnSubscribe(disposable -> Log.i(toString(), "onSubscribe"))
                 .retry(throwable -> {
-                    Log.i(toString(), throwable.toString());
+                    Log.e(toString() + "Error", throwable.getClass().getName() + " " + throwable.getMessage());
                     removeNotification();
+
+                    if(throwable instanceof IllegalArgumentException){
+                        postAudioCanceledState(new DownloadingAudioBundle(taskAudio, 0));
+                        audioDownloadPq.remove(taskAudio);
+                        return true;
+                    }
+
                     return throwable instanceof SSLException || throwable instanceof ServiceUnavailableException;
-                })
-                .doOnError(throwable -> {
-                    audioDownloadPq.clear();
-                    writeTasks();
-                    removeNotification();
-                    stopSelf();
                 })
                 .doOnNext(this::postAudioDownloadingState)
                 .filter(DownloadingAudioBundle::isLoaded)
-                .doOnNext(bundle -> {
-                    Log.i(toString(), bundle.toString());
-                    audioDownloadPq.remove(bundle.getTaskAudio());
-                    postAudioDownloadedState(bundle);
-                    Log.i(toString(), audioDownloadPq.toString());
-                })
+                .doOnComplete(() -> Log.i(toString(),"onComplete " + String.valueOf(taskAudio)))
                 .repeatUntil(audioDownloadPq::isEmpty)
                 .doOnComplete(() -> {
-                    Log.i(toString(), "onComplete");
+                    Log.i(toString(), "onComplete final");
                     buildDoneNotification();
+                    stopSelf();
+                })
+                .subscribe((bundle) ->{
+                    Log.i(toString(), "subscribe " + bundle.toString());
+                    audioDownloadPq.remove(bundle.getTaskAudio());
+                    postAudioDownloadedState(bundle);
+
+                }, throwable -> {
+                    postAudioCanceledState(new DownloadingAudioBundle(taskAudio, 0));
+                    audioDownloadPq.clear();
+                    writeTasks();
                     stopSelf();
                 });
     }
@@ -221,15 +227,19 @@ public class AudioDownloadService extends Service {
 
 
     private void postAudioPreparingState(DownloadingAudioBundle bundle) {
-        rxBus.post(AudioStatus.STATUS_AUDIO_PREPARING, getStatePair(bundle));
+        rxBus.post(AudioStatus.STATUS_AUDIO_PREPARING, bundle);
     }
 
     private void postAudioDownloadingState(DownloadingAudioBundle bundle) {
-        rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADING, getStatePair(bundle));
+        rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADING, bundle);
     }
 
     private void postAudioDownloadedState(DownloadingAudioBundle bundle) {
-        rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADING, getStatePair(bundle));
+        rxBus.post(AudioStatus.STATUS_AUDIO_DOWNLOADED, bundle);
+    }
+
+    private void postAudioCanceledState(DownloadingAudioBundle bundle){
+        rxBus.post(AudioStatus.STATUS_AUDIO_CANCELED, bundle);
     }
 
     private void buildCurrentStateNotification(Audio taskAudio) {
@@ -246,7 +256,7 @@ public class AudioDownloadService extends Service {
 
     private void buildDoneNotification() {
         notificationManager.notify(NOTIFICATION_ID, new Notification.Builder(this)
-                .setContentTitle(getResources().getString(R.string.all_downloads_complete))
+                .setContentTitle(getResources().getString(R.string.all_tracks_downloaded))
                 .setSmallIcon(R.drawable.ic_music_rounded)
                 .setOngoing(false)
                 .setShowWhen(true)

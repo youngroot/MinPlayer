@@ -25,7 +25,7 @@ public class Audio implements Serializable, Comparable<Audio> {
 
     @Override
     public String toString() {
-        return id + "\n" + localData + "\n" + cloudData + "\n" + md5Hash + "\n" + title + "\n" + album + "\n" + artist;
+        return id + " " + localData + " " + cloudData + " " + md5Hash + " " + title + " " + album + " " + artist;
     }
 
     public Audio(long id, String localData, String title, String album, String artist) {

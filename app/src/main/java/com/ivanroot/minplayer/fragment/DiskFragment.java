@@ -45,6 +45,7 @@ import io.reactivex.disposables.Disposable;
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
+import static com.ivanroot.minplayer.disk.AudioDownloadService.DownloadingAudioBundle;
 
 public class DiskFragment extends NavFragmentBase {
     public static final String NAME = "DiskFragment";
@@ -160,19 +161,27 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})
-    public void setAudioPreparingStatus(Pair<String, Pair<Long, Long>> state) {
-        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_PREPARING);
+    public void setAudioPreparingStatus(DownloadingAudioBundle bundle) {
+        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_PREPARING);
     }
 
-    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADING)})
-    public void setAudioDownloadingStatus(Pair<String, Pair<Long, Long>> state){
-        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADING);
-    }
+//    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADING)})
+//    public void setAudioDownloadingStatus(Pair<String, Pair<Long, Long>> state){
+//        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADING);
+//    }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
-    public void setAudioDownloadedStatus(Pair<String, Pair<Long, Long>> state) {
-        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADED);
-        Toast.makeText(activity, getResources().getString(R.string.download_complete), Toast.LENGTH_SHORT).show();
+    public void setAudioDownloadedStatus(DownloadingAudioBundle bundle) {
+        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_DOWNLOADED);
+        String title = bundle.getTaskAudio().getTitle();
+        Toast.makeText(activity, getResources().getString(R.string.download_complete) + ": " + title, Toast.LENGTH_SHORT).show();
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_CANCELED)})
+    public void setAudioCanceledStatus(DownloadingAudioBundle bundle) {
+        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_CANCELED);
+        String title = bundle.getTaskAudio().getTitle();
+        Toast.makeText(activity, getResources().getString(R.string.download_canceled) + ": " + title, Toast.LENGTH_SHORT).show();
     }
 
     @Override
