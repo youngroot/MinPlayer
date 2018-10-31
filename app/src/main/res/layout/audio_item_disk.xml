@@ -62,29 +62,6 @@
             android:visibility="invisible"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-        <FrameLayout
-            android:id="@+id/loadProgressHolder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <ProgressBar
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:indeterminate="false"
-                android:max="100"
-                android:progress="100"
-                android:progressDrawable="@drawable/circle_progress_background" />
-
-            <ProgressBar
-                android:id="@+id/circleProgress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:max="100"
-                android:rotation="-90"
-                android:indeterminate="false"
-                android:progressDrawable="@drawable/circle_progress_foreground" />
-        </FrameLayout>
         <ImageButton
             android:id="@+id/downloadBtn"
             android:layout_width="match_parent"

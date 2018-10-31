@@ -1,20 +1,21 @@
 package com.ivanroot.minplayer.visualization.wallpapers;
 
+import android.app.Service;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.audiofx.Visualizer;
-import android.opengl.GLSurfaceView;
-import android.preference.PreferenceManager;
-import android.service.wallpaper.WallpaperService;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
-import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.ivanroot.minplayer.R;
 import com.yalantis.waves.util.Horizon;
 
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -29,6 +30,31 @@ public class HorizonWallpaperService extends WallpaperServiceBase {
         sampleRate = Integer.valueOf(audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE));
     }
 
+    public static class RestarterService extends Service {
+        private Disposable disposable;
+
+        @Override
+        public int onStartCommand(Intent intent, int flags, int startId) {
+            disposable = Completable.create(emitter -> {
+                stopService(new Intent(this, HorizonWallpaperService.class));
+                Log.i(toString(), "Started");
+                Thread.sleep(500);
+                emitter.onComplete();
+            }).subscribeOn(Schedulers.newThread())
+                    .doOnComplete(() -> startService(new Intent(this, HorizonWallpaperService.class)))
+                    .doOnDispose(this::stopSelf)
+                    .subscribe();
+
+            return super.onStartCommand(intent, flags, startId);
+        }
+
+        @Nullable
+        @Override
+        public IBinder onBind(Intent intent) {
+            return null;
+        }
+    }
+
     @Override
     public Engine onCreateEngine() {
         return new WallpaperEngine();
@@ -39,7 +65,8 @@ public class HorizonWallpaperService extends WallpaperServiceBase {
         private WallpaperGLSurfaceView glSurfaceView;
         private Visualizer visualizer;
         private byte[] fft;
-        private Disposable disposable;
+        private Disposable msDisposable;
+        private Disposable colorDisposable;
 
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
@@ -51,9 +78,11 @@ public class HorizonWallpaperService extends WallpaperServiceBase {
 
             fft = new byte[visualizer.getCaptureSize()];
 
-            horizon = new Horizon(glSurfaceView, getResources().getColor(R.color.colorHorizonBgDefault), sampleRate, 1, 16);
+            int defaultBgColor = sharedPreferences.getInt("horizon_background_color", getResources().getColor(R.color.colorHorizonBgDefault));
 
-            disposable = rxPreferences.getInteger("horizon_frame_update_ms", 45)
+            horizon = new Horizon(glSurfaceView, defaultBgColor, sampleRate, 1, 16);
+
+            msDisposable = rxPreferences.getInteger("horizon_frame_update_ms", 45)
                     .asObservable()
                     .observeOn(Schedulers.newThread())
                     .switchMap(ms -> Observable.interval(ms, TimeUnit.MILLISECONDS)
@@ -61,11 +90,16 @@ public class HorizonWallpaperService extends WallpaperServiceBase {
                             .doOnDispose(() -> visualizer.release())
                             .doOnNext(i -> visualizer.getFft(fft)))
                     .subscribe(i -> horizon.updateView(fft));
+
+            colorDisposable = rxPreferences.getInteger("horizon_background_color")
+                    .asObservable()
+                    .subscribe(i -> startService(new Intent(HorizonWallpaperService.this, RestarterService.class)));
         }
 
         @Override
         public void onDestroy() {
-            disposable.dispose();
+            msDisposable.dispose();
+            colorDisposable.dispose();
         }
 
         @Override

@@ -113,6 +113,7 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/wave_in_wallpaper" />
         </service>
+        <service android:name=".visualization.wallpapers.HorizonWallpaperService$RestarterService" />
 
         <receiver android:name=".utils.RxNetworkChangeReceiver">
             <intent-filter>

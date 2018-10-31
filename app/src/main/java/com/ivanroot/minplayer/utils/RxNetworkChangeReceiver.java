@@ -59,12 +59,7 @@ public class RxNetworkChangeReceiver extends BroadcastReceiver {
         return Observable.<NetworkInfo>create(emitter -> {
             if (lastState != null)
                 emitter.onNext(lastState);
-            onReceiveListener = new OnReceiveListener() {
-                @Override
-                public void onReceive(NetworkInfo networkInfo) {
-                    emitter.onNext(networkInfo);
-                }
-            };
+            onReceiveListener = networkInfo -> emitter.onNext(networkInfo);
         })
                 .doOnDispose(() -> {
                     if (context != null) unregister();
