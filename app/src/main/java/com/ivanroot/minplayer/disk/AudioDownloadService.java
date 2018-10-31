@@ -72,7 +72,13 @@ public class AudioDownloadService extends Service {
                 .subscribe(token -> restClient = RestClientUtil.getInstance(new Credentials("", token)));
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationBuilder = new Notification.Builder(this);
+        notificationBuilder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_music_rounded)
+                .setOngoing(true)
+                .setShowWhen(true)
+                .setColor(getResources().getColor(R.color.colorDarkMagenta))
+                .setPriority(Notification.PRIORITY_HIGH);
+
         readTasks();
     }
 
@@ -156,7 +162,8 @@ public class AudioDownloadService extends Service {
                         String saveToMd5Hash = Utils.getMd5Hash(Utils.getFileBytes(saveTo));
 
                         if (!Objects.equals(saveToMd5Hash, taskAudio.getMd5Hash())) {
-                            buildCurrentStateNotification(taskAudio);
+                            //buildCurrentStateNotification(taskAudio);
+                            buildPreparingStateNotification(taskAudio);
                             restClient.downloadFile(taskAudio.getCloudData(), saveTo, new ProgressListener() {
 
                                 @Override
@@ -178,34 +185,51 @@ public class AudioDownloadService extends Service {
                     }
                     emitter.onComplete();
                 }))
-                .doOnSubscribe(disposable -> Log.i(toString(), "onSubscribe"))
+                .doOnSubscribe(disposable -> {
+                    Log.i(toString(), "onSubscribe");
+                    writeTasks();
+                })
                 .retry(throwable -> {
                     Log.e(toString() + "Error", throwable.getClass().getName() + " " + throwable.getMessage());
-                    removeNotification();
 
                     if(throwable instanceof IllegalArgumentException){
+                        removeNotification();
                         postAudioCanceledState(new DownloadingAudioBundle(taskAudio, 0));
                         audioDownloadPq.remove(taskAudio);
                         return true;
                     }
 
-                    return throwable instanceof SSLException || throwable instanceof ServiceUnavailableException;
+                    if(throwable instanceof SSLException || throwable instanceof ServiceUnavailableException){
+                        buildWaitingForInternetNotification();
+                        return true;
+                    }
+
+                    return false;
                 })
                 .doOnNext(this::postAudioDownloadingState)
+                .doOnNext(bundle -> {
+                    int loadedPercentage = Utils.getLoadedPercentage(bundle.getLoaded(), bundle.getTaskAudio().getSize());
+                    if(loadedPercentage % 10 == 0)
+                        buildCurrentStateNotification(bundle.getTaskAudio(), loadedPercentage);
+                })
                 .filter(DownloadingAudioBundle::isLoaded)
+                .doOnNext(bundle -> buildCurrentStateNotification(bundle.getTaskAudio(), 100))
                 .doOnComplete(() -> Log.i(toString(),"onComplete " + String.valueOf(taskAudio)))
                 .repeatUntil(audioDownloadPq::isEmpty)
                 .doOnComplete(() -> {
                     Log.i(toString(), "onComplete final");
+                    removeNotification();
                     buildDoneNotification();
                     stopSelf();
                 })
-                .subscribe((bundle) ->{
+                .subscribe(bundle ->{
                     Log.i(toString(), "subscribe " + bundle.toString());
                     audioDownloadPq.remove(bundle.getTaskAudio());
                     postAudioDownloadedState(bundle);
+                    writeTasks();
 
                 }, throwable -> {
+                    removeNotification();
                     postAudioCanceledState(new DownloadingAudioBundle(taskAudio, 0));
                     audioDownloadPq.clear();
                     writeTasks();
@@ -244,15 +268,39 @@ public class AudioDownloadService extends Service {
 
     private void buildCurrentStateNotification(Audio taskAudio) {
         notificationBuilder.setContentTitle(getResources().getString(R.string.downloading_from_disk))
-                .setContentText(taskAudio.getTitle())
-                .setSmallIcon(R.drawable.ic_music_rounded)
-                .setOngoing(true)
-                .setShowWhen(true)
-                .setColor(getResources().getColor(R.color.colorDarkMagenta))
-                .setPriority(Notification.PRIORITY_HIGH);
+                .setContentText(taskAudio.getTitle());
 
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
+
+    private void buildPreparingStateNotification(Audio taskAudio){
+        notificationBuilder.setContentTitle(getResources().getString(R.string.downloading_from_disk))
+                .setContentText(taskAudio.getTitle())
+                .setProgress(100, 0, true);
+
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+    }
+
+    private void buildWaitingForInternetNotification(){
+        notificationManager.notify(NOTIFICATION_ID, new Notification.Builder(this)
+                .setContentTitle(getResources().getString(R.string.waiting_for_internet_connection))
+                .setSmallIcon(R.drawable.ic_music_rounded)
+                .setOngoing(true)
+                .setShowWhen(true)
+                .setProgress(100,0,true)
+                .setColor(getResources().getColor(R.color.colorDarkMagenta))
+                .setPriority(Notification.PRIORITY_HIGH)
+                .build());
+    }
+
+    private void buildCurrentStateNotification(Audio taskAudio, int loadedPercentage) {
+        notificationBuilder.setContentTitle(getResources().getString(R.string.downloading_from_disk))
+                .setContentText(taskAudio.getTitle())
+                .setProgress(100, loadedPercentage, false);
+
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+    }
+
 
     private void buildDoneNotification() {
         notificationManager.notify(NOTIFICATION_ID, new Notification.Builder(this)

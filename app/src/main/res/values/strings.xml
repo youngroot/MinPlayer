@@ -41,6 +41,7 @@
     <string name="download_canceled">Canceled</string>
     <string name="all_tracks_downloaded">All tracks downloaded!</string>
     <string name="no_internet_connection">No Internet Connection!</string>
+    <string name="waiting_for_internet_connection">Waiting for internet connection</string>
     <string name="disk_login_error">Disk Login Error!</string>
     <string name="wave_in">Wave In</string>
     <string name="horizon">Horizon</string>
