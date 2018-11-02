@@ -145,6 +145,7 @@ public class Audio implements Serializable, Comparable<Audio> {
             if (this.md5Hash != null && audio.md5Hash != null && Objects.equals(this.md5Hash, audio.md5Hash))
                 return true;
 
+            if(!Objects.equals(this.id, audio.id)) return false;
             if (!Objects.equals(this.localData, audio.localData)) return false;
             if (!Objects.equals(this.title, audio.title)) return false;
             if (!Objects.equals(this.album, audio.album)) return false;

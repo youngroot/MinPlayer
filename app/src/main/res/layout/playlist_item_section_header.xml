@@ -10,5 +10,5 @@
         android:layout_marginStart="10dp"
         android:text="@string/playlists"
         android:textColor="?attr/colorAccent"
-        android:textSize="14sp" />
+        android:textSize="16sp" />
 </RelativeLayout>

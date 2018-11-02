@@ -1,45 +1,37 @@
 package com.ivanroot.minplayer.adapter.section;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
-import com.ivanroot.minplayer.adapter.listeners.OnMoreBtnClickListener;
+import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.AudioViewHolder;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Random;
 
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters;
-import io.github.luizgrp.sectionedrecyclerviewadapter.StatelessSection;
+import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
-public class AudioSection extends StatelessSection {
-    private Context context;
-    private OnAudioClickListener onAudioClickListener;
-    private OnMoreBtnClickListener onMoreBtnClickListener;
-    private List<Audio> audioList = new ArrayList<>();
 
-    public AudioSection(Context context) {
-        super(SectionParameters.builder()
-                .itemResourceId(R.layout.audio_item)
+public class AudioSection extends BaseItemSection<Audio> {
+    protected OnAudioClickListener onAudioClickListener;
+    protected OnAudioMoreBtnClickListener onAudioMoreBtnClickListener;
+
+    public AudioSection(Context context, String tag, SectionedRecyclerViewAdapter adapter) {
+        super(context, SectionParameters.builder()
+                .itemResourceId(R.layout.audio_item_section)
                 .headerResourceId(R.layout.audio_item_section_header)
-                .build());
-        this.context = context;
+                .build(), tag, adapter);
     }
 
-    public void setAudioList(@NonNull List<Audio> audioList){
-        this.audioList = audioList;
-    }
-
-    @Override
-    public int getContentItemsTotal() {
-        return audioList.size();
+    public AudioSection(Context context, SectionParameters build, String tag, SectionedRecyclerViewAdapter adapter) {
+        super(context, build, tag, adapter);
     }
 
     @Override
@@ -50,21 +42,37 @@ public class AudioSection extends StatelessSection {
     @Override
     public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
         AudioViewHolder audioViewHolder = (AudioViewHolder)holder;
-        audioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(audioList.get(position),
+        audioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(filteredData.get(position),
                 PlaylistManager.ALL_TRACKS_PLAYLIST));
         audioViewHolder.setMoreBtnOnClickListener(v -> {
             Playlist playlist = new Playlist();
-            playlist.setAudioList(audioList);
-            onMoreBtnClickListener.onMoreBtnClick(v, playlist, position);
+            playlist.setAudioList(filteredData);
+            onAudioMoreBtnClickListener.onMoreBtnClick(v, playlist, position);
         });
-        audioViewHolder.representItem(context, audioList.get(position));
+        audioViewHolder.representItem(context, filteredData.get(position));
     }
 
     public void setOnAudioClickListener(OnAudioClickListener onAudioClickListener) {
         this.onAudioClickListener = onAudioClickListener;
     }
 
-    public void setOnMoreBtnClickListener(OnMoreBtnClickListener onMoreBtnClickListener) {
-        this.onMoreBtnClickListener = onMoreBtnClickListener;
+    @Override
+    public boolean isItemMatchingQuery(Audio audio, String query, int position) {
+        query = query.toLowerCase();
+        return audio.getTitle() != null && audio.getTitle().toLowerCase().startsWith(query)||
+                audio.getAlbum() != null && audio.getAlbum().toLowerCase().startsWith(query)||
+                audio.getArtist() != null && audio.getArtist().toLowerCase().startsWith(query);
+
     }
+
+    @Override
+    public boolean isLowerThan(Audio item1, Audio item2) {
+        int comp = item1.getTitle().compareTo(item2.getTitle());
+        return comp < 0;
+    }
+
+    public void setOnAudioMoreBtnClickListener(OnAudioMoreBtnClickListener onAudioMoreBtnClickListener) {
+        this.onAudioMoreBtnClickListener = onAudioMoreBtnClickListener;
+    }
+
 }

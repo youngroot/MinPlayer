@@ -19,6 +19,8 @@ import android.view.View;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
 import com.ivanroot.minplayer.fragment.DiskFragment;
@@ -37,6 +39,8 @@ import java.util.Map;
 
 public class MainActivity extends NightModeResponsibleActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    public static final String ACTION_OPEN_PLAYLISTS = "action_open_playlists";
 
     private PlayerService player;
     private boolean wasStarted = false;
@@ -287,6 +291,14 @@ public class MainActivity extends NightModeResponsibleActivity
 
     public SlidingUpPanelLayout getPanelLayout() {
         return panelLayout;
+    }
+
+    @Subscribe(tags = {@Tag(ACTION_OPEN_PLAYLISTS)})
+    public void onOpenPlaylistsAction(String playlistName){
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_holder, new PlaylistFragment(playlistName))
+                .commit();
     }
 
 }

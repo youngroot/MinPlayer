@@ -28,6 +28,8 @@ import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
 import static com.ivanroot.minplayer.player.constants.PlayerKeys.*;
+import static java.lang.String.format;
+
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
@@ -61,6 +63,8 @@ public class ControllerFragment extends Fragment {
     private TextView title;
     private TextView artist;
     private TextView album;
+    private TextView secNow;
+    private TextView secLeft;
     private ImageButton nextBtn;
     private ImageButton playBtn;
     private ImageButton prevBtn;
@@ -124,6 +128,9 @@ public class ControllerFragment extends Fragment {
         shuffleBtn = (ImageButton) view.findViewById(R.id.shuffle_btn);
         repeatBtn = (ImageButton) view.findViewById(R.id.repeat_btn);
 
+        secNow = (TextView)view.findViewById(R.id.sec_now);
+        secLeft = (TextView)view.findViewById(R.id.sec_left);
+
         if(panelLayout == null && getActivity() instanceof MainActivity)
             panelLayout = ((MainActivity)getActivity()).getPanelLayout();
     }
@@ -136,7 +143,8 @@ public class ControllerFragment extends Fragment {
         playbackProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-
+                secNow.setText(getPlayerTimeString(i));
+                secLeft.setText(getPlayerTimeString(seekBar.getMax() - i));
             }
 
             @Override
@@ -367,5 +375,13 @@ public class ControllerFragment extends Fragment {
             case 2:
                 repeatBtn.setImageResource(R.drawable.ic_repeat_once);
         }
+    }
+
+    public String getPlayerTimeString(int millis){
+        int sec = millis / 1000;
+        int min = sec / 60;
+        sec %= 60;
+
+        return min + ":" + (sec < 10 ? "0" : "") + sec;
     }
 }

@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.listeners.OnPlaylistClickListener;
+import com.ivanroot.minplayer.adapter.listeners.OnPlaylistItemMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.PlaylistViewHolder;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -26,13 +27,13 @@ import io.reactivex.disposables.Disposable;
  */
 
 public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHolder>
-        implements FastScrollRecyclerView.SectionedAdapter {
+        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable {
 
     private List<PlaylistItem> playlistItems;
     private PlaylistManager playlistManager;
     private Disposable disposable;
     private OnPlaylistClickListener playlistClickListener;
-    private OnMoreBtnClickListener moreBtnClickListener;
+    private OnPlaylistItemMoreBtnClickListener moreBtnClickListener;
     private Context context;
 
     public PlaylistSelectorAdapter(Context context) {
@@ -48,7 +49,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
         this.playlistClickListener = playlistClickListener;
     }
 
-    public void setOnMoreBtnClickListener(OnMoreBtnClickListener moreBtnClickListener){
+    public void setOnMoreBtnClickListener(OnPlaylistItemMoreBtnClickListener moreBtnClickListener){
         this.moreBtnClickListener = moreBtnClickListener;
     }
 
@@ -96,6 +97,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
                 .substring(0, 1);
     }
 
+    @Override
     public void dispose() {
         if (disposable != null)
             disposable.dispose();
@@ -105,7 +107,4 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
         playlistManager.removePlaylist(context, playlistName);
     }
 
-    public interface OnMoreBtnClickListener{
-        void onMoreBtnClick(View view, PlaylistItem playlistItem);
-    }
 }

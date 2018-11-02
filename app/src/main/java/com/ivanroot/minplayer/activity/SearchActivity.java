@@ -2,49 +2,51 @@ package com.ivanroot.minplayer.activity;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
-import com.ivanroot.minplayer.adapter.listeners.OnMoreBtnClickListener;
+import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.section.AudioSection;
+import com.ivanroot.minplayer.adapter.section.DiskAudioSection;
 import com.ivanroot.minplayer.adapter.section.PlaylistItemSection;
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.disk.RestClientUtil;
+import com.ivanroot.minplayer.disk.constants.AudioStatus;
+import com.ivanroot.minplayer.disk.service.AudioDownloadService;
 import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.disk.service.AudioUploadService;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorDialog;
 import com.ivanroot.minplayer.player.constants.PlayerActions;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.utils.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.yandex.disk.rest.RestClient;
 
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
-import io.reactivex.Observable;
-import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
+import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
 public class SearchActivity extends NavUpActivityBase {
@@ -60,7 +62,7 @@ public class SearchActivity extends NavUpActivityBase {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         editSearch = (EditText) findViewById(R.id.edit_search);
-        cancelButton = (ImageButton)findViewById(R.id.cancel_button);
+        cancelButton = (ImageButton) findViewById(R.id.cancel_button);
 
         if (savedInstanceState == null) {
             getFragmentManager()
@@ -74,7 +76,7 @@ public class SearchActivity extends NavUpActivityBase {
         return editSearch;
     }
 
-    public ImageButton getCancelButton(){
+    public ImageButton getCancelButton() {
         return cancelButton;
     }
 
@@ -82,15 +84,17 @@ public class SearchActivity extends NavUpActivityBase {
         private EditText editSearch;
         private ImageButton cancelButton;
         private SearchActivity activity;
-        private Subject<String> searchTextSubject = BehaviorSubject.create();
+        private Subject<String> searchTextSubject = PublishSubject.create();
         private AudioSection audioSection;
+        private DiskAudioSection diskAudioSection;
         private PlaylistItemSection playlistItemSection;
         private SectionedRecyclerViewAdapter adapter;
         private RecyclerView recyclerView;
         private PlaylistManager playlistManager = PlaylistManager.getInstance();
-        private Disposable disposable;
         private boolean selectorDialogIsActive = false;
         private Audio selectedAudio;
+        private Disposable disposable;
+        private RxSharedPreferences rxPreferences;
         private Bus rxBus = RxBus.get();
 
 
@@ -100,6 +104,7 @@ public class SearchActivity extends NavUpActivityBase {
             rxBus.register(this);
             activity = (SearchActivity) getActivity();
             adapter = new SectionedRecyclerViewAdapter();
+            rxPreferences = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(activity));
         }
 
         @Nullable
@@ -118,23 +123,35 @@ public class SearchActivity extends NavUpActivityBase {
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                    searchTextSubject.onNext(charSequence.toString());
+                    String text = charSequence.toString();
+
+                    if (!text.matches(""))
+                        cancelButton.setVisibility(View.VISIBLE);
+                    else {
+                        cancelButton.setVisibility(View.INVISIBLE);
+                        text = "\n\n\0";
+                    }
+
+                    audioSection.filter(text);
+                    diskAudioSection.filter(text);
+                    playlistItemSection.filter(text);
                 }
 
                 @Override
                 public void afterTextChanged(Editable editable) {
-                    if(editable.toString().length() == 0)
-                        cancelButton.setVisibility(View.INVISIBLE);
-                    else
-                        cancelButton.setVisibility(View.VISIBLE);
+
                 }
             });
 
-
             cancelButton.setOnClickListener(v -> editSearch.getText().clear());
 
-            audioSection = new AudioSection(activity);
-            audioSection.setOnMoreBtnClickListener((v, playlist, i) -> {
+            OnAudioClickListener onAudioClickListener = (audio, playlistName) -> {
+                rxBus.post(PlayerActions.ACTION_SET_PLAYLIST, playlistName);
+                rxBus.post(PlayerActions.ACTION_PLAY_AUDIO, audio);
+            };
+
+            audioSection = new AudioSection(activity, "audio_section", adapter);
+            audioSection.setOnAudioMoreBtnClickListener((v, playlist, i) -> {
                 PopupMenu popupMenu = new PopupMenu(activity, v);
                 popupMenu.inflate(R.menu.audio_item_more_menu);
                 popupMenu.setOnMenuItemClickListener(item -> {
@@ -160,18 +177,21 @@ public class SearchActivity extends NavUpActivityBase {
                 popupMenu.show();
             });
 
-            audioSection.setOnAudioClickListener((audio, playlistName) -> {
-                rxBus.post(PlayerActions.ACTION_SET_PLAYLIST, playlistName);
-                rxBus.post(PlayerActions.ACTION_PLAY_AUDIO, audio);
+            audioSection.setOnAudioClickListener(onAudioClickListener);
+
+            diskAudioSection = new DiskAudioSection(activity, "audio_item_disk_section", adapter);
+            diskAudioSection.setOnAudioClickListener(onAudioClickListener);
+            diskAudioSection.setOnAudioMoreBtnClickListener((v, playlist, i) -> activity.startService(AudioTransferServiceBase.getIntentFromAudio(activity, playlist.getAudio(i), AudioDownloadService.class)));
+
+            playlistItemSection = new PlaylistItemSection(activity, "playlist_item_section", adapter);
+            playlistItemSection.setOnPlaylistClickListener(playlistName -> {
+                rxBus.post(MainActivity.ACTION_OPEN_PLAYLISTS, playlistName);
+                //activity.finish();
             });
 
-            audioSection.setVisible(false);
-
-            playlistItemSection = new PlaylistItemSection(activity);
-            playlistItemSection.setVisible(false);
-
-            adapter.addSection(audioSection);
-            adapter.addSection(playlistItemSection);
+            adapter.addSection(audioSection.getTag(), audioSection);
+            adapter.addSection(diskAudioSection.getTag(), diskAudioSection);
+            adapter.addSection(playlistItemSection.getTag(), playlistItemSection);
 
             recyclerView = (RecyclerView) view.findViewById(R.id.search_recycler);
             recyclerView.setLayoutManager(new LinearLayoutManager(activity));
@@ -181,22 +201,6 @@ public class SearchActivity extends NavUpActivityBase {
 
         @Override
         public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-            disposable = searchTextSubject
-                    .doOnNext(text -> Log.i(toString(), "onNext " + String.valueOf(text)))
-                    .filter(s -> s != null && !s.equals(""))
-                    .distinctUntilChanged()
-                    .compose(getOnlyKeywordItemsTransformer())
-                    .subscribe(pair -> {
-                        Log.i(toString(), "subscribe " + pair);
-                        audioSection.setAudioList(pair.first);
-                        audioSection.setVisible(!pair.first.isEmpty());
-                        playlistItemSection.setPlaylistItems(pair.second);
-                        playlistItemSection.setVisible(!pair.second.isEmpty());
-                        adapter.notifyDataSetChanged();
-                    }, throwable -> {
-                        Log.e(toString(), throwable.toString());
-                    });
-
             if (savedInstanceState != null) {
                 selectorDialogIsActive = savedInstanceState.getBoolean("selector_dialog_is_active");
                 String json = savedInstanceState.getString("selected_audio");
@@ -215,6 +219,17 @@ public class SearchActivity extends NavUpActivityBase {
                 }
             }
 
+            audioSection.subscribe(playlistManager.getAllAudiosObservable(activity));
+            playlistItemSection.subscribe(playlistManager.getPlaylistItemsObservable(activity));
+
+            disposable = RestClientUtil.asObservable(rxPreferences, TokenActivity.PREF_ACCESS_TOKEN)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .filter(map -> map.containsKey(RestClientUtil.KEY_REST_CLIENT))
+                    .map(map -> ((RestClient) map.get(RestClientUtil.KEY_REST_CLIENT)))
+                    .subscribe(restClient -> diskAudioSection
+                            .subscribe(playlistManager
+                                    .getDiskAllTracksObservable(activity, restClient)
+                                    .distinctUntilChanged()));
         }
 
 
@@ -227,49 +242,11 @@ public class SearchActivity extends NavUpActivityBase {
             super.onSaveInstanceState(outState);
         }
 
-        private ObservableTransformer<String, Pair<List<Audio>, List<PlaylistItem>>> getOnlyKeywordItemsTransformer() {
-            return upstream -> upstream
-                    .flatMap(keyword ->
-                            Observable.combineLatest(getOnlyKeywordAudiosObservable(keyword),
-                                    getOnlyKeywordPlaylistItemsObservable(keyword), Pair::new)
-                                    .take(1))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread());
-
-        }
-
-        private Observable<List<Audio>> getOnlyKeywordAudiosObservable(@NonNull String keyword) {
-            return playlistManager.getAllAudiosObservable(getActivity())
-                    .map(audios -> {
-                        List<Audio> result = new ArrayList<>();
-                        for (Audio audio : audios) {
-                            Log.i(toString(), "Working on " + audio.getTitle());
-                            if (audio.getTitle() != null && audio.getTitle().startsWith(keyword))
-                                result.add(audio);
-                            else if (audio.getAlbum() != null && audio.getAlbum().startsWith(keyword))
-                                result.add(audio);
-                            else if (audio.getArtist() != null && audio.getArtist().startsWith(keyword))
-                                result.add(audio);
-
-                        }
-                        return result;
-                    });
-        }
-
-        private Observable<List<PlaylistItem>> getOnlyKeywordPlaylistItemsObservable(@NonNull String keyword) {
-            return playlistManager.getPlaylistItemsObservable(getActivity())
-                    .map(playlistItems -> {
-                        List<PlaylistItem> result = new ArrayList<>();
-                        for (PlaylistItem playlistItem : playlistItems)
-                            if (playlistItem.getName() != null && playlistItem.getName().startsWith(keyword))
-                                result.add(playlistItem);
-
-                        return result;
-                    });
-        }
-
         @Override
         public void onDestroyView() {
+            audioSection.dispose();
+            playlistItemSection.dispose();
+
             if (disposable != null)
                 disposable.dispose();
             super.onDestroyView();
@@ -289,5 +266,33 @@ public class SearchActivity extends NavUpActivityBase {
             dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
         }
 
+        @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOAD_PREPARING)})
+        public void setAudioPreparingStatus(Audio taskAudio) {
+            diskAudioSection.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOAD_PREPARING);
+        }
+
+//    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADING)})
+//    public void setAudioDownloadingStatus(Pair<String, Pair<Long, Long>> state){
+//        adapter.setStatus(state, AudioStatus.STATUS_AUDIO_DOWNLOADING);
+//    }
+
+        @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
+        public void setAudioDownloadedStatus(Audio taskAudio) {
+            diskAudioSection.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOADED);
+            String title = taskAudio.getTitle();
+            Toast.makeText(activity, getResources().getString(R.string.download_completed) + ": " + title, Toast.LENGTH_SHORT).show();
+        }
+
+        @Subscribe(tags = {@Tag(AudioStatus.STATUS_ALL_AUDIOS_DOWNLOADED)})
+        public void showAllAudiosDownloadedToast(Object object) {
+            Toast.makeText(activity, getString(R.string.all_tracks_downloaded), Toast.LENGTH_SHORT).show();
+        }
+
+        @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOAD_CANCELED)})
+        public void setAudioCanceledStatus(Audio taskAudio) {
+            diskAudioSection.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOAD_CANCELED);
+            String title = taskAudio.getTitle();
+            Toast.makeText(activity, getResources().getString(R.string.download_canceled) + ": " + title, Toast.LENGTH_SHORT).show();
+        }
     }
 }

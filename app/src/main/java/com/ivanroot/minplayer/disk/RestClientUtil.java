@@ -2,9 +2,11 @@ package com.ivanroot.minplayer.disk;
 
 import android.content.Context;
 import android.net.NetworkInfo;
+import android.support.annotation.NonNull;
 
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.facebook.stetho.okhttp.StethoInterceptor;
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.ivanroot.minplayer.activity.TokenActivity;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
@@ -15,6 +17,7 @@ import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
 
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +63,24 @@ public class RestClientUtil {
                     } catch (UnauthorizedException ex){
                         state.put(KEY_ERROR, ex);
                         state.remove(KEY_REST_CLIENT);
+                    }
+                    return state;
+                });
+    }
+
+    public static Observable<Map<String, Object>> asObservable(RxSharedPreferences rxPreferences, @NonNull String tokenKey){
+        return ReactiveNetwork.observeInternetConnectivity()
+                .observeOn(Schedulers.io())
+                .filter(b -> b)
+                .switchMap(b -> rxPreferences.getString(tokenKey).asObservable())
+                .map(token -> new RestClient(new Credentials("", token)))
+                .map(restClient -> {
+                    Map<String, Object> state = new HashMap<>();
+                    try{
+                        restClient.getDiskInfo();
+                        state.put(KEY_REST_CLIENT, restClient);
+                    }catch (UnauthorizedException | UnknownHostException ex){
+                        state.put(KEY_ERROR, ex);
                     }
                     return state;
                 });

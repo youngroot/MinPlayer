@@ -6,7 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
-import com.ivanroot.minplayer.adapter.listeners.OnMoreBtnClickListener;
+import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.BaseItemViewHolder;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -15,7 +15,7 @@ import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import io.reactivex.disposables.Disposable;
 
 public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> extends RecyclerView.Adapter<VH>
-        implements FastScrollRecyclerView.SectionedAdapter{
+        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable {
 
     protected Activity activity;
     protected Playlist playlist;
@@ -23,7 +23,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
     protected Disposable playlistDisposable;
     protected OnAudioClickListener audioClickListener;
     protected PlaylistAdapter.OnNewPlaylistUpdateListener playlistListener;
-    protected OnMoreBtnClickListener moreBtnListener;
+    protected OnAudioMoreBtnClickListener moreBtnListener;
 
     public BasePlaylistAdapter(Activity activity) {
         this.activity = activity;
@@ -37,7 +37,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         this.playlistListener = playlistListener;
     }
 
-    public void setOnMoreBtnClickListener(OnMoreBtnClickListener moreBtnListener){
+    public void setOnMoreBtnClickListener(OnAudioMoreBtnClickListener moreBtnListener){
         this.moreBtnListener = moreBtnListener;
     }
 
@@ -64,6 +64,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         else return 0;
     }
 
+    @Override
     public void dispose(){
         if(playlistDisposable != null)
             playlistDisposable.dispose();
@@ -78,4 +79,5 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
     public interface OnNewPlaylistUpdateListener {
         void onNewPlaylist(Playlist playlist);
     }
+
 }
