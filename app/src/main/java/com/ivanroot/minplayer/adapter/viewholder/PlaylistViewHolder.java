@@ -1,7 +1,6 @@
 package com.ivanroot.minplayer.adapter.viewholder;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -28,15 +27,15 @@ public class PlaylistViewHolder extends BaseItemViewHolder<PlaylistItem> {
     public PlaylistViewHolder(View itemView) {
         super(itemView);
         playlistImages = new ImageView[]{
-                (ImageView) itemView.findViewById(R.id.SubPlaylistImage1),
-                (ImageView) itemView.findViewById(R.id.SubPlaylistImage2),
-                (ImageView) itemView.findViewById(R.id.SubPlaylistImage3),
-                (ImageView) itemView.findViewById(R.id.SubPlaylistImage4)
+                (ImageView) itemView.findViewById(R.id.sub_playlist_image_1),
+                (ImageView) itemView.findViewById(R.id.sub_playlist_image_2),
+                (ImageView) itemView.findViewById(R.id.sub_playlist_image_3),
+                (ImageView) itemView.findViewById(R.id.sub_playlist_image_4)
 
         };
-        playlistName = (TextView) itemView.findViewById(R.id.playlistName);
-        playlistSize = (TextView) itemView.findViewById(R.id.playlistSize);
-        moreBtn = (ImageButton) itemView.findViewById(R.id.moreBtn);
+        playlistName = (TextView) itemView.findViewById(R.id.playlist_name);
+        playlistSize = (TextView) itemView.findViewById(R.id.playlist_size);
+        moreBtn = (ImageButton) itemView.findViewById(R.id.more_btn);
     }
 
     public void representItem(Context context, PlaylistItem playlistItem){

@@ -1,7 +1,5 @@
 package com.ivanroot.minplayer.fragment;
 
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,7 +8,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.cleveroad.audiovisualization.DbmHandler;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
@@ -22,14 +19,7 @@ import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import me.bogerchan.niervisualizer.NierVisualizerManager;
 import me.bogerchan.niervisualizer.renderer.IRenderer;
 import me.bogerchan.niervisualizer.renderer.circle.CircleBarRenderer;
-import me.bogerchan.niervisualizer.renderer.circle.CircleRenderer;
-import me.bogerchan.niervisualizer.renderer.circle.CircleSolidRenderer;
 import me.bogerchan.niervisualizer.renderer.circle.CircleWaveRenderer;
-import me.bogerchan.niervisualizer.renderer.columnar.ColumnarType1Renderer;
-import me.bogerchan.niervisualizer.renderer.columnar.ColumnarType3Renderer;
-import me.bogerchan.niervisualizer.renderer.columnar.ColumnarType4Renderer;
-import me.bogerchan.niervisualizer.renderer.line.LineRenderer;
-import me.bogerchan.niervisualizer.renderer.other.ArcStaticRenderer;
 
 public class NierFragment extends Fragment {
     private NierVisualizerManager visualizerManager = new NierVisualizerManager();
@@ -53,7 +43,7 @@ public class NierFragment extends Fragment {
     @Override
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        surfaceView = (SurfaceView) inflater.inflate(R.layout.nier_fragment_layout, container, false)
+        surfaceView = (SurfaceView) inflater.inflate(R.layout.nier_fragment, container, false)
                 .findViewById(R.id.surface_view);
         return surfaceView;
     }

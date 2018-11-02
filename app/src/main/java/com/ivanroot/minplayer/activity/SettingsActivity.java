@@ -15,8 +15,11 @@ import com.ivanroot.minplayer.R;
 
 import java.util.Objects;
 
-public class SettingsActivity extends NightModeResponsibleActivity {
-    private Toolbar toolbar;
+public class SettingsActivity extends NavUpActivityBase {
+
+    public SettingsActivity(){
+        super(R.layout.activity_settings);
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -31,19 +34,6 @@ public class SettingsActivity extends NightModeResponsibleActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
-
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        setSupportActionBar(toolbar);
-
-        try {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
-            Log.d("Error", ex.getMessage());
-        }
 
         Intent intent = getIntent();
         String action = null;
@@ -78,12 +68,6 @@ public class SettingsActivity extends NightModeResponsibleActivity {
             getSupportActionBar()
                     .setTitle(savedInstanceState.getString("ActionBarTitle"));
         }
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
     }
 
     public static class SettingsFragment extends PreferenceFragment {

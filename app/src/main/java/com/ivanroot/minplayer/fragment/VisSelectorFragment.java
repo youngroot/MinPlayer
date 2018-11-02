@@ -18,9 +18,9 @@ public class VisSelectorFragment extends NavFragmentBase {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.vis_selector_fragment_layout, container, false);
+        View view = inflater.inflate(R.layout.vis_selector_fragment, container, false);
         setupDrawer(view);
-        viewPager = (ViewPager)view.findViewById(R.id.viewPager);
+        viewPager = (ViewPager)view.findViewById(R.id.view_pager);
         VisFragmentPagerAdapter adapter = new VisFragmentPagerAdapter(((FragmentActivity)getActivity()).getSupportFragmentManager());
         viewPager.setAdapter(adapter);
         return view;

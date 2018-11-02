@@ -9,10 +9,9 @@ import android.view.ViewGroup;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.viewholder.DiskAudioViewHolder;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.disk.AudioStatus;
+import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.utils.Pair;
 import com.yandex.disk.rest.RestClient;
 
 import java.util.HashMap;
@@ -21,10 +20,8 @@ import java.util.Map;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
-import static com.ivanroot.minplayer.disk.AudioDownloadService.DownloadingAudioBundle;
-
 public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioViewHolder> {
-    private Map<String, Pair<String, DownloadingAudioBundle>> statuses = new HashMap<>();
+    private Map<String, String> statuses = new HashMap<>();
 
     public DiskPlaylistAdapter(Activity activity) {
         super(activity);
@@ -56,20 +53,19 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
     @Override
     public void onBindViewHolder(DiskAudioViewHolder holder, int position) {
         Audio audio = playlist.getAudio(position);
-        Pair<String, DownloadingAudioBundle> status = new Pair<>(AudioStatus.STATUS_AUDIO_ONLY_ONLINE, new DownloadingAudioBundle());
+        String status = AudioStatus.STATUS_AUDIO_ONLY_ONLINE;
 
         if (statuses.get(audio.getMd5Hash()) != null)
             status = statuses.get(audio.getMd5Hash());
 
-        status.second.setTaskAudio(audio);
-        holder.representItem(activity, status);
-        holder.itemView.setOnClickListener(v -> audioClickListener.OnAudioClick(audio, playlist.getName()));
+        holder.representItem(activity, audio, status);
+        holder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(audio, playlist.getName()));
         holder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, position));
     }
 
-    public void setStatus(DownloadingAudioBundle bundle, String status) {
-        String md5Hash = bundle.getTaskAudio().getMd5Hash();
-        statuses.put(md5Hash, new Pair<>(status, bundle));
+    public void setStatus(Audio taskAudio, String status) {
+        String md5Hash = taskAudio.getMd5Hash();
+        statuses.put(md5Hash, status);
         notifyDataSetChanged();
     }
 }

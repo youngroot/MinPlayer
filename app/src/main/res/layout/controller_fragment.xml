@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <include
-        layout="@layout/main_controller_layout"
+        layout="@layout/main_controller"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingTop="25dp" />
-    <include layout="@layout/small_controller_layout" />
+    <include layout="@layout/small_controller" />
 
 </FrameLayout>

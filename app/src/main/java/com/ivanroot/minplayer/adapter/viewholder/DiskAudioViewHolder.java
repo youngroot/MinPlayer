@@ -8,11 +8,7 @@ import android.widget.TextView;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.disk.AudioDownloadService;
-import com.ivanroot.minplayer.disk.AudioStatus;
-import com.ivanroot.minplayer.utils.Pair;
-
-import static com.ivanroot.minplayer.disk.AudioDownloadService.DownloadingAudioBundle;
+import com.ivanroot.minplayer.disk.constants.AudioStatus;
 
 public class DiskAudioViewHolder extends AudioViewHolder {
     private TextView infoTextView;
@@ -20,23 +16,23 @@ public class DiskAudioViewHolder extends AudioViewHolder {
 
     public DiskAudioViewHolder(View itemView) {
         super(itemView);
-        infoTextView = (TextView)itemView.findViewById(R.id.bigInfoText);
-        moreBtn = (ImageButton) itemView.findViewById(R.id.downloadBtn);
-        loadProgress = (ProgressBar) itemView.findViewById(R.id.loadProgress);
+        infoTextView = (TextView)itemView.findViewById(R.id.big_info_text);
+        moreBtn = (ImageButton) itemView.findViewById(R.id.download_btn);
+        loadProgress = (ProgressBar) itemView.findViewById(R.id.load_progress);
     }
 
-    public void representItem(Context context, Pair<String, DownloadingAudioBundle> status) {
+    public void representItem(Context context, Audio audio, String status) {
         //super.representItem(context, audio);
-        infoTextView.setText(status.second.getTaskAudio().getTitle());
+        infoTextView.setText(audio.getTitle());
 
-        switch (status.first) {
+        switch (status) {
             case AudioStatus.STATUS_AUDIO_ONLY_ONLINE:
                 loadProgress.setVisibility(View.INVISIBLE);
                 moreBtn.setVisibility(View.VISIBLE);
                 moreBtn.setImageResource(R.drawable.ic_cloud_download);
                 break;
 
-            case AudioStatus.STATUS_AUDIO_PREPARING:
+            case AudioStatus.STATUS_AUDIO_DOWNLOAD_PREPARING:
                 moreBtn.setVisibility(View.INVISIBLE);
                 loadProgress.setVisibility(View.VISIBLE);
                 break;
@@ -48,7 +44,7 @@ public class DiskAudioViewHolder extends AudioViewHolder {
                 moreBtn.setImageResource(R.drawable.ic_done);
                 break;
 
-            case AudioStatus.STATUS_AUDIO_CANCELED:
+            case AudioStatus.STATUS_AUDIO_DOWNLOAD_CANCELED:
                 loadProgress.setVisibility(View.INVISIBLE);
                 moreBtn.setVisibility(View.VISIBLE);
                 moreBtn.setImageResource(R.drawable.ic_cloud_download);

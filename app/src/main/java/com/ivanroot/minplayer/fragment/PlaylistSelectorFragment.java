@@ -86,7 +86,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
             getActivity()
                     .getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentHolder, playlistFragment, PlaylistFragment.NAME)
+                    .replace(R.id.fragment_holder, playlistFragment, PlaylistFragment.NAME)
                     .commit();
         }));
 

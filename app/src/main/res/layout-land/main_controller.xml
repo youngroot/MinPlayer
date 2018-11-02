@@ -7,7 +7,7 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/bigAlbumArt"
+        android:id="@+id/big_album_art"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitXY"/>
@@ -33,7 +33,7 @@
                android:layout_weight="0.95">
 
                <ImageView
-                   android:id="@+id/albumArt"
+                   android:id="@+id/album_art"
                    android:layout_width="280dp"
                    android:layout_height="280dp"
                    android:scaleType="fitXY"
@@ -42,7 +42,7 @@
                    android:layout_marginBottom="25dp"
                    android:src="@drawable/default_album_art" />
                <ImageButton
-                   android:id="@+id/closeBtn"
+                   android:id="@+id/close_btn"
                    android:layout_width="24dp"
                    android:layout_height="24dp"
                    android:layout_alignParentStart="true"
@@ -67,7 +67,7 @@
                 android:layout_margin="1dp">
 
                 <ImageButton
-                    android:id="@+id/playBtn"
+                    android:id="@+id/play_btn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_alignParentBottom="true"
@@ -77,27 +77,27 @@
                     android:background="?android:attr/selectableItemBackgroundBorderless"/>
 
                 <ImageButton
-                    android:id="@+id/prevBtn"
+                    android:id="@+id/prev_btn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginRight="20dp"
                     android:src="@drawable/ic_prev"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:layout_alignParentBottom="true"
-                    android:layout_toStartOf="@+id/playBtn" />
+                    android:layout_toStartOf="@+id/play_btn" />
 
                 <ImageButton
-                    android:id="@+id/nextBtn"
+                    android:id="@+id/next_btn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginLeft="20dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_next"
                     android:layout_alignParentBottom="true"
-                    android:layout_toEndOf="@+id/playBtn" />
+                    android:layout_toEndOf="@+id/play_btn" />
 
                 <SeekBar
-                    android:id="@+id/songProgress"
+                    android:id="@+id/song_progress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
@@ -109,14 +109,14 @@
                     android:layout_marginTop="60dp" />
 
                 <TextView
-                    android:id="@+id/txtTitle"
+                    android:id="@+id/txt_title"
                     android:ellipsize="marquee"
                     android:scrollHorizontally="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_above="@id/txtAlbum"
+                    android:layout_above="@id/txt_album"
                     android:layout_centerHorizontal="true"
                     android:text="@string/unknown_song_title"
                     android:textColor="@color/colorWhite"
@@ -124,7 +124,7 @@
                     android:singleLine="true" />
 
                 <TextView
-                    android:id="@+id/txtAlbum"
+                    android:id="@+id/txt_album"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="marquee"
@@ -138,14 +138,14 @@
                     android:singleLine="true" />
 
                 <TextView
-                    android:id="@+id/txtArtist"
+                    android:id="@+id/txt_artist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="marquee"
                     android:scrollHorizontally="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:layout_below="@id/txtAlbum"
+                    android:layout_below="@id/txt_album"
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="5dp"
                     android:textColor="@color/colorWhite"
@@ -153,7 +153,7 @@
                     android:singleLine="true" />
 
                 <TextView
-                    android:id="@+id/secNow"
+                    android:id="@+id/sec_now"
                     android:text="0:00"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -162,13 +162,13 @@
                     android:textColor="@color/colorWhite"
                     android:layout_marginStart="10dp"/>
                 <TextView
-                    android:id="@+id/secLeft"
+                    android:id="@+id/sec_left"
                     android:text="-0:00"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_above="@id/songProgress"
+                    android:layout_above="@id/song_progress"
                     android:layout_alignParentEnd="true"
-                    android:layout_alignBaseline="@id/secNow"
+                    android:layout_alignBaseline="@id/sec_now"
                     android:textColor="@color/colorWhite"
                     android:layout_marginEnd="10dp"/>
             </RelativeLayout>
@@ -178,7 +178,7 @@
                 android:layout_weight="0.2">
 
                 <ImageButton
-                    android:id="@+id/shuffleBtn"
+                    android:id="@+id/shuffle_btn"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_alignParentLeft="true"
@@ -186,7 +186,7 @@
                     android:src="@drawable/ic_shuffle"
                     android:layout_marginLeft="100dp"/>
                 <ImageButton
-                    android:id="@+id/repeatBtn"
+                    android:id="@+id/repeat_btn"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_alignParentRight="true"

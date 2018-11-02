@@ -58,7 +58,7 @@ public class HorizonRecorderFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.horizon_recorder_fragment_layout, container, false);
+        View view = inflater.inflate(R.layout.horizon_recorder_fragment, container, false);
         glSurfaceView = (GLSurfaceView)view.findViewById(R.id.gl_surface);
         horizon = new Horizon(glSurfaceView, getResources().getColor(R.color.colorBlack),
                 RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_ENCODING_BIT);

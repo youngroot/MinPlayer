@@ -24,11 +24,11 @@ public class AudioViewHolder extends BaseItemViewHolder<Audio> {
 
     public AudioViewHolder(View itemView) {
         super(itemView);
-        title = (TextView) itemView.findViewById(R.id.songTitle);
-        album = (TextView) itemView.findViewById(R.id.songAlbum);
-        artist = (TextView) itemView.findViewById(R.id.songArtist);
-        albumArt = (ImageView) itemView.findViewById(R.id.albumArt);
-        moreBtn = (ImageButton) itemView.findViewById(R.id.moreBtn);
+        title = (TextView) itemView.findViewById(R.id.song_title);
+        album = (TextView) itemView.findViewById(R.id.song_album);
+        artist = (TextView) itemView.findViewById(R.id.song_artist);
+        albumArt = (ImageView) itemView.findViewById(R.id.album_art);
+        moreBtn = (ImageButton) itemView.findViewById(R.id.more_btn);
 
     }
 

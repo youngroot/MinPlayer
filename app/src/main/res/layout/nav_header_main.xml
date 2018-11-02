@@ -33,7 +33,7 @@
             android:layout_toEndOf="@id/imageView">
 
             <TextView
-                android:id="@+id/appName"
+                android:id="@+id/app_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
@@ -41,20 +41,20 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
             <TextView
-                android:id="@+id/aboutShort"
+                android:id="@+id/about_short"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:layout_alignStart="@id/appName"
-                android:layout_below="@id/appName"
+                android:layout_alignStart="@id/app_name"
+                android:layout_below="@id/app_name"
                 android:text="@string/about_short" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:layout_alignStart="@id/aboutShort"
-                android:layout_below="@id/aboutShort"
+                android:layout_alignStart="@id/about_short"
+                android:layout_below="@id/about_short"
                 android:text="@string/created_by"
                 android:textSize="10sp" />
         </RelativeLayout>

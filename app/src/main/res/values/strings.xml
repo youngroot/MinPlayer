@@ -37,9 +37,14 @@
     <string name="yandex_disk">Yandex.Disk</string>
     <string name="advanced">Advanced</string>
     <string name="downloading_from_disk">Downloading</string>
-    <string name="download_complete">Downloaded</string>
+    <string name="download_completed">Downloaded</string>
     <string name="download_canceled">Canceled</string>
-    <string name="all_tracks_downloaded">All tracks downloaded!</string>
+    <string name="all_tracks_downloaded">All tracks successfully downloaded!</string>
+    <string name="upload_to_disk">Upload to Yandex.Disk</string>
+    <string name="uploading_to_disk">Uploading</string>
+    <string name="upload_completed">Uploaded</string>
+    <string name="upload_canceled">Canceled</string>
+    <string name="all_tracks_uploaded">All tracks successfully uploaded!</string>
     <string name="no_internet_connection">No Internet Connection!</string>
     <string name="waiting_for_internet_connection">Waiting for internet connection</string>
     <string name="disk_login_error">Disk Login Error!</string>
@@ -61,4 +66,6 @@
     <string name="wallpapers">Wallpapers</string>
     <string name="set_as_wallpaper">Set as wallpaper</string>
     <string name="frame_update_ms">Frame update time in ms.</string>
+    <string name="label_search">Search…</string>
+    <string name="tracks">Tracks</string>
 </resources>

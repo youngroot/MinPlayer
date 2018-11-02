@@ -3,11 +3,11 @@ package com.ivanroot.minplayer.adapter;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.ViewGroup;
 
+import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
+import com.ivanroot.minplayer.adapter.listeners.OnMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.BaseItemViewHolder;
-import com.ivanroot.minplayer.audio.OnAudioClickListener;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -23,7 +23,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
     protected Disposable playlistDisposable;
     protected OnAudioClickListener audioClickListener;
     protected PlaylistAdapter.OnNewPlaylistUpdateListener playlistListener;
-    protected PlaylistAdapter.OnMoreBtnClickListener moreBtnListener;
+    protected OnMoreBtnClickListener moreBtnListener;
 
     public BasePlaylistAdapter(Activity activity) {
         this.activity = activity;
@@ -73,10 +73,6 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
     @Override
     public String getSectionName(int i) {
         return playlist.getAudio(i).getTitle().substring(0,1);
-    }
-
-    public interface OnMoreBtnClickListener{
-        void onMoreBtnClick(View view, Playlist playlist, int i);
     }
 
     public interface OnNewPlaylistUpdateListener {

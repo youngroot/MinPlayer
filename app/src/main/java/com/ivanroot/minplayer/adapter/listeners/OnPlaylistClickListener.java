@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.playlist;
+package com.ivanroot.minplayer.adapter.listeners;
 
 /**
  * Created by Ivan Root on 12.02.2018.

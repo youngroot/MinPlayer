@@ -23,6 +23,19 @@ public class Audio implements Serializable, Comparable<Audio> {
 
     public Audio() {}
 
+    public Audio(long id, long size, String localData, String cloudData, String md5Hash, String title, String album, String artist, String genre, String albumArtPath) {
+        this.id = id;
+        this.size = size;
+        this.localData = localData;
+        this.cloudData = cloudData;
+        this.md5Hash = md5Hash;
+        this.title = title;
+        this.album = album;
+        this.artist = artist;
+        this.genre = genre;
+        this.albumArtPath = albumArtPath;
+    }
+
     @Override
     public String toString() {
         return id + " " + localData + " " + cloudData + " " + md5Hash + " " + title + " " + album + " " + artist;

@@ -50,10 +50,10 @@ public class PlaylistAddDialog extends DialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.add_playlist_dialog, null);
         playlist = new Playlist();
-        ListView audioListView = (ListView) dialogView.findViewById(R.id.audioList);
-        final EditText playlistName = (EditText) dialogView.findViewById(R.id.playlistName);
-        Button cancelBtn = (Button) dialogView.findViewById(R.id.cancelBtn);
-        Button okBtn = (Button) dialogView.findViewById(R.id.okBtn);
+        ListView audioListView = (ListView) dialogView.findViewById(R.id.audio_list);
+        final EditText playlistName = (EditText) dialogView.findViewById(R.id.playlist_name);
+        Button cancelBtn = (Button) dialogView.findViewById(R.id.cancel_btn);
+        Button okBtn = (Button) dialogView.findViewById(R.id.ok_btn);
         adapter = new AudioSelectorAdapter(getActivity());
 
         audioListView.setAdapter(adapter);
@@ -102,7 +102,7 @@ public class PlaylistAddDialog extends DialogFragment {
             this.activity = activity;
             fadeIn = AnimationUtils.loadAnimation(activity, R.anim.fade_in);
             fadeIn.setDuration(500);
-            disposable = playlistManager.getAllAudioObservable(activity)
+            disposable = playlistManager.getAllAudiosObservable(activity)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(this::setAudioList);
 
@@ -143,10 +143,10 @@ public class PlaylistAddDialog extends DialogFragment {
                 view = inflater.inflate(R.layout.audio_item_add_playtlist_dialog, null);
             }
 
-            title = (TextView) view.findViewById(R.id.songTitle);
-            album = (TextView) view.findViewById(R.id.songAlbum);
-            artist = (TextView) view.findViewById(R.id.songArtist);
-            audioCheckBox = (CheckBox) view.findViewById(R.id.audioCheckBox);
+            title = (TextView) view.findViewById(R.id.song_title);
+            album = (TextView) view.findViewById(R.id.song_album);
+            artist = (TextView) view.findViewById(R.id.song_artist);
+            audioCheckBox = (CheckBox) view.findViewById(R.id.audio_check_box);
 
             Audio tempAudio = getItem(position).first;
             title.setText(tempAudio.getTitle());

@@ -74,7 +74,7 @@ public class PlaylistManager {
 
     }
 
-    public Observable<List<Audio>> getAllAudioObservable(Context context) {
+    public Observable<List<Audio>> getAllAudiosObservable(Context context) {
         return StorIOContentResolverFactory.getAllAudioObservable(context, ASC_SORT_ORDER);
     }
 

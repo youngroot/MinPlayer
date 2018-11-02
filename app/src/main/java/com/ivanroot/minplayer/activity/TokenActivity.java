@@ -47,7 +47,7 @@ public class TokenActivity extends AppCompatActivity {
 
         yandexTokenUrl = MessageFormat.format(yandexTokenUrl, clientId, id(this), Build.MODEL);
 
-        webView = (WebView) findViewById(R.id.webView);
+        webView = (WebView) findViewById(R.id.web_view);
         setWebView(webView);
         webView.loadUrl(yandexTokenUrl);
 

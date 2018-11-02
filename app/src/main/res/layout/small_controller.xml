@@ -5,110 +5,112 @@
     android:layout_width="match_parent"
     android:layout_height="70dp"
     android:background="?android:attr/colorBackground">
+
     <LinearLayout
-        android:id="@+id/buttonPanel"
+        android:id="@+id/button_panel"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:layout_alignParentEnd="true">
+        android:layout_alignParentEnd="true"
+        android:orientation="horizontal">
+
         <ImageButton
-            android:id="@+id/smallPrevBtn"
+            android:id="@+id/small_prev_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
+            android:layout_marginStart="0dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_prev_noti"
-            android:tint="?android:attr/textColor"
-            android:background="?android:attr/selectableItemBackgroundBorderless"  />
+            android:tint="?android:attr/textColor" />
 
         <ImageButton
-            android:id="@+id/smallPlayBtn"
+            android:id="@+id/small_play_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
+            android:layout_marginStart="0dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_play_noti"
-            android:tint="?android:attr/textColor"
-            android:background="?android:attr/selectableItemBackgroundBorderless"  />
+            android:tint="?android:attr/textColor" />
 
 
         <ImageButton
-            android:id="@+id/smallNextBtn"
+            android:id="@+id/small_next_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="0dp"
             android:layout_gravity="center_vertical"
+            android:layout_marginStart="0dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_next_noti"
-            android:tint="?android:attr/textColor"
-            android:background="?android:attr/selectableItemBackgroundBorderless"  />
+            android:tint="?android:attr/textColor" />
     </LinearLayout>
 
     <FrameLayout
-        android:id="@+id/smallAlbumArtHolder"
+        android:id="@+id/small_album_art_holder"
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:layout_alignParentStart="true">
+
         <ImageView
-            android:id="@+id/smallAlbumArt"
+            android:id="@+id/small_album_art"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"
-            app:srcCompat="@drawable/default_album_art"/>
+            app:srcCompat="@drawable/default_album_art" />
+
         <ProgressBar
-            android:id="@+id/loadProgress"
+            android:id="@+id/load_progress"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="invisible"/>
+            android:visibility="invisible" />
     </FrameLayout>
 
     <ProgressBar
-        android:id="@+id/smallProgress"
+        android:id="@+id/small_progress"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@id/albumArt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_marginTop="-7dp"
-        android:layout_marginBottom="-6dp"/>
+        android:layout_marginBottom="-6dp"
+        android:layout_toEndOf="@id/album_art" />
 
     <TextView
-        android:id="@+id/smallTitle"
+        android:id="@+id/small_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="@string/app_name"
-        android:textSize="15sp"
-        android:layout_below="@+id/smallProgress"
+        android:layout_below="@+id/small_progress"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:layout_toEndOf="@id/smallAlbumArtHolder"
-        android:layout_toStartOf="@+id/buttonPanel" />
-
-    <TextView
-        android:id="@+id/smallAlbum"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/button_panel"
+        android:layout_toEndOf="@id/small_album_art_holder"
         android:singleLine="true"
         android:text="@string/app_name"
-        android:layout_below="@+id/smallTitle"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/small_album"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/small_title"
         android:layout_marginStart="4dp"
         android:layout_marginTop="0dp"
-        android:layout_toEndOf="@id/smallAlbumArtHolder"
-        android:visibility="gone"
-        android:layout_toStartOf="@+id/buttonPanel"/>
-
-    <TextView
-        android:id="@+id/smallArtist"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/button_panel"
+        android:layout_toEndOf="@id/small_album_art_holder"
         android:singleLine="true"
         android:text="@string/app_name"
-        android:layout_below="@+id/smallTitle"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/small_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/small_title"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:layout_toEndOf="@id/smallAlbumArtHolder"
-        android:layout_toStartOf="@+id/buttonPanel"/>
-
-
+        android:layout_toStartOf="@+id/button_panel"
+        android:layout_toEndOf="@id/small_album_art_holder"
+        android:singleLine="true"
+        android:text="@string/app_name" />
 
 </RelativeLayout>

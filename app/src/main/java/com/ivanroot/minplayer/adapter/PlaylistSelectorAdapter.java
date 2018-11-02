@@ -2,8 +2,6 @@ package com.ivanroot.minplayer.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,8 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.adapter.listeners.OnPlaylistClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.PlaylistViewHolder;
-import com.ivanroot.minplayer.playlist.OnPlaylistClickListener;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;

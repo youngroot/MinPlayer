@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,15 +14,23 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
+import com.hwangjr.rxbus.annotation.Subscribe;
+import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.activity.SearchActivity;
 import com.ivanroot.minplayer.adapter.PlaylistAdapter;
 import com.ivanroot.minplayer.audio.Audio;
+import com.ivanroot.minplayer.disk.constants.AudioStatus;
+import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
+import com.ivanroot.minplayer.disk.service.AudioUploadService;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -55,13 +64,15 @@ public class PlaylistFragment extends NavFragmentBase {
     private CardView playlistHeaderCard;
     private TextView playlistNameView;
     private TextView playlistSizeView;
+    private ImageButton searchButton;
     private Bus rxBus = RxBus.get();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
 
-    public PlaylistFragment(){}
+    public PlaylistFragment() {
+    }
 
-    public PlaylistFragment(@NonNull String playlistName){
+    public PlaylistFragment(@NonNull String playlistName) {
         this.playlistName = playlistName;
     }
 
@@ -74,12 +85,11 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onCreate(savedInstanceState);
         playlistManager = PlaylistManager.getInstance();
 
-        if(savedInstanceState == null) {
-            if(playlistItem != null)
+        if (savedInstanceState == null) {
+            if (playlistItem != null)
                 playlistName = playlistItem.getName();
 
-        }
-        else {
+        } else {
             playlistName = savedInstanceState.getString("playlist_name");
         }
 
@@ -101,18 +111,23 @@ public class PlaylistFragment extends NavFragmentBase {
                     .onRestoreInstanceState(savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT));
         }
 
-        if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
-            playlistHeaderCard = (CardView)view.findViewById(R.id.playlistHeaderCard);
+        if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+            playlistHeaderCard = (CardView) view.findViewById(R.id.playlist_header_card);
             //playlistHeaderCard.getBackground().setAlpha(100);
-            playlistNameView = (TextView)view.findViewById(R.id.playlistName);
-            playlistSizeView = (TextView)view.findViewById(R.id.playlistSize);
+            playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
+            playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
             playlistImages = new ImageView[]{
-                    (ImageView) view.findViewById(R.id.SubPlaylistImage1),
-                    (ImageView) view.findViewById(R.id.SubPlaylistImage2),
-                    (ImageView) view.findViewById(R.id.SubPlaylistImage3),
-                    (ImageView) view.findViewById(R.id.SubPlaylistImage4)
+                    (ImageView) view.findViewById(R.id.sub_playlist_image_1),
+                    (ImageView) view.findViewById(R.id.sub_playlist_image_2),
+                    (ImageView) view.findViewById(R.id.sub_playlist_image_3),
+                    (ImageView) view.findViewById(R.id.sub_playlist_image_4)
 
             };
+
+        } else {
+            searchButton = (ImageButton)view.findViewById(R.id.search_button);
+            searchButton.setOnClickListener(v -> startActivity(new Intent(activity, SearchActivity.class)));
+            searchButton.setVisibility(View.VISIBLE);
         }
 
         prepareListeners(view);
@@ -121,12 +136,12 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void prepareListeners(View view) {
 
-        if(!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+        if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
 
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
                 rxBus.post(ACTION_SET_PLAYLIST, playlistName);
-                if(adapter.getPlaylist().size() > 0) {
+                if (adapter.getPlaylist().size() > 0) {
                     rxBus.post(ACTION_PLAY_AUDIO, adapter.getPlaylist().getAudio(0));
                 }
                 appBarLayout.setExpanded(false, true);
@@ -135,14 +150,22 @@ public class PlaylistFragment extends NavFragmentBase {
 
         adapter.setOnMoreBtnClickListener((v, playlist, i) -> {
 
-            PopupMenu popupMenu = new PopupMenu(getActivity(), v);
+            PopupMenu popupMenu = new PopupMenu(activity, v);
             popupMenu.inflate(R.menu.audio_item_more_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.add_to_playlist:
-                        selectedAudio = adapter.getPlaylist().getAudio(i);
+                        selectedAudio = playlist.getAudio(i);
                         showPlaylistSelectionDialog(selectedAudio);
                         return true;
+
+                    case R.id.upload_to_disk:
+                        Intent intent = AudioTransferServiceBase
+                                .getIntentFromAudio(activity, playlist.getAudio(i),
+                                        AudioUploadService.class);
+                        activity.startService(intent);
+                        return true;
+
                     default:
                         return false;
                 }
@@ -151,8 +174,8 @@ public class PlaylistFragment extends NavFragmentBase {
         });
 
         adapter.setAudioClickListener((audio, playlistName) -> {
-            rxBus.post(ACTION_SET_PLAYLIST,playlistName);
-            rxBus.post(ACTION_PLAY_AUDIO,audio);
+            rxBus.post(ACTION_SET_PLAYLIST, playlistName);
+            rxBus.post(ACTION_PLAY_AUDIO, audio);
 
         });
 
@@ -203,9 +226,9 @@ public class PlaylistFragment extends NavFragmentBase {
             private String logMessage;
 
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState){
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 logMessage = "onScrollStateChanged: new state: " + newState;
-                Log.i(toString(),logMessage);
+                Log.i(toString(), logMessage);
 
             }
 
@@ -213,7 +236,7 @@ public class PlaylistFragment extends NavFragmentBase {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 logMessage = "onScrolled dx: " + dx + " dy: " + dy;
-                Log.i(toString(),logMessage);
+                Log.i(toString(), logMessage);
             }
 
         });
@@ -222,32 +245,32 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
 
-    public String getPlaylistName(){
+    public String getPlaylistName() {
         return playlistName;
     }
 
     @Override
     protected String getActionBarTitle() {
-        return playlistManager.getTitleFromPlaylistName(getActivity(),playlistName);
+        return playlistManager.getTitleFromPlaylistName(getActivity(), playlistName);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if(savedInstanceState != null){
+        if (savedInstanceState != null) {
             selectorDialogIsActive = savedInstanceState.getBoolean("selector_dialog_is_active");
             String json = savedInstanceState.getString("selected_audio");
-            selectedAudio = new Gson().fromJson(json,Audio.class);
+            selectedAudio = new Gson().fromJson(json, Audio.class);
 
-            if(selectorDialogIsActive){
-                PlaylistSelectorDialog dialog = (PlaylistSelectorDialog)getActivity()
+            if (selectorDialogIsActive) {
+                PlaylistSelectorDialog dialog = (PlaylistSelectorDialog) getActivity()
                         .getFragmentManager()
                         .findFragmentByTag(getActivity().getResources().getString(R.string.add_to_playlist));
-                if(dialog != null){
+                if (dialog != null) {
                     dialog.setPlaylistItemClickListener(playlistItem -> {
-                        playlistManager.addToPlaylist(getActivity(),playlistItem.getName(),selectedAudio);
-                    dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
+                        playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), selectedAudio);
+                        dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
                     });
                 }
             }
@@ -260,9 +283,9 @@ public class PlaylistFragment extends NavFragmentBase {
         Gson gson = new Gson();
         String json = gson.toJson(selectedAudio);
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, audioRecyclerView.getLayoutManager().onSaveInstanceState());
-        outState.putString("playlist_name",playlistName);
-        outState.putBoolean("selector_dialog_is_active",selectorDialogIsActive);
-        outState.putString("selected_audio",json);
+        outState.putString("playlist_name", playlistName);
+        outState.putBoolean("selector_dialog_is_active", selectorDialogIsActive);
+        outState.putString("selected_audio", json);
         super.onSaveInstanceState(outState);
     }
 
@@ -279,7 +302,7 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onDestroy();
     }
 
-    private void setImages(Playlist playlist){
+    private void setImages(Playlist playlist) {
         try {
             int i = 0;
             for (Audio audio : playlist.getAudioList()) {
@@ -293,31 +316,41 @@ public class PlaylistFragment extends NavFragmentBase {
                     i++;
                 }
             }
-        }catch (NullPointerException ex){
+        } catch (NullPointerException ex) {
             ex.printStackTrace();
-            Log.e(toString(),ex.getMessage());
+            Log.e(toString(), ex.getMessage());
         }
     }
 
-    private void setText(Playlist playlist){
-       try {
+    private void setText(Playlist playlist) {
+        try {
 
-           playlistNameView.setText(playlist.getName());
-           String playlistSize = playlist.size()+ " " + getActivity().getResources().getString(R.string.songs);
-           playlistSizeView.setText(playlistSize);
-       }catch (NullPointerException ex){
-           ex.printStackTrace();
-           Log.e(toString(),ex.getMessage());
-       }
+            playlistNameView.setText(playlist.getName());
+            String playlistSize = playlist.size() + " " + getActivity().getResources().getString(R.string.songs);
+            playlistSizeView.setText(playlistSize);
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+            Log.e(toString(), ex.getMessage());
+        }
 
     }
 
-    public void showPlaylistSelectionDialog(Audio audio){
+    public void showPlaylistSelectionDialog(Audio audio) {
         PlaylistSelectorDialog dialog = new PlaylistSelectorDialog();
-        dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(),playlistItem.getName(),audio));
-        dialog.show(getActivity().getFragmentManager(),getActivity().getResources().getString(R.string.add_to_playlist));
+        dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), audio));
+        dialog.show(getActivity().getFragmentManager(), getActivity().getResources().getString(R.string.add_to_playlist));
         selectorDialogIsActive = true;
         dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_UPLOADED)})
+    public void showAudioUploadedToast(Audio taskAudio){
+        Toast.makeText(activity, getString(R.string.upload_completed) + ": " + taskAudio.getTitle(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_ALL_AUDIOS_UPLOADED)})
+    public void showAllAudiosUploadedToast(Object object){
+        Toast.makeText(activity, getString(R.string.all_tracks_uploaded), Toast.LENGTH_SHORT).show();
     }
 
 }

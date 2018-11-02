@@ -1,19 +1,15 @@
 package com.ivanroot.minplayer.fragment;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,16 +23,14 @@ import com.ivanroot.minplayer.activity.MainActivity;
 import com.ivanroot.minplayer.activity.TokenActivity;
 import com.ivanroot.minplayer.adapter.DiskPlaylistAdapter;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.disk.AudioDownloadService;
-import com.ivanroot.minplayer.disk.AudioStatus;
+import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.disk.RestClientUtil;
-import com.ivanroot.minplayer.utils.Pair;
+import com.ivanroot.minplayer.disk.service.AudioDownloadService;
+import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
-
-import java.util.HashMap;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -45,7 +39,6 @@ import io.reactivex.disposables.Disposable;
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
-import static com.ivanroot.minplayer.disk.AudioDownloadService.DownloadingAudioBundle;
 
 public class DiskFragment extends NavFragmentBase {
     public static final String NAME = "DiskFragment";
@@ -74,7 +67,7 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     private void setupRestClient(View view) {
-        statusText = (TextView) view.findViewById(R.id.statusText);
+        statusText = (TextView) view.findViewById(R.id.status_text);
         Observable<String> tokenObservable = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(getActivity()))
                 .getString(TokenActivity.PREF_ACCESS_TOKEN)
                 .asObservable();
@@ -111,7 +104,7 @@ public class DiskFragment extends NavFragmentBase {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.disk_fragment_layout, container, false);
+        View view = inflater.inflate(R.layout.disk_fragment, container, false);
         setupDrawer(view);
         setupRecycler(view);
         setupRestClient(view);
@@ -142,7 +135,7 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     private void prepareListeners() {
-        adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> activity.startService(getIntentFromAudio(playlist.getAudio(i))));
+        adapter.setOnMoreBtnClickListener((moreBtn, playlist, i) -> activity.startService(AudioTransferServiceBase.getIntentFromAudio(activity, playlist.getAudio(i), AudioDownloadService.class)));
 
         adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
@@ -150,19 +143,9 @@ public class DiskFragment extends NavFragmentBase {
         });
     }
 
-    @NonNull
-    private Intent getIntentFromAudio(Audio audio) {
-        Intent intent = new Intent(activity, AudioDownloadService.class);
-        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_SIZE, audio.getSize());
-        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_PATH, audio.getCloudData());
-        intent.putExtra(AudioDownloadService.EXTRA_MD5_HASH, audio.getMd5Hash());
-        intent.putExtra(AudioDownloadService.EXTRA_AUDIO_TITLE, audio.getTitle());
-        return intent;
-    }
-
-    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_PREPARING)})
-    public void setAudioPreparingStatus(DownloadingAudioBundle bundle) {
-        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_PREPARING);
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOAD_PREPARING)})
+    public void setAudioPreparingStatus(Audio taskAudio) {
+        adapter.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOAD_PREPARING);
     }
 
 //    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADING)})
@@ -171,16 +154,21 @@ public class DiskFragment extends NavFragmentBase {
 //    }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOADED)})
-    public void setAudioDownloadedStatus(DownloadingAudioBundle bundle) {
-        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_DOWNLOADED);
-        String title = bundle.getTaskAudio().getTitle();
-        Toast.makeText(activity, getResources().getString(R.string.download_complete) + ": " + title, Toast.LENGTH_SHORT).show();
+    public void setAudioDownloadedStatus(Audio taskAudio) {
+        adapter.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOADED);
+        String title = taskAudio.getTitle();
+        Toast.makeText(activity, getResources().getString(R.string.download_completed) + ": " + title, Toast.LENGTH_SHORT).show();
     }
 
-    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_CANCELED)})
-    public void setAudioCanceledStatus(DownloadingAudioBundle bundle) {
-        adapter.setStatus(bundle, AudioStatus.STATUS_AUDIO_CANCELED);
-        String title = bundle.getTaskAudio().getTitle();
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_ALL_AUDIOS_DOWNLOADED)})
+    public void showAllAudiosDownloadedToast(Object object){
+        Toast.makeText(activity, getString(R.string.all_tracks_downloaded), Toast.LENGTH_SHORT).show();
+    }
+
+    @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_DOWNLOAD_CANCELED)})
+    public void setAudioCanceledStatus(Audio taskAudio) {
+        adapter.setStatus(taskAudio, AudioStatus.STATUS_AUDIO_DOWNLOAD_CANCELED);
+        String title = taskAudio.getTitle();
         Toast.makeText(activity, getResources().getString(R.string.download_canceled) + ": " + title, Toast.LENGTH_SHORT).show();
     }
 

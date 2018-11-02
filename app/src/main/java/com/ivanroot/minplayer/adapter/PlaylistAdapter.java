@@ -36,7 +36,7 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
     public void onBindViewHolder(AudioViewHolder audioViewHolder, int i) {
         audioViewHolder.representItem(activity, playlist.getAudio(i));
         audioViewHolder.itemView
-                .setOnClickListener(v -> audioClickListener.OnAudioClick(playlist.getAudio(i), playlist.getName()));
+                .setOnClickListener(v -> audioClickListener.onAudioClick(playlist.getAudio(i), playlist.getName()));
         audioViewHolder
                 .setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, i));
     }

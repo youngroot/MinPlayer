@@ -101,28 +101,28 @@ public class ControllerFragment extends Fragment {
     }
 
     private void prepareViews(View view) {
-        smallProgress = (ProgressBar) view.findViewById(R.id.smallProgress);
-        smallAlbumArt = (ImageView) view.findViewById(R.id.smallAlbumArt);
-        smallTitle = (TextView) view.findViewById(R.id.smallTitle);
-        smallArtist = (TextView) view.findViewById(R.id.smallArtist);
-        smallAlbum = (TextView) view.findViewById(R.id.smallAlbum);
-        smallPrevBtn = (ImageButton) view.findViewById(R.id.smallPrevBtn);
-        smallPlayBtn = (ImageButton) view.findViewById(R.id.smallPlayBtn);
-        smallNextBtn = (ImageButton) view.findViewById(R.id.smallNextBtn);
+        smallProgress = (ProgressBar) view.findViewById(R.id.small_progress);
+        smallAlbumArt = (ImageView) view.findViewById(R.id.small_album_art);
+        smallTitle = (TextView) view.findViewById(R.id.small_title);
+        smallArtist = (TextView) view.findViewById(R.id.small_artist);
+        smallAlbum = (TextView) view.findViewById(R.id.small_album);
+        smallPrevBtn = (ImageButton) view.findViewById(R.id.small_prev_btn);
+        smallPlayBtn = (ImageButton) view.findViewById(R.id.small_play_btn);
+        smallNextBtn = (ImageButton) view.findViewById(R.id.small_next_btn);
         smallViewContainer = (ViewGroup) view.findViewById(R.id.small_controller_layout);
 
-        playbackProgress = (SeekBar) view.findViewById(R.id.songProgress);
-        loadProgress = (ProgressBar)view.findViewById(R.id.loadProgress);
-        bigAlbumArt = (ImageView) view.findViewById(R.id.bigAlbumArt);
-        albumArt = (ImageView) view.findViewById(R.id.albumArt);
-        title = (TextView) view.findViewById(R.id.txtTitle);
-        artist = (TextView) view.findViewById(R.id.txtArtist);
-        album = (TextView) view.findViewById(R.id.txtAlbum);
-        playBtn = (ImageButton) view.findViewById(R.id.playBtn);
-        prevBtn = (ImageButton) view.findViewById(R.id.prevBtn);
-        nextBtn = (ImageButton) view.findViewById(R.id.nextBtn);
-        shuffleBtn = (ImageButton) view.findViewById(R.id.shuffleBtn);
-        repeatBtn = (ImageButton) view.findViewById(R.id.repeatBtn);
+        playbackProgress = (SeekBar) view.findViewById(R.id.song_progress);
+        loadProgress = (ProgressBar)view.findViewById(R.id.load_progress);
+        bigAlbumArt = (ImageView) view.findViewById(R.id.big_album_art);
+        albumArt = (ImageView) view.findViewById(R.id.album_art);
+        title = (TextView) view.findViewById(R.id.txt_title);
+        artist = (TextView) view.findViewById(R.id.txt_artist);
+        album = (TextView) view.findViewById(R.id.txt_album);
+        playBtn = (ImageButton) view.findViewById(R.id.play_btn);
+        prevBtn = (ImageButton) view.findViewById(R.id.prev_btn);
+        nextBtn = (ImageButton) view.findViewById(R.id.next_btn);
+        shuffleBtn = (ImageButton) view.findViewById(R.id.shuffle_btn);
+        repeatBtn = (ImageButton) view.findViewById(R.id.repeat_btn);
 
         if(panelLayout == null && getActivity() instanceof MainActivity)
             panelLayout = ((MainActivity)getActivity()).getPanelLayout();

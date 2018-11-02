@@ -20,7 +20,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.PlayerHolder, new PlayerFragment())
+                .replace(R.id.player_holder, new PlayerFragment())
                 .commit();
 
     }

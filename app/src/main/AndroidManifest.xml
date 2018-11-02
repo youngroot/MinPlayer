@@ -66,10 +66,14 @@
         <!--android:launchMode="singleTask"/>-->
 
         <activity android:name=".activity.TokenActivity" />
+        <activity android:name=".activity.SearchActivity" />
 
         <service
-            android:name=".disk.AudioDownloadService"
+            android:name=".disk.service.AudioDownloadService"
             android:exported="false" />
+
+        <service android:name=".disk.service.AudioUploadService"
+            android:exported="false"/>
 
         <!--<service android:name=".visualization.wallpapers.NierWallpaperService"-->
         <!--android:enabled="true"-->

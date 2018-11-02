@@ -10,7 +10,7 @@
     tools:showIn="@layout/activity_main">
 
     <LinearLayout
-        android:id="@+id/controllerHolder"
+        android:id="@+id/controller_holder"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:orientation="vertical"
@@ -21,12 +21,12 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/fragmentHolder"
+        android:id="@+id/fragment_holder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_alignParentTop="true"
-        android:layout_above="@id/controllerHolder"
+        android:layout_above="@id/controller_holder"
         android:layout_alignParentStart="true">
     </LinearLayout>
 

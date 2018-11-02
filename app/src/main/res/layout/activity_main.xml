@@ -17,13 +17,13 @@
         sothree:umanoShadowHeight="2dp">
 
         <FrameLayout
-            android:id="@+id/fragmentHolder"
+            android:id="@+id/fragment_holder"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
 
         <FrameLayout
-            android:id="@+id/controllerHolder"
+            android:id="@+id/controller_holder"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 

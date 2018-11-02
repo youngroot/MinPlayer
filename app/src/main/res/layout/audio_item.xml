@@ -9,7 +9,7 @@
     android:background="?android:attr/selectableItemBackground">
 
     <ImageView
-        android:id="@+id/albumArt"
+        android:id="@+id/album_art"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginStart="5dp"
@@ -17,16 +17,16 @@
         app:srcCompat="@drawable/default_album_art" />
 
     <LinearLayout
-        android:id="@+id/infoLayout"
+        android:id="@+id/info_layout"
         android:layout_width="265dp"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
-        android:layout_toEndOf="@id/albumArt"
+        android:layout_toEndOf="@id/album_art"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/songTitle"
+            android:id="@+id/song_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
@@ -34,7 +34,7 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/songAlbum"
+            android:id="@+id/song_album"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
@@ -42,7 +42,7 @@
             android:visibility="gone" />
 
         <TextView
-            android:id="@+id/songArtist"
+            android:id="@+id/song_artist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
@@ -51,7 +51,7 @@
 
 
     <ImageButton
-        android:id="@+id/moreBtn"
+        android:id="@+id/more_btn"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_alignParentEnd="true"

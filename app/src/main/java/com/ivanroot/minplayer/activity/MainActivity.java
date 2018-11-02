@@ -26,7 +26,6 @@ import com.ivanroot.minplayer.fragment.PlayerFragment;
 import com.ivanroot.minplayer.fragment.PlaylistFragment;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
-import com.ivanroot.minplayer.fragment.VisRecyclerFragment;
 import com.ivanroot.minplayer.fragment.VisSelectorFragment;
 import com.ivanroot.minplayer.player.PlayerService;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
@@ -108,7 +107,7 @@ public class MainActivity extends NightModeResponsibleActivity
             //controllerFragment.setPanelLayout(panelLayout);
             getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.controllerHolder, controllerFragment, ControllerFragment.NAME)
+                    .replace(R.id.controller_holder, controllerFragment, ControllerFragment.NAME)
                     .commit();
 
             wasStarted = true;
@@ -130,7 +129,7 @@ public class MainActivity extends NightModeResponsibleActivity
         } else {
 
             Fragment fragment = getFragmentManager()
-                    .findFragmentById(R.id.fragmentHolder);
+                    .findFragmentById(R.id.fragment_holder);
 
             switch (fragment.getTag()) {
                 case PlaylistFragment.NAME:
@@ -280,7 +279,7 @@ public class MainActivity extends NightModeResponsibleActivity
         if (fragment != null) {
             getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentHolder, fragment, tag)
+                    .replace(R.id.fragment_holder, fragment, tag)
                     .commit();
         }
 

@@ -5,5 +5,9 @@
             android:id="@+id/add_to_playlist"
             android:title="@string/add_to_playlist">
         </item>
+        <item
+            android:id="@+id/upload_to_disk"
+            android:title="@string/upload_to_disk">
+        </item>
     </group>
 </menu>

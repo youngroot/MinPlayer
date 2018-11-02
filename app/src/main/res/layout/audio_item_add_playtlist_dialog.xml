@@ -9,7 +9,7 @@
     android:layout_marginBottom="1dp">
 
     <RelativeLayout
-        android:id="@+id/infoLayout"
+        android:id="@+id/info_layout"
         android:layout_width="265dp"
         android:layout_height="45dp">
         <LinearLayout
@@ -20,7 +20,7 @@
             android:layout_centerVertical="true">
 
             <TextView
-                android:id="@+id/songTitle"
+                android:id="@+id/song_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
@@ -28,7 +28,7 @@
                 android:textSize="15sp" />
 
             <TextView
-                android:id="@+id/songAlbum"
+                android:id="@+id/song_album"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
@@ -36,7 +36,7 @@
                 android:visibility="gone"/>
 
             <TextView
-                android:id="@+id/songArtist"
+                android:id="@+id/song_artist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
@@ -44,7 +44,7 @@
         </LinearLayout>
     </RelativeLayout>
     <CheckBox
-        android:id="@+id/audioCheckBox"
+        android:id="@+id/audio_check_box"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_centerVertical="true"

@@ -104,7 +104,7 @@ public class PlayerFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.main_controller_layout, container, false);
+        View view = inflater.inflate(R.layout.main_controller, container, false);
         prepareViews(view);
         prepareListeners();
         initAnimations();
@@ -185,24 +185,24 @@ public class PlayerFragment extends Fragment {
 
 
     private void prepareViews(View view) {
-        albumArt = (ImageView) view.findViewById(R.id.albumArt);
-        bigAlbumArt = (ImageView) view.findViewById(R.id.bigAlbumArt);
-        songProgress = (SeekBar) view.findViewById(R.id.songProgress);
+        albumArt = (ImageView) view.findViewById(R.id.album_art);
+        bigAlbumArt = (ImageView) view.findViewById(R.id.big_album_art);
+        songProgress = (SeekBar) view.findViewById(R.id.song_progress);
 
-        title = (TextView) view.findViewById(R.id.txtTitle);
-        album = (TextView) view.findViewById(R.id.txtAlbum);
-        artist = (TextView) view.findViewById(R.id.txtArtist);
+        title = (TextView) view.findViewById(R.id.txt_title);
+        album = (TextView) view.findViewById(R.id.txt_album);
+        artist = (TextView) view.findViewById(R.id.txt_artist);
 
-        secNow = (TextView) view.findViewById(R.id.secNow);
-        secLeft = (TextView) view.findViewById(R.id.secLeft);
+        secNow = (TextView) view.findViewById(R.id.sec_now);
+        secLeft = (TextView) view.findViewById(R.id.sec_left);
 
-        closeBtn = (ImageButton) view.findViewById(R.id.closeBtn);
-        playBtn = (ImageButton) view.findViewById(R.id.playBtn);
-        prevBtn = (ImageButton) view.findViewById(R.id.prevBtn);
-        nextBtn = (ImageButton) view.findViewById(R.id.nextBtn);
+        closeBtn = (ImageButton) view.findViewById(R.id.close_btn);
+        playBtn = (ImageButton) view.findViewById(R.id.play_btn);
+        prevBtn = (ImageButton) view.findViewById(R.id.prev_btn);
+        nextBtn = (ImageButton) view.findViewById(R.id.next_btn);
 
-        shuffleBtn = (ImageButton) view.findViewById(R.id.shuffleBtn);
-        repeatBtn = (ImageButton) view.findViewById(R.id.repeatBtn);
+        shuffleBtn = (ImageButton) view.findViewById(R.id.shuffle_btn);
+        repeatBtn = (ImageButton) view.findViewById(R.id.repeat_btn);
 
         closeBtn.setOnClickListener(v -> getActivity().onBackPressed());
     }
