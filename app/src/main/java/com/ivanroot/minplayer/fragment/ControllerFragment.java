@@ -144,7 +144,7 @@ public class ControllerFragment extends Fragment {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 secNow.setText(getPlayerTimeString(i));
-                secLeft.setText(getPlayerTimeString(seekBar.getMax() - i));
+                secLeft.setText(String.format("-%s", getPlayerTimeString(seekBar.getMax() - i)));
             }
 
             @Override
@@ -242,28 +242,33 @@ public class ControllerFragment extends Fragment {
             smallTitle.setText(currAudio.getTitle());
             smallAlbum.setText(currAudio.getAlbum());
             smallArtist.setText(currAudio.getArtist());
+            smallAlbumArt.setImageResource(R.drawable.default_album_art);
 
             playbackProgress.setProgress(0);
             title.setText(currAudio.getTitle());
             album.setText(currAudio.getAlbum());
             artist.setText(currAudio.getArtist());
-
+            albumArt.setImageResource(R.drawable.default_album_art);
 
             onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
             onRepeatModeEvents((int)state.get(KEY_RP_MODE));
 
+
+            if(currAudio.getAlbumArtPath() != null) {
+
+                Picasso.with(getActivity())
+                        .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
+                        .error(R.drawable.default_album_art)
+                        .into(smallAlbumArt);
+
+                Picasso.with(getActivity())
+                        .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
+                        .error(R.drawable.default_album_art)
+                        .into(albumArt);
+            }
+
             Bitmap bitmap = Utils.getAudioAlbumArt(currAudio.getAlbumArtPath(),
                     BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey));
-
-            Picasso.with(getActivity())
-                    .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
-                    .error(R.drawable.default_album_art)
-                    .into(smallAlbumArt);
-
-            Picasso.with(getActivity())
-                    .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
-                    .error(R.drawable.default_album_art)
-                    .into(albumArt);
 
             Blurry.with(getActivity())
                     .async()

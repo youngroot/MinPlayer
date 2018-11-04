@@ -12,22 +12,23 @@ import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
+import java.util.List;
+
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> extends RecyclerView.Adapter<VH>
         implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable {
 
-    protected Activity activity;
     protected Playlist playlist;
-    protected PlaylistManager playlistManager = PlaylistManager.getInstance();
     protected Disposable playlistDisposable;
     protected OnAudioClickListener audioClickListener;
     protected PlaylistAdapter.OnNewPlaylistUpdateListener playlistListener;
     protected OnAudioMoreBtnClickListener moreBtnListener;
 
-    public BasePlaylistAdapter(Activity activity) {
-        this.activity = activity;
-    }
 
     public void setAudioClickListener(OnAudioClickListener audioClickListener){
         this.audioClickListener = audioClickListener;
@@ -62,6 +63,13 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         if(playlist != null)
             return playlist.size();
         else return 0;
+    }
+
+    public void subscribe(@NonNull Observable<Playlist> playlistObservable){
+        dispose();
+        playlistDisposable = playlistObservable
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::setPlaylist);
     }
 
     @Override

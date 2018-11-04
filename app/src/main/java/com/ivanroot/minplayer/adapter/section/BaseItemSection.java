@@ -107,6 +107,7 @@ public abstract class BaseItemSection<T> extends StatelessSection
     }
 
     public void subscribe(@NonNull Observable<List<T>> itemsSourceObservable) {
+        dispose();
         disposable = itemsSourceObservable
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(data -> {

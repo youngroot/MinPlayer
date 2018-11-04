@@ -37,11 +37,14 @@ public class AudioViewHolder extends BaseItemViewHolder<Audio> {
         title.setText(audio.getTitle());
         album.setText(audio.getAlbum());
         artist.setText(audio.getArtist());
+        albumArt.setImageResource(R.drawable.default_album_art);
 
-        Picasso.with(context)
-                .load(Utils.getFileFromPath(audio.getAlbumArtPath()))
-                .error(R.drawable.default_album_art)
-                .into(albumArt);
+        if (audio.getAlbumArtPath() != null) {
+            Picasso.with(context)
+                    .load(Utils.getFileFromPath(audio.getAlbumArtPath()))
+                    .error(R.drawable.default_album_art)
+                    .into(albumArt);
+        }
     }
 
 }

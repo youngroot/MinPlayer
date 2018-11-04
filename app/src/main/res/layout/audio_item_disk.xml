@@ -10,18 +10,18 @@
 
     <ImageView
         android:id="@+id/album_art"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginStart="5dp"
         android:visibility="visible"
         android:layout_centerVertical="true"
         android:scaleType="fitXY"
         app:srcCompat="@drawable/disk_audio_file" />
     <FrameLayout
-        android:layout_width="265dp"
+        android:layout_width="260dp"
         android:layout_height="60dp"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"
+        android:layout_marginStart="3dp"
         android:layout_toEndOf="@id/album_art">
         <RelativeLayout
             android:id="@+id/big_info_text_holder"

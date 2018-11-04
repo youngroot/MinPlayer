@@ -8,6 +8,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -53,7 +54,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
 
     private PlaylistItem playlistItem = null;
-    private String playlistName = null;
+    protected String playlistName = null;
     private PlaylistAdapter adapter;
     private FastScrollRecyclerView audioRecyclerView;
     private FloatingActionButton playFab;
@@ -68,17 +69,11 @@ public class PlaylistFragment extends NavFragmentBase {
     private Bus rxBus = RxBus.get();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
+    private LinearLayoutManager layoutManager;
+    private RecyclerView.SmoothScroller smoothScroller;
 
-    public PlaylistFragment() {
-    }
+    public PlaylistFragment() { }
 
-    public PlaylistFragment(@NonNull String playlistName) {
-        this.playlistName = playlistName;
-    }
-
-    public PlaylistFragment(@NonNull PlaylistItem playlistItem) {
-        this.playlistItem = playlistItem;
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,8 +88,12 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistName = savedInstanceState.getString("playlist_name");
         }
 
-        adapter = new PlaylistAdapter(getActivity(), playlistName);
+        adapter = new PlaylistAdapter(getActivity());
         rxBus.register(this);
+    }
+
+    public void setPlaylistName(String playlistName){
+        this.playlistName = playlistName;
     }
 
     @Nullable
@@ -141,7 +140,7 @@ public class PlaylistFragment extends NavFragmentBase {
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
                 rxBus.post(ACTION_SET_PLAYLIST, playlistName);
-                if (adapter.getPlaylist().size() > 0) {
+                if (adapter.getItemCount() > 0) {
                     rxBus.post(ACTION_PLAY_AUDIO, adapter.getPlaylist().getAudio(0));
                 }
                 appBarLayout.setExpanded(false, true);
@@ -199,7 +198,13 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setupRecycler(View view) {
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager = new LinearLayoutManager(getActivity());
+        smoothScroller = new LinearSmoothScroller(activity){
+            @Override protected int getVerticalSnapPreference() {
+                return LinearSmoothScroller.SNAP_TO_START;
+            }
+        };
+
         audioRecyclerView = (FastScrollRecyclerView) view.findViewById(R.id.audio_recycler);
         audioRecyclerView.setHasFixedSize(true);
         audioRecyclerView.setLayoutManager(layoutManager);
@@ -275,7 +280,18 @@ public class PlaylistFragment extends NavFragmentBase {
                 }
             }
 
+            int pos = savedInstanceState.getInt("pos", 0);
+            //smoothScroller.setTargetPosition(pos);
+            //layoutManager.startSmoothScroll(smoothScroller);
+            layoutManager.scrollToPositionWithOffset(pos, 0);
+            Log.i(toString(), "pos: " + pos);
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        adapter.subscribe(playlistManager.getPlaylistObservable(activity, playlistName));
     }
 
     @Override
@@ -286,7 +302,14 @@ public class PlaylistFragment extends NavFragmentBase {
         outState.putString("playlist_name", playlistName);
         outState.putBoolean("selector_dialog_is_active", selectorDialogIsActive);
         outState.putString("selected_audio", json);
+        outState.putInt("pos", layoutManager.findFirstVisibleItemPosition());
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        adapter.dispose();
     }
 
     @Override
@@ -296,8 +319,6 @@ public class PlaylistFragment extends NavFragmentBase {
 
     @Override
     public void onDestroy() {
-        if (adapter != null)
-            adapter.dispose();
         rxBus.unregister(this);
         super.onDestroy();
     }
@@ -330,7 +351,7 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistSizeView.setText(playlistSize);
         } catch (NullPointerException ex) {
             ex.printStackTrace();
-            Log.e(toString(), ex.getMessage());
+            //Log.e(toString(), ex.getMessage());
         }
 
     }

@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.fragment;
 
+import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -7,12 +8,14 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.PlaylistSelectorAdapter;
+import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
@@ -82,12 +85,17 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
 
         adapter.setOnPlaylistClickListener((playlistName -> {
-            PlaylistFragment playlistFragment = new PlaylistFragment(playlistName);
+            PlaylistFragment fragment = new PlaylistFragment();
+            fragment.setPlaylistName(playlistName);
+
             getActivity()
                     .getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_holder, playlistFragment, PlaylistFragment.NAME)
+                    .replace(R.id.fragment_holder, fragment, PlaylistFragment.NAME)
+                    .addToBackStack(PlaylistFragment.NAME)
                     .commit();
+
+            Log.i(toString(), playlistName);
         }));
 
         adapter.setOnMoreBtnClickListener((v, playlistItem) -> {

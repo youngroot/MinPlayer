@@ -17,7 +17,6 @@ import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
 
 
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,7 +78,7 @@ public class RestClientUtil {
                     try{
                         restClient.getDiskInfo();
                         state.put(KEY_REST_CLIENT, restClient);
-                    }catch (UnauthorizedException | UnknownHostException ex){
+                    }catch (UnauthorizedException ex){
                         state.put(KEY_ERROR, ex);
                     }
                     return state;

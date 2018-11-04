@@ -84,7 +84,6 @@ public class SearchActivity extends NavUpActivityBase {
         private EditText editSearch;
         private ImageButton cancelButton;
         private SearchActivity activity;
-        private Subject<String> searchTextSubject = PublishSubject.create();
         private AudioSection audioSection;
         private DiskAudioSection diskAudioSection;
         private PlaylistItemSection playlistItemSection;

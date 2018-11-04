@@ -1,6 +1,7 @@
 package com.ivanroot.minplayer.activity;
 
 import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -22,6 +24,7 @@ import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
+import com.ivanroot.minplayer.fragment.AllTracksPlaylistFragment;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
 import com.ivanroot.minplayer.fragment.DiskFragment;
 import com.ivanroot.minplayer.fragment.PlayerFragment;
@@ -30,7 +33,9 @@ import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.fragment.VisSelectorFragment;
 import com.ivanroot.minplayer.player.PlayerService;
+import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.ivanroot.minplayer.utils.Pair;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
@@ -136,12 +141,12 @@ public class MainActivity extends NightModeResponsibleActivity
                     .findFragmentById(R.id.fragment_holder);
 
             switch (fragment.getTag()) {
+                case AllTracksPlaylistFragment.NAME:
+                    break;
+
                 case PlaylistFragment.NAME:
-                    String name = ((PlaylistFragment) fragment).getPlaylistName();
-                    if (!name.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
-                        fragmentLauncher(R.id.playlists);
-                        navigationView.setCheckedItem(R.id.playlists);
-                    }
+                    fragmentLauncher(R.id.playlists);
+                    navigationView.setCheckedItem(R.id.playlists);
                     break;
 
                 case PlaylistSelectorFragment.NAME:
@@ -250,55 +255,66 @@ public class MainActivity extends NightModeResponsibleActivity
         return true;
     }
 
-    private void fragmentLauncher(Integer itemId) {
-        Fragment fragment = null;
+    public void fragmentLauncher(Integer itemId) {
         String tag = null;
+        Pair<Fragment, Boolean> fragmentBooleanPair = new Pair<>(null, false);
+
         switch (itemId) {
 
             case R.id.all_audio:
-                fragment = new PlaylistFragment(PlaylistManager.ALL_TRACKS_PLAYLIST);
-                tag = PlaylistFragment.NAME;
+                tag = AllTracksPlaylistFragment.NAME;
+                fragmentBooleanPair = getExistingOrNewFragment(tag, AllTracksPlaylistFragment.class);
                 break;
 
             case R.id.playlists:
-                fragment = new PlaylistSelectorFragment();
                 tag = PlaylistSelectorFragment.NAME;
+                fragmentBooleanPair = getExistingOrNewFragment(tag, PlaylistSelectorFragment.class);
                 break;
+
             case R.id.disk:
-                fragment = new DiskFragment();
                 tag = DiskFragment.NAME;
+                fragmentBooleanPair = getExistingOrNewFragment(tag, DiskFragment.class);
                 break;
 
             case R.id.visualizer:
-                fragment = new VisSelectorFragment();
                 tag = VisSelectorFragment.NAME;
+                fragmentBooleanPair = getExistingOrNewFragment(tag, VisFragment.class);
                 break;
 
             case R.id.settings:
-                fragment = null;
+                fragmentBooleanPair.first = null;
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }
 
-        if (fragment != null) {
-            getFragmentManager()
+        if (fragmentBooleanPair.first != null) {
+            FragmentTransaction transaction = getFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_holder, fragment, tag)
-                    .commit();
-        }
+                    .replace(R.id.fragment_holder, fragmentBooleanPair.first, tag);
 
+            if (!fragmentBooleanPair.second)
+                transaction.addToBackStack(tag);
+
+            transaction.commit();
+        }
     }
 
     public SlidingUpPanelLayout getPanelLayout() {
         return panelLayout;
     }
 
-    @Subscribe(tags = {@Tag(ACTION_OPEN_PLAYLISTS)})
-    public void onOpenPlaylistsAction(String playlistName){
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_holder, new PlaylistFragment(playlistName))
-                .commit();
-    }
 
+    private Pair<Fragment, Boolean> getExistingOrNewFragment(@NonNull String tag, Class fragmentClass) {
+        Fragment fragment = getFragmentManager().findFragmentByTag(tag);
+
+        if (fragment != null)
+            return new Pair<>(fragment, true);
+
+        try {
+            return new Pair<>((Fragment) Class.forName(fragmentClass.getName()).newInstance(), false);
+        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return new Pair<>(null, false);
+    }
 }

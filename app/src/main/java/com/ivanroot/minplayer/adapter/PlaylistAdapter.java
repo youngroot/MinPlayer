@@ -17,12 +17,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 
 public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder> {
 
-    public PlaylistAdapter(Activity activity, String playlistName) {
-        super(activity);
-        playlistDisposable = playlistManager.getPlaylistObservable(this.activity, playlistName)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setPlaylist);
+    private Activity activity;
 
+    public PlaylistAdapter(Activity activity) {
+        this.activity = activity;
     }
 
     @Override

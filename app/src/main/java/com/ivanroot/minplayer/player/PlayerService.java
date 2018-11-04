@@ -132,6 +132,7 @@ public class PlayerService extends Service implements
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.get();
     private ArrayList<Long> clicks = new ArrayList<>();
+    private boolean foregroundStarted = false;
 
     @Override
     public void onCreate() {
@@ -152,7 +153,7 @@ public class PlayerService extends Service implements
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i("PlayerService", "onStartCommand");
         handleIncomingActions(intent);
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -869,7 +870,13 @@ public class PlayerService extends Service implements
                     .addAction(notificationAction, "play/pause", playPauseAction)
                     .addAction(R.drawable.ic_next_noti, "next", playbackAction(2));
 
-            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, notificationBuilder.build());
+            if(foregroundStarted) {
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                        .notify(NOTIFICATION_ID, notificationBuilder.build());
+            } else {
+                startForeground(NOTIFICATION_ID, notificationBuilder.build());
+                foregroundStarted = true;
+            }
         }
     }
 
