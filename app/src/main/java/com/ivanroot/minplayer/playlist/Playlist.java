@@ -65,8 +65,12 @@ public class Playlist implements Serializable, IPlaylist {
 
     @Override
     public void addAudio(Audio audio){
-
         playlist.add(audio);
+    }
+
+    @Override
+    public void addAudio(int i, Audio audio){
+        playlist.add(i, audio);
     }
 
     @Override

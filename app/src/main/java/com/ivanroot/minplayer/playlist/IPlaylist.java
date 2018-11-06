@@ -16,6 +16,8 @@ public interface IPlaylist {
 
     void addAudio(Audio audio);
 
+    void addAudio(int i, Audio audio);
+
     void deleteAudio(int audioIndex);
 
     void deleteAudio(Audio audio);

@@ -1,6 +1,5 @@
 package com.ivanroot.minplayer.adapter;
 
-import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
@@ -8,26 +7,28 @@ import android.view.ViewGroup;
 import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
 import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.BaseItemViewHolder;
+import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.ivanroot.minplayer.playlist.InsertRemoveAudioPlaylistObservableModifier;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
-import java.util.List;
 
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> extends RecyclerView.Adapter<VH>
-        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable {
+        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable,
+        InsertRemoveAudioPlaylistObservableModifier.OnAudioRemoveListener,
+        InsertRemoveAudioPlaylistObservableModifier.OnAudioInsertListener {
 
-    protected Playlist playlist;
+    protected Playlist playlist = new Playlist();
     protected Disposable playlistDisposable;
     protected OnAudioClickListener audioClickListener;
     protected PlaylistAdapter.OnNewPlaylistUpdateListener playlistListener;
     protected OnAudioMoreBtnClickListener moreBtnListener;
+    protected boolean playlistOrderChanged = false;
+    protected InsertRemoveAudioPlaylistObservableModifier modifier = new InsertRemoveAudioPlaylistObservableModifier(playlist);
 
 
     public void setAudioClickListener(OnAudioClickListener audioClickListener){
@@ -42,14 +43,22 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         this.moreBtnListener = moreBtnListener;
     }
 
-    protected void setPlaylist(Playlist playlist){
+    public void setPlaylist(Playlist playlist){
         this.playlist = playlist;
-        if(playlistListener != null) playlistListener.onNewPlaylist(playlist);
+        if(playlistListener != null)
+            playlistListener.onNewPlaylist(playlist);
+        playlistOrderChanged = false;
         notifyDataSetChanged();
     }
 
     public Playlist getPlaylist(){
-        return this.playlist;
+        return playlist;
+    }
+
+    public BasePlaylistAdapter() {
+        super();
+        modifier.setOnAudioRemoveListener(this);
+        modifier.setOnAudioInsertListener(this);
     }
 
     @Override
@@ -60,16 +69,26 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
 
     @Override
     public int getItemCount() {
-        if(playlist != null)
-            return playlist.size();
-        else return 0;
+       return playlist.size();
     }
 
     public void subscribe(@NonNull Observable<Playlist> playlistObservable){
         dispose();
         playlistDisposable = playlistObservable
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setPlaylist);
+                .doOnNext(playlist -> {
+                    if(playlistListener != null)
+                        playlistListener.onNewPlaylist(playlist);
+                })
+                .doOnNext(playlist ->{
+                    if(playlistOrderChanged){
+                        setPlaylist(playlist);
+                        modifier.setCurrentPlaylist(playlist);
+                    }
+                })
+                .filter(playlist -> !playlistOrderChanged)
+                .compose(modifier)
+                .subscribe();
     }
 
     @Override
@@ -84,8 +103,21 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         return playlist.getAudio(i).getTitle().substring(0,1);
     }
 
+    @Override
+    public void onAudioRemove(int position, Audio audio) {
+        notifyItemRemoved(position);
+    }
+
+    @Override
+    public void onAudioInsert(int position, Audio audio) {
+        notifyItemInserted(position);
+    }
+
     public interface OnNewPlaylistUpdateListener {
         void onNewPlaylist(Playlist playlist);
     }
 
+    public void notifyPlaylistOrderChanged(){
+        playlistOrderChanged = true;
+    }
 }

@@ -160,4 +160,9 @@ public class Audio implements Serializable, Comparable<Audio> {
     public int compareTo(@NonNull Audio audio) {
         return Long.compare(getSize(), audio.getSize());
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, size, localData, cloudData, md5Hash, title, album, artist, genre, albumArtPath);
+    }
 }
