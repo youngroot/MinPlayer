@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.ivanroot.minplayer.audio.Audio;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -42,7 +43,7 @@ public class InsertRemoveAudioPlaylistObservableModifier implements ObservableTr
     public ObservableSource<Playlist> apply(Observable<Playlist> upstream) {
         return upstream.doOnNext(updatedPlaylist -> {
             Set<Audio> updatedAudioSet = new HashSet<>(updatedPlaylist.getAudioList());
-            List<Audio> audioList = currentPlaylist.getAudioList();
+            List<Audio> audioList = new ArrayList<>(currentPlaylist.getAudioList());
             int delta = 0;
 
             for (int i = 0; i < audioList.size(); i++) {
