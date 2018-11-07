@@ -21,7 +21,7 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters;
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 
 public class DiskAudioSection extends AudioSection {
-    private Map<String, String> statuses = new HashMap<>();
+    private Map<Audio, String> statuses = new HashMap<>();
 
     public DiskAudioSection(Context context,
                             String tag, SectionedRecyclerViewAdapter adapter) {
@@ -29,6 +29,10 @@ public class DiskAudioSection extends AudioSection {
                 .itemResourceId(R.layout.audio_item_disk_section)
                 .headerResourceId(R.layout.audio_item_disk_section_header)
                 .build(), tag, adapter);
+    }
+
+    public DiskAudioSection(Context context, SectionParameters build, String tag, SectionedRecyclerViewAdapter adapter) {
+        super(context, build, tag, adapter);
     }
 
     @Override
@@ -41,8 +45,8 @@ public class DiskAudioSection extends AudioSection {
         Audio audio = filteredData.get(position);
         String status = AudioStatus.STATUS_AUDIO_ONLY_ONLINE;
 
-        if (statuses.get(audio.getMd5Hash()) != null)
-            status = statuses.get(audio.getMd5Hash());
+        if (statuses.get(audio) != null)
+            status = statuses.get(audio);
 
         DiskAudioViewHolder diskAudioViewHolder = (DiskAudioViewHolder)holder;
         diskAudioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(audio,
@@ -58,13 +62,13 @@ public class DiskAudioSection extends AudioSection {
     }
 
     public void setStatus(Audio taskAudio, String status) {
-        String md5Hash = taskAudio.getMd5Hash();
-        statuses.put(md5Hash, status);
+        statuses.put(taskAudio, status);
     }
 
     @Override
-    public void setData(@NonNull List<Audio> data) {
-        super.setData(data);
-        statuses.clear();
+    public void onItemRemoved(int position, Audio audio) {
+        super.onItemRemoved(position, audio);
+        statuses.remove(audio);
     }
+
 }

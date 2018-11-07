@@ -43,15 +43,16 @@ public class InsertRemoveAudioPlaylistObservableModifier implements ObservableTr
     public ObservableSource<Playlist> apply(Observable<Playlist> upstream) {
         return upstream.doOnNext(updatedPlaylist -> {
             Set<Audio> updatedAudioSet = new HashSet<>(updatedPlaylist.getAudioList());
-            List<Audio> audioList = new ArrayList<>(currentPlaylist.getAudioList());
+            List<Audio> audioList = currentPlaylist.getAudioList();
+
             int delta = 0;
 
             for (int i = 0; i < audioList.size(); i++) {
                 if (!updatedAudioSet.contains(audioList.get(i))) {
-                    currentPlaylist.deleteAudio(i - delta);
+                    currentPlaylist.deleteAudio(i);
                     if (onAudioRemoveListener != null)
-                        onAudioRemoveListener.onAudioRemove(i - delta, audioList.get(i));
-                    delta++;
+                        onAudioRemoveListener.onAudioRemove(i, audioList.get(i));
+                    i -= ++delta;
                 }
             }
 

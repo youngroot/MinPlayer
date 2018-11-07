@@ -45,12 +45,6 @@ public class PlaylistItemSection extends BaseItemSection<PlaylistItem> {
         return item.getName() != null && item.getName().toLowerCase().startsWith(query);
     }
 
-    @Override
-    public boolean isLowerThan(PlaylistItem item1, PlaylistItem item2) {
-        int comp = item1.getName().compareTo(item2.getName());
-        return comp < 0;
-    }
-
     public void setOnPlaylistItemMoreBtnClickListener(OnPlaylistItemMoreBtnClickListener onPlaylistItemMoreBtnClickListener) {
         this.onPlaylistItemMoreBtnClickListener = onPlaylistItemMoreBtnClickListener;
     }

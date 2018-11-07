@@ -9,18 +9,17 @@ import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.BaseItemViewHolder;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.ivanroot.minplayer.playlist.InsertRemoveAudioPlaylistObservableModifier;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
 public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> extends RecyclerView.Adapter<VH>
-        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable,
-        InsertRemoveAudioPlaylistObservableModifier.OnAudioRemoveListener,
-        InsertRemoveAudioPlaylistObservableModifier.OnAudioInsertListener {
+        implements FastScrollRecyclerView.SectionedAdapter,
+        com.ivanroot.minplayer.adapter.Disposable,
+        ItemRemoveInsertListObservableTransformer.OnItemRemovedListener<Audio>,
+        ItemRemoveInsertListObservableTransformer.OnItemInsertedListener<Audio> {
 
     protected Playlist playlist = new Playlist();
     protected Disposable playlistDisposable;
@@ -28,8 +27,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
     protected PlaylistAdapter.OnNewPlaylistUpdateListener playlistListener;
     protected OnAudioMoreBtnClickListener moreBtnListener;
     protected boolean playlistOrderChanged = false;
-    protected InsertRemoveAudioPlaylistObservableModifier modifier = new InsertRemoveAudioPlaylistObservableModifier(playlist);
-
+    protected ItemRemoveInsertListObservableTransformer<Audio> transformer;
 
     public void setAudioClickListener(OnAudioClickListener audioClickListener){
         this.audioClickListener = audioClickListener;
@@ -45,6 +43,7 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
 
     public void setPlaylist(Playlist playlist){
         this.playlist = playlist;
+        transformer.setCurrentList(playlist.getAudioList());
         if(playlistListener != null)
             playlistListener.onNewPlaylist(playlist);
         playlistOrderChanged = false;
@@ -57,8 +56,9 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
 
     public BasePlaylistAdapter() {
         super();
-        modifier.setOnAudioRemoveListener(this);
-        modifier.setOnAudioInsertListener(this);
+        transformer = new ItemRemoveInsertListObservableTransformer<>(playlist.getAudioList());
+        transformer.setOnItemRemovedListener(this);
+        transformer.setOnItemInsertedListener(this);
     }
 
     @Override
@@ -83,11 +83,11 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
                 .doOnNext(playlist ->{
                     if(playlistOrderChanged){
                         setPlaylist(playlist);
-                        modifier.setCurrentPlaylist(playlist);
                     }
                 })
                 .filter(playlist -> !playlistOrderChanged)
-                .compose(modifier)
+                .map(Playlist::getAudioList)
+                .compose(transformer)
                 .subscribe();
     }
 
@@ -103,18 +103,18 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         return playlist.getAudio(i).getTitle().substring(0,1);
     }
 
+    public interface OnNewPlaylistUpdateListener {
+        void onNewPlaylist(Playlist playlist);
+    }
+
     @Override
-    public void onAudioRemove(int position, Audio audio) {
+    public void onItemRemoved(int position, Audio audio) {
         notifyItemRemoved(position);
     }
 
     @Override
-    public void onAudioInsert(int position, Audio audio) {
+    public void onItemInserted(int position, Audio audio) {
         notifyItemInserted(position);
-    }
-
-    public interface OnNewPlaylistUpdateListener {
-        void onNewPlaylist(Playlist playlist);
     }
 
     public void notifyPlaylistOrderChanged(){

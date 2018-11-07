@@ -12,11 +12,8 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 
-import java.util.Random;
-
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters;
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 
 
 public class AudioSection extends BaseItemSection<Audio> {
@@ -63,12 +60,6 @@ public class AudioSection extends BaseItemSection<Audio> {
                 audio.getAlbum() != null && audio.getAlbum().toLowerCase().startsWith(query)||
                 audio.getArtist() != null && audio.getArtist().toLowerCase().startsWith(query);
 
-    }
-
-    @Override
-    public boolean isLowerThan(Audio item1, Audio item2) {
-        int comp = item1.getTitle().compareTo(item2.getTitle());
-        return comp < 0;
     }
 
     public void setOnAudioMoreBtnClickListener(OnAudioMoreBtnClickListener onAudioMoreBtnClickListener) {
