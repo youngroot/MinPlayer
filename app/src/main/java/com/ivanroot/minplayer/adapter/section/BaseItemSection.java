@@ -15,6 +15,7 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapt
 import io.github.luizgrp.sectionedrecyclerviewadapter.StatelessSection;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -22,18 +23,16 @@ import io.reactivex.schedulers.Schedulers;
 public abstract class BaseItemSection<T> extends StatelessSection
         implements Filterable, com.ivanroot.minplayer.adapter.Disposable,
         ItemRemoveInsertListObservableTransformer.OnItemRemovedListener<T>,
-        ItemRemoveInsertListObservableTransformer.OnItemInsertedListener<T> {
+        ItemRemoveInsertListObservableTransformer.OnItemInsertedListener<T>,
+        ObservableOnSubscribe<String> {
 
     protected final String TAG;
     protected String query;
     protected Context context;
     protected Disposable disposable;
     protected SectionedRecyclerViewAdapter adapter;
-
     protected List<T> filteredData = new ArrayList<>();
-    protected Observable<String> queryObservable;
     protected ObservableEmitter<String> queryEmitter;
-
     protected ItemRemoveInsertListObservableTransformer<T> transformer;
 
     public BaseItemSection(Context context, SectionParameters sectionParameters, String tag, SectionedRecyclerViewAdapter adapter) {
@@ -42,14 +41,6 @@ public abstract class BaseItemSection<T> extends StatelessSection
         this.TAG = tag;
         this.adapter = adapter;
         this.setVisible(false);
-
-        queryObservable = Observable.create(emitter -> {
-            queryEmitter = emitter;
-
-            if (query != null)
-                emitter.onNext(query);
-
-        });
 
         transformer = new ItemRemoveInsertListObservableTransformer<>(filteredData);
         transformer.setOnItemRemovedListener(this);
@@ -71,9 +62,18 @@ public abstract class BaseItemSection<T> extends StatelessSection
         }
     }
 
+    @Override
+    public void subscribe(ObservableEmitter<String> emitter) {
+        queryEmitter = emitter;
+
+        if (query != null)
+            emitter.onNext(query);
+
+    }
+
     public void subscribe(@NonNull Observable<List<T>> itemsSourceObservable) {
         dispose();
-        disposable = Observable.combineLatest(itemsSourceObservable, queryObservable, (updatedData, query) -> {
+        disposable = Observable.combineLatest(itemsSourceObservable, Observable.create(this), (updatedData, query) -> {
             List<T> updatedFilteredData = new ArrayList<>();
 
             for (int i = 0; i < updatedData.size(); i++)
@@ -83,7 +83,6 @@ public abstract class BaseItemSection<T> extends StatelessSection
             return updatedFilteredData;
         }).observeOn(AndroidSchedulers.mainThread())
                 .compose(transformer)
-                .observeOn(Schedulers.newThread())
                 .subscribe(filteredData -> {}, throwable -> Log.e(toString(), throwable.toString()));
 
     }
@@ -121,4 +120,5 @@ public abstract class BaseItemSection<T> extends StatelessSection
 
         adapter.notifyItemInsertedInSection(TAG, position);
     }
+
 }
