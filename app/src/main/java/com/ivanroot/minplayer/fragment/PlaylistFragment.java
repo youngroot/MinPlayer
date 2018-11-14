@@ -11,10 +11,16 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,6 +34,7 @@ import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.SearchActivity;
 import com.ivanroot.minplayer.adapter.PlaylistAdapter;
+import com.ivanroot.minplayer.adapter.SimpleItemTouchHelperCallback;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
@@ -65,14 +72,21 @@ public class PlaylistFragment extends NavFragmentBase {
     private CardView playlistHeaderCard;
     private TextView playlistNameView;
     private TextView playlistSizeView;
+    private EditText playlistEditedNameView;
     private ImageButton searchButton;
+    private ImageButton moreButton;
+    private Button playlistModifyCancelButton;
+    private Button playlistModifyOkButton;
     private Bus rxBus = RxBus.get();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
     private LinearLayoutManager layoutManager;
     private RecyclerView.SmoothScroller smoothScroller;
+    private boolean playlistModifyModeEnabled = false;
+    private ItemTouchHelper itemTouchHelper;
 
-    public PlaylistFragment() { }
+    public PlaylistFragment() {
+    }
 
 
     @Override
@@ -92,7 +106,7 @@ public class PlaylistFragment extends NavFragmentBase {
         rxBus.register(this);
     }
 
-    public void setPlaylistName(String playlistName){
+    public void setPlaylistName(String playlistName) {
         this.playlistName = playlistName;
     }
 
@@ -115,6 +129,7 @@ public class PlaylistFragment extends NavFragmentBase {
             //playlistHeaderCard.getBackground().setAlpha(100);
             playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
             playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
+            playlistEditedNameView = (EditText) view.findViewById(R.id.playlist_name_edit);
             playlistImages = new ImageView[]{
                     (ImageView) view.findViewById(R.id.sub_playlist_image_1),
                     (ImageView) view.findViewById(R.id.sub_playlist_image_2),
@@ -122,10 +137,11 @@ public class PlaylistFragment extends NavFragmentBase {
                     (ImageView) view.findViewById(R.id.sub_playlist_image_4)
 
             };
-
+            moreButton = (ImageButton) view.findViewById(R.id.playlist_more_btn);
+            playlistModifyCancelButton = (Button) view.findViewById(R.id.ok_btn);
+            playlistModifyOkButton = (Button) view.findViewById(R.id.cancel_btn);
         } else {
-            searchButton = (ImageButton)view.findViewById(R.id.search_button);
-            searchButton.setOnClickListener(v -> startActivity(new Intent(activity, SearchActivity.class)));
+            searchButton = (ImageButton) view.findViewById(R.id.search_button);
             searchButton.setVisibility(View.VISIBLE);
         }
 
@@ -145,6 +161,36 @@ public class PlaylistFragment extends NavFragmentBase {
                 }
                 appBarLayout.setExpanded(false, true);
             });
+
+            moreButton.setOnClickListener(v -> {
+                View infoHolder = view.findViewById(R.id.info_layout);
+                PopupMenu popupMenu = new PopupMenu(activity, infoHolder);
+                popupMenu.getMenu().add(getResources().getString(R.string.modify));
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    setPlaylistModifyModeEnabled(true);
+                    return true;
+                });
+                popupMenu.show();
+            });
+
+            adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
+                playlistManager.writePlaylist(activity, modifiedPlaylist);
+                String editedName = playlistEditedNameView.getText().toString();
+
+                if (!editedName.isEmpty())
+                    playlistManager.renamePlaylist(activity, modifiedPlaylist.getName(), editedName);
+            });
+
+            playlistModifyCancelButton.setOnClickListener(v -> setPlaylistModifyModeEnabled(false));
+
+            playlistModifyOkButton.setOnClickListener(v -> {
+                adapter.saveModifiedPlaylist();
+                setPlaylistModifyModeEnabled(false);
+            });
+
+
+        } else {
+            searchButton.setOnClickListener(v -> startActivity(new Intent(activity, SearchActivity.class)));
         }
 
         adapter.setOnMoreBtnClickListener((v, playlist, i) -> {
@@ -175,13 +221,13 @@ public class PlaylistFragment extends NavFragmentBase {
         adapter.setAudioClickListener((audio, playlistName) -> {
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
-
         });
 
         adapter.setNewPlaylistUpdateListener(playlist -> {
             setImages(playlist);
             setText(playlist);
         });
+
     }
 
     private View getView(LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -199,8 +245,9 @@ public class PlaylistFragment extends NavFragmentBase {
     private void setupRecycler(View view) {
 
         layoutManager = new LinearLayoutManager(getActivity());
-        smoothScroller = new LinearSmoothScroller(activity){
-            @Override protected int getVerticalSnapPreference() {
+        smoothScroller = new LinearSmoothScroller(activity) {
+            @Override
+            protected int getVerticalSnapPreference() {
                 return LinearSmoothScroller.SNAP_TO_START;
             }
         };
@@ -345,7 +392,6 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setText(Playlist playlist) {
         try {
-
             playlistNameView.setText(playlist.getName());
             String playlistSize = playlist.size() + " " + getActivity().getResources().getString(R.string.songs);
             playlistSizeView.setText(playlistSize);
@@ -365,13 +411,50 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_AUDIO_UPLOADED)})
-    public void showAudioUploadedToast(Audio taskAudio){
+    public void showAudioUploadedToast(Audio taskAudio) {
         Toast.makeText(activity, getString(R.string.upload_completed) + ": " + taskAudio.getTitle(), Toast.LENGTH_SHORT).show();
     }
 
     @Subscribe(tags = {@Tag(AudioStatus.STATUS_ALL_AUDIOS_UPLOADED)})
-    public void showAllAudiosUploadedToast(Object object){
+    public void showAllAudiosUploadedToast(Object object) {
         Toast.makeText(activity, getString(R.string.all_tracks_uploaded), Toast.LENGTH_SHORT).show();
     }
 
+    public void setPlaylistModifyModeEnabled(boolean playlistModifyModeEnabled) {
+        this.playlistModifyModeEnabled = playlistModifyModeEnabled;
+        adapter.setPlaylistModifyModeEnabled(playlistModifyModeEnabled);
+
+        if (playlistModifyModeEnabled) {
+            if (itemTouchHelper == null) {
+                ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(adapter);
+                itemTouchHelper = new ItemTouchHelper(callback);
+                adapter.setItemTouchHelper(itemTouchHelper);
+            }
+
+            playlistNameView.setVisibility(View.INVISIBLE);
+            playlistSizeView.setVisibility(View.INVISIBLE);
+            moreButton.setVisibility(View.INVISIBLE);
+            playFab.setVisibility(View.INVISIBLE);
+
+            playlistEditedNameView.setVisibility(View.VISIBLE);
+            playlistModifyCancelButton.setVisibility(View.VISIBLE);
+            playlistModifyOkButton.setVisibility(View.VISIBLE);
+
+            playlistEditedNameView.setText(adapter.getPlaylist().getName());
+
+            itemTouchHelper.attachToRecyclerView(audioRecyclerView);
+        } else {
+            playlistEditedNameView.setVisibility(View.INVISIBLE);
+            playlistModifyCancelButton.setVisibility(View.INVISIBLE);
+            playlistModifyOkButton.setVisibility(View.INVISIBLE);
+
+            playlistNameView.setVisibility(View.VISIBLE);
+            playlistSizeView.setVisibility(View.VISIBLE);
+            moreButton.setVisibility(View.VISIBLE);
+            playFab.setVisibility(View.VISIBLE);
+
+            if (itemTouchHelper != null)
+                itemTouchHelper.attachToRecyclerView(null);
+        }
+    }
 }

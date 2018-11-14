@@ -68,4 +68,5 @@
     <string name="frame_update_ms">Frame update time in ms.</string>
     <string name="label_search">Search…</string>
     <string name="tracks">Tracks</string>
+    <string name="modify">Modify</string>
 </resources>

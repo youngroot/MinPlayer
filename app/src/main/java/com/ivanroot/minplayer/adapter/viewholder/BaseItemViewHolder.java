@@ -1,5 +1,6 @@
 package com.ivanroot.minplayer.adapter.viewholder;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -17,6 +18,14 @@ public abstract class BaseItemViewHolder<T> extends RecyclerView.ViewHolder {
 
     public void setMoreBtnOnClickListener(View.OnClickListener onClickListener){
         moreBtn.setOnClickListener(onClickListener);
+    }
+
+    public void setMoreBtnOnTouchListener(View.OnTouchListener onTouchListener){
+        moreBtn.setOnTouchListener(onTouchListener);
+    }
+
+    public void setMoreBtnIconResource(int resId){
+        moreBtn.setImageResource(resId);
     }
 
 }

@@ -36,6 +36,21 @@ public class Playlist implements Serializable, IPlaylist {
         playlist = new ArrayList<>();
     }
 
+    public Playlist(Playlist other) {
+        this.id = other.id;
+        this.name = other.name;
+        this.dateAdded = other.dateAdded;
+        this.dateModified = other.dateModified;
+        this.imagePath = other.imagePath;
+        this.isShuffled = other.isShuffled;
+        this.audioIndex = other.audioIndex;
+        this.currAudio = other.currAudio;
+        this.playlist = other.playlist;
+        this.non_shuffled_playlist = other.non_shuffled_playlist;
+        this.shuffled_playlist = other.shuffled_playlist;
+        this.repeatMode = other.repeatMode;
+    }
+
     public long getId(){
         return id;
     }
