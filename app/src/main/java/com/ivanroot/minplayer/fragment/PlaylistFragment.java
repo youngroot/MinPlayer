@@ -2,7 +2,6 @@ package com.ivanroot.minplayer.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -12,11 +11,8 @@ import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -46,6 +42,9 @@ import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.squareup.picasso.Picasso;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
@@ -84,6 +83,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private RecyclerView.SmoothScroller smoothScroller;
     private boolean playlistModifyModeEnabled = false;
     private ItemTouchHelper itemTouchHelper;
+    private Observable<Playlist> playlistObservable;
 
     public PlaylistFragment() {
     }
@@ -104,6 +104,17 @@ public class PlaylistFragment extends NavFragmentBase {
 
         adapter = new PlaylistAdapter(getActivity());
         rxBus.register(this);
+
+        setupPlaylistObservable();
+    }
+
+    private void setupPlaylistObservable() {
+        playlistObservable = playlistManager.getPlaylistObservable(getActivity(), playlistName)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(playlist -> {
+                    setImages(playlist);
+                    setText(playlist);
+                });
     }
 
     public void setPlaylistName(String playlistName) {
@@ -137,9 +148,10 @@ public class PlaylistFragment extends NavFragmentBase {
                     (ImageView) view.findViewById(R.id.sub_playlist_image_4)
 
             };
+
             moreButton = (ImageButton) view.findViewById(R.id.playlist_more_btn);
-            playlistModifyCancelButton = (Button) view.findViewById(R.id.ok_btn);
-            playlistModifyOkButton = (Button) view.findViewById(R.id.cancel_btn);
+            playlistModifyCancelButton = (Button) view.findViewById(R.id.cancel_btn);
+            playlistModifyOkButton = (Button) view.findViewById(R.id.ok_btn);
         } else {
             searchButton = (ImageButton) view.findViewById(R.id.search_button);
             searchButton.setVisibility(View.VISIBLE);
@@ -176,14 +188,22 @@ public class PlaylistFragment extends NavFragmentBase {
             adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
                 playlistManager.writePlaylist(activity, modifiedPlaylist);
                 String editedName = playlistEditedNameView.getText().toString();
+                Log.i(toString(), "OnSavePlaylist");
 
-                if (!editedName.isEmpty())
-                    playlistManager.renamePlaylist(activity, modifiedPlaylist.getName(), editedName);
+                if (!editedName.isEmpty() && playlistName != null && !playlistName.equals(editedName)) {
+                    playlistManager.renamePlaylist(activity, playlistName, editedName);
+                    playlistName = editedName;
+
+                    setupPlaylistObservable();
+                    adapter.subscribe(playlistObservable);
+                    rxBus.post(ACTION_SET_PLAYLIST, playlistName);
+                }
             });
 
             playlistModifyCancelButton.setOnClickListener(v -> setPlaylistModifyModeEnabled(false));
 
             playlistModifyOkButton.setOnClickListener(v -> {
+                Log.i(toString(), "OnSaveButtonClick");
                 adapter.saveModifiedPlaylist();
                 setPlaylistModifyModeEnabled(false);
             });
@@ -223,10 +243,10 @@ public class PlaylistFragment extends NavFragmentBase {
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
 
-        adapter.setNewPlaylistUpdateListener(playlist -> {
-            setImages(playlist);
-            setText(playlist);
-        });
+//        adapter.setNewPlaylistUpdateListener(playlist -> {
+//            setImages(playlist);
+//            setText(playlist);
+//        });
 
     }
 
@@ -338,7 +358,7 @@ public class PlaylistFragment extends NavFragmentBase {
     @Override
     public void onResume() {
         super.onResume();
-        adapter.subscribe(playlistManager.getPlaylistObservable(activity, playlistName));
+        adapter.subscribe(playlistObservable);
     }
 
     @Override
@@ -372,6 +392,9 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setImages(Playlist playlist) {
         try {
+            for(int i = 0; i < playlistImages.length; i++)
+                playlistImages[i].setImageResource(0);
+
             int i = 0;
             for (Audio audio : playlist.getAudioList()) {
                 if (i == 4) break;
@@ -421,6 +444,7 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     public void setPlaylistModifyModeEnabled(boolean playlistModifyModeEnabled) {
+        Log.i(toString(), "setPlaylistModifyModeEnabled " + playlistModifyModeEnabled);
         this.playlistModifyModeEnabled = playlistModifyModeEnabled;
         adapter.setPlaylistModifyModeEnabled(playlistModifyModeEnabled);
 

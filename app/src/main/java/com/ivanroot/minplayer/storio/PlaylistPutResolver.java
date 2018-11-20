@@ -30,15 +30,15 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
 
             if (playlistId == -1) {
                 ContentValues value = new ContentValues();
-                value.put(MediaStore.Audio.Playlists.NAME,playlist.getName());
+                value.put(MediaStore.Audio.Playlists.NAME, playlist.getName());
 //                value.put(MediaStore.Audio.Playlists.DATE_ADDED,playlist.getDateAdded().getTime());
                 playlistId = Long.parseLong(contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, value).getLastPathSegment());
                 newPlaylist = true;
             }
 
-            Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
+            Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
 
-            if(!newPlaylist) {
+            if (!newPlaylist) {
                 contentResolver.delete(membersUri, null, null);
             }
 
@@ -48,17 +48,16 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
 
             ContentValues[] values = new ContentValues[playlist.size()];
 
-            for (int i = 0; i < playlist.size(); i++){
+            for (int i = 0; i < playlist.size(); i++) {
                 values[i] = new ContentValues(2);
-                values[i].put(MediaStore.Audio.Playlists.Members.AUDIO_ID,playlist.getAudio(i).getId());
-                values[i].put(MediaStore.Audio.Playlists.Members.PLAY_ORDER,i);
+                values[i].put(MediaStore.Audio.Playlists.Members.AUDIO_ID, playlist.getAudio(i).getId());
+                values[i].put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, i);
             }
 
-            contentResolver.bulkInsert(membersUri,values);
-        }
-        catch (Exception | Error e){
+            contentResolver.bulkInsert(membersUri, values);
+        } catch (Exception | Error e) {
             e.printStackTrace();
-            Log.e(toString(),e.getMessage());
+            Log.e(toString(), e.getMessage());
         }
         return null;
     }

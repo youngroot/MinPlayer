@@ -83,8 +83,9 @@ public class PlaylistManager {
     }
 
     public synchronized void writePlaylist(Context context, Playlist playlist) {
-
         if (playlist == null) return;
+
+        Log.i(toString(), "writePlaylist " + playlist.getName() + " size: " + playlist.size());
 
         if (Objects.equals(playlist.getName(), ALL_TRACKS_PLAYLIST) || Objects.equals(playlist.getName(), DISK_ALL_TRACKS_PLAYLIST))
             //playlist.setAudioList(new ArrayList<>());
@@ -215,7 +216,8 @@ public class PlaylistManager {
                                 audio.setMd5Hash(res.getMd5());
                                 audioList.add(audio);
                             }
-                        }catch (UnauthorizedException ex){}
+                        } catch (UnauthorizedException ex) {
+                        }
                     }
                     return audioList;
                 }).subscribeOn(Schedulers.io());
@@ -223,6 +225,31 @@ public class PlaylistManager {
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) {
         //TODO: Implement playlist renaming
+        Cursor cursor = StorIOContentResolverFactory.get(context).get()
+                .cursor()
+                .withQuery(Query.builder()
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
+                        .whereArgs(oldName).build())
+                .prepare()
+                .executeAsBlocking();
+        try {
+            cursor.moveToFirst();
+            long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+
+            ContentResolver contentResolver = StorIOContentResolverFactory
+                    .get(context)
+                    .lowLevel()
+                    .contentResolver();
+
+            ContentValues value = new ContentValues(1);
+            value.put(MediaStore.Audio.Playlists.NAME, newName);
+            contentResolver.update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, value, MediaStore.Audio.Playlists._ID + "=" + playlistId, null);
+
+        }catch (NullPointerException ex){
+            ex.printStackTrace();
+            Log.e(toString(), ex.toString());
+        }
     }
 
 

@@ -3,6 +3,7 @@ package com.ivanroot.minplayer.adapter;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,8 +45,6 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
     @Override
     public void onBindViewHolder(AudioViewHolder audioViewHolder, int i) {
         audioViewHolder.representItem(activity, playlist.getAudio(i));
-        audioViewHolder.itemView
-                .setOnClickListener(v -> audioClickListener.onAudioClick(playlist.getAudio(i), playlist.getName()));
 
         if (playlistModifyModeEnabled) {
             if (itemTouchHelper != null)
@@ -57,25 +56,32 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
                         return false;
                     }
                 });
+
+            audioViewHolder.itemView.setOnClickListener(null);
+            audioViewHolder.setMoreBtnOnClickListener(null);
             audioViewHolder.setMoreBtnIconResource(R.drawable.ic_drag);
         } else {
+            audioViewHolder.setMoreBtnOnTouchListener(null);
+            audioViewHolder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(playlist.getAudio(i), playlist.getName()));
+            audioViewHolder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, i));
             audioViewHolder.setMoreBtnIconResource(R.drawable.ic_more_vert);
-            audioViewHolder
-                    .setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, i));
         }
     }
 
     public void setPlaylistModifyModeEnabled(boolean playlistModifyModeEnabled) {
+        Log.i(toString(), "setPlaylistModifyModeEnabled " + playlistModifyModeEnabled);
         this.playlistModifyModeEnabled = playlistModifyModeEnabled;
 
         if (playlistModifyModeEnabled) {
             Playlist changedPlaylist = new Playlist(playlist);
             originalPlaylist = playlist;
             playlist = changedPlaylist;
+            transformer.setCurrentList(playlist.getAudioList());
         } else {
             playlist = originalPlaylist;
         }
 
+        transformer.setCurrentList(playlist.getAudioList());
         notifyDataSetChanged();
     }
 
@@ -106,6 +112,7 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
     }
 
     public void saveModifiedPlaylist() {
+        Log.i(toString(), "saveModifiedPlaylist");
         if (playlistModifyModeEnabled) {
             originalPlaylist = playlist;
 

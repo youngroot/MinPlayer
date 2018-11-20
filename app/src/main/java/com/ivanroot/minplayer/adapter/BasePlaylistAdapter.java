@@ -77,6 +77,11 @@ public abstract class BasePlaylistAdapter<T, VH extends BaseItemViewHolder<T>> e
         playlistDisposable = playlistObservable
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(playlist -> {
+                    this.playlist.setId(playlist.getId());
+                    this.playlist.setName(playlist.getName());
+                    this.playlist.setImagePath(playlist.getImagePath());
+                })
+                .doOnNext(playlist -> {
                     if(playlistListener != null)
                         playlistListener.onNewPlaylist(playlist);
                 })
