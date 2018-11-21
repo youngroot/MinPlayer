@@ -18,10 +18,12 @@
         android:scaleType="fitXY"
         app:srcCompat="@drawable/disk_audio_file" />
     <FrameLayout
-        android:layout_width="260dp"
+        android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_toStartOf="@id/more_holder"
         android:layout_toEndOf="@id/album_art">
         <RelativeLayout
             android:id="@+id/big_info_text_holder"
@@ -71,6 +73,7 @@
 
 
     <FrameLayout
+        android:id="@+id/more_holder"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_alignParentEnd="true"

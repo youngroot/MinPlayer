@@ -128,14 +128,14 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         setupRestClient();
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         restPrefDisposable.dispose();
         adapter.dispose();
     }

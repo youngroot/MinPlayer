@@ -35,9 +35,11 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.disk.service.AudioUploadService;
+import com.ivanroot.minplayer.exceptions.PlaylistAlreadyExistsException;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
+import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -46,6 +48,7 @@ import com.squareup.picasso.Picasso;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
+import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
 
@@ -72,10 +75,12 @@ public class PlaylistFragment extends NavFragmentBase {
     private TextView playlistNameView;
     private TextView playlistSizeView;
     private EditText playlistEditedNameView;
+    private View playlistEditedNameViewHolder;
     private ImageButton searchButton;
     private ImageButton moreButton;
-    private Button playlistModifyCancelButton;
-    private Button playlistModifyOkButton;
+    private ImageButton playlistModifyButton;
+    private ImageButton playlistModifyCancelButton;
+    private ImageButton playlistModifyOkButton;
     private Bus rxBus = RxBus.get();
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
@@ -141,6 +146,8 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
             playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
             playlistEditedNameView = (EditText) view.findViewById(R.id.playlist_name_edit);
+            playlistEditedNameViewHolder = view.findViewById(R.id.playlist_name_edit_holder);
+
             playlistImages = new ImageView[]{
                     (ImageView) view.findViewById(R.id.sub_playlist_image_1),
                     (ImageView) view.findViewById(R.id.sub_playlist_image_2),
@@ -150,8 +157,9 @@ public class PlaylistFragment extends NavFragmentBase {
             };
 
             moreButton = (ImageButton) view.findViewById(R.id.playlist_more_btn);
-            playlistModifyCancelButton = (Button) view.findViewById(R.id.cancel_btn);
-            playlistModifyOkButton = (Button) view.findViewById(R.id.ok_btn);
+            playlistModifyButton = (ImageButton)view.findViewById(R.id.playlist_modify_btn);
+            playlistModifyCancelButton = (ImageButton) view.findViewById(R.id.cancel_btn);
+            playlistModifyOkButton = (ImageButton) view.findViewById(R.id.ok_btn);
         } else {
             searchButton = (ImageButton) view.findViewById(R.id.search_button);
             searchButton.setVisibility(View.VISIBLE);
@@ -185,29 +193,44 @@ public class PlaylistFragment extends NavFragmentBase {
                 popupMenu.show();
             });
 
-            adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
-                playlistManager.writePlaylist(activity, modifiedPlaylist);
-                String editedName = playlistEditedNameView.getText().toString();
-                Log.i(toString(), "OnSavePlaylist");
-
-                if (!editedName.isEmpty() && playlistName != null && !playlistName.equals(editedName)) {
-                    playlistManager.renamePlaylist(activity, playlistName, editedName);
-                    playlistName = editedName;
-
-                    setupPlaylistObservable();
-                    adapter.subscribe(playlistObservable);
-                    rxBus.post(ACTION_SET_PLAYLIST, playlistName);
-                }
-            });
+            playlistModifyButton.setOnClickListener(v -> setPlaylistModifyModeEnabled(true));
 
             playlistModifyCancelButton.setOnClickListener(v -> setPlaylistModifyModeEnabled(false));
 
             playlistModifyOkButton.setOnClickListener(v -> {
                 Log.i(toString(), "OnSaveButtonClick");
-                adapter.saveModifiedPlaylist();
-                setPlaylistModifyModeEnabled(false);
+                String editedName = playlistEditedNameView.getText().toString();
+
+                if(editedName.isEmpty()){
+                    Toast.makeText(activity, getResources().getString(R.string.playlist_name_cannot_be_empty), Toast.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+
+                if (playlistName != null && !playlistName.equals(editedName)) {
+                    try {
+                        playlistManager.renamePlaylist(activity, playlistName, editedName);
+                        rxBus.post(ACTION_ON_PLAYLIST_NAME_CHANGED, new Pair<>(playlistName, editedName));
+
+                        playlistName = editedName;
+
+                        setupPlaylistObservable();
+                        adapter.saveModifiedPlaylist();
+
+                    } catch (PlaylistAlreadyExistsException ex){
+                        Toast.makeText(activity, getResources().getString(R.string.playlist_already_exists), Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                } else {
+                    adapter.saveModifiedPlaylist();
+                }
             });
 
+            adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
+                playlistManager.writePlaylist(activity, modifiedPlaylist);
+                adapter.subscribe(playlistObservable);
+                setPlaylistModifyModeEnabled(false);
+            });
 
         } else {
             searchButton.setOnClickListener(v -> startActivity(new Intent(activity, SearchActivity.class)));
@@ -356,8 +379,8 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         adapter.subscribe(playlistObservable);
     }
 
@@ -374,8 +397,8 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         adapter.dispose();
     }
 
@@ -392,8 +415,8 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setImages(Playlist playlist) {
         try {
-            for(int i = 0; i < playlistImages.length; i++)
-                playlistImages[i].setImageResource(0);
+            for (ImageView playlistImage : playlistImages)
+                playlistImage.setImageResource(0);
 
             int i = 0;
             for (Audio audio : playlist.getAudioList()) {
@@ -457,10 +480,11 @@ public class PlaylistFragment extends NavFragmentBase {
 
             playlistNameView.setVisibility(View.INVISIBLE);
             playlistSizeView.setVisibility(View.INVISIBLE);
-            moreButton.setVisibility(View.INVISIBLE);
+            //moreButton.setVisibility(View.INVISIBLE);
+            playlistModifyButton.setVisibility(View.INVISIBLE);
             playFab.setVisibility(View.INVISIBLE);
 
-            playlistEditedNameView.setVisibility(View.VISIBLE);
+            playlistEditedNameViewHolder.setVisibility(View.VISIBLE);
             playlistModifyCancelButton.setVisibility(View.VISIBLE);
             playlistModifyOkButton.setVisibility(View.VISIBLE);
 
@@ -468,13 +492,14 @@ public class PlaylistFragment extends NavFragmentBase {
 
             itemTouchHelper.attachToRecyclerView(audioRecyclerView);
         } else {
-            playlistEditedNameView.setVisibility(View.INVISIBLE);
+            playlistEditedNameViewHolder.setVisibility(View.INVISIBLE);
             playlistModifyCancelButton.setVisibility(View.INVISIBLE);
             playlistModifyOkButton.setVisibility(View.INVISIBLE);
 
             playlistNameView.setVisibility(View.VISIBLE);
             playlistSizeView.setVisibility(View.VISIBLE);
-            moreButton.setVisibility(View.VISIBLE);
+            //moreButton.setVisibility(View.VISIBLE);
+            playlistModifyButton.setVisibility(View.VISIBLE);
             playFab.setVisibility(View.VISIBLE);
 
             if (itemTouchHelper != null)

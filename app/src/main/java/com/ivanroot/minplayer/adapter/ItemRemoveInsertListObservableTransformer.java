@@ -18,6 +18,7 @@ public class ItemRemoveInsertListObservableTransformer<T> implements ObservableT
     private List<T> currentList;
     private OnItemRemovedListener<T> onItemRemovedListener;
     private OnItemInsertedListener<T> onItemInsertedListener;
+    private boolean paused = false;
 
     public ItemRemoveInsertListObservableTransformer(@NonNull List<T> currentList) {
         this.currentList = currentList;
@@ -37,7 +38,9 @@ public class ItemRemoveInsertListObservableTransformer<T> implements ObservableT
 
     @Override
     public ObservableSource<List<T>> apply(Observable<List<T>> upstream) {
-        return upstream.doOnNext(updatedList -> {
+        return upstream
+                .filter(updatedList -> !paused)
+                .doOnNext(updatedList -> {
             Set<T> updatedListSet = new HashSet<>(updatedList);
             List<T> copyList = new ArrayList<>(currentList);
             int delta = 0;
@@ -68,6 +71,10 @@ public class ItemRemoveInsertListObservableTransformer<T> implements ObservableT
             }
 
         });
+    }
+
+    public void setPaused(boolean paused){
+        this.paused = paused;
     }
 
     public interface OnItemRemovedListener<T> {

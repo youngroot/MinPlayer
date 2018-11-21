@@ -3,7 +3,6 @@ package com.ivanroot.minplayer.adapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +12,12 @@ import com.ivanroot.minplayer.adapter.listeners.OnPlaylistClickListener;
 import com.ivanroot.minplayer.adapter.listeners.OnPlaylistItemMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.viewholder.PlaylistViewHolder;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
-import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 
 
@@ -27,36 +26,36 @@ import io.reactivex.disposables.Disposable;
  */
 
 public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHolder>
-        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable {
+        implements FastScrollRecyclerView.SectionedAdapter, com.ivanroot.minplayer.adapter.Disposable,
+        ItemRemoveInsertListObservableTransformer.OnItemRemovedListener<PlaylistItem>,
+        ItemRemoveInsertListObservableTransformer.OnItemInsertedListener<PlaylistItem> {
 
-    private List<PlaylistItem> playlistItems;
-    private PlaylistManager playlistManager;
+    private List<PlaylistItem> playlistItems = new ArrayList<>();
+    private ItemRemoveInsertListObservableTransformer<PlaylistItem> transformer = new ItemRemoveInsertListObservableTransformer<>(playlistItems);
     private Disposable disposable;
+    private Context context;
     private OnPlaylistClickListener playlistClickListener;
     private OnPlaylistItemMoreBtnClickListener moreBtnClickListener;
-    private Context context;
 
     public PlaylistSelectorAdapter(Context context) {
         this.context = context;
-        playlistManager = PlaylistManager.getInstance();
-        disposable = playlistManager.getPlaylistItemsObservable(context)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setPlaylistItems);
-
+        transformer.setOnItemRemovedListener(this);
+        transformer.setOnItemInsertedListener(this);
     }
 
     public void setOnPlaylistClickListener(OnPlaylistClickListener playlistClickListener) {
         this.playlistClickListener = playlistClickListener;
     }
 
-    public void setOnMoreBtnClickListener(OnPlaylistItemMoreBtnClickListener moreBtnClickListener){
+    public void setOnMoreBtnClickListener(OnPlaylistItemMoreBtnClickListener moreBtnClickListener) {
         this.moreBtnClickListener = moreBtnClickListener;
     }
 
-    private void setPlaylistItems(List<PlaylistItem> playlistItems) {
-        Log.i(this.toString(), "new List!");
-        this.playlistItems = playlistItems;
-        notifyDataSetChanged();
+    public void subscribe(Observable<List<PlaylistItem>> playlistItemObservable) {
+        dispose();
+        disposable = playlistItemObservable
+                .compose(transformer)
+                .subscribe();
     }
 
     @Override
@@ -69,11 +68,11 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     @Override
     public void onBindViewHolder(PlaylistViewHolder playlistViewHolder, int i) {
         PlaylistItem playlistItem = playlistItems.get(i);
-        playlistViewHolder.representItem(context,playlistItem);
+        playlistViewHolder.representItem(context, playlistItem);
         playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
-            if(moreBtnClickListener != null){
-                moreBtnClickListener.onMoreBtnClick(v,playlistItem);
+            if (moreBtnClickListener != null) {
+                moreBtnClickListener.onMoreBtnClick(v, playlistItem);
             }
         });
     }
@@ -103,8 +102,13 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
             disposable.dispose();
     }
 
-    public void removePlaylistFromStorage(String playlistName){
-        playlistManager.removePlaylist(context, playlistName);
+    @Override
+    public void onItemRemoved(int position, PlaylistItem item) {
+        notifyItemRemoved(position);
     }
 
+    @Override
+    public void onItemInserted(int position, PlaylistItem item) {
+        notifyItemInserted(position);
+    }
 }

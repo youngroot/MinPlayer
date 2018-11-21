@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -98,48 +99,80 @@
                             android:layout_marginEnd="10dp"
                             android:layout_marginStart="20dp"
                             android:layout_toEndOf="@id/playlist_image_card">
-                            <Button
+                            <ImageButton
+                                android:id="@+id/playlist_modify_btn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_alignParentTop="true"
+                                android:tint="?android:attr/textColor"
+                                app:srcCompat="@drawable/ic_modify"
+                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
+
+                            <ImageButton
                                 android:id="@+id/ok_btn"
                                 android:visibility="invisible"
-                                android:text="@string/ok"
                                 android:textColor="?attr/colorAccent"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
                                 android:layout_alignParentBottom="true"
                                 android:layout_alignParentEnd="true"
-                                android:background="?android:attr/selectableItemBackground"/>
+                                android:layout_marginEnd="15dp"
+                                android:layout_marginBottom="30dp"
+                                android:tint="?android:attr/textColor"
+                                app:srcCompat="@drawable/ic_done"
+                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
 
-                            <Button
+                            <ImageButton
                                 android:id="@+id/cancel_btn"
                                 android:visibility="invisible"
-                                android:text="@string/cancel"
                                 android:textColor="?attr/colorAccent"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
                                 android:layout_alignParentBottom="true"
                                 android:layout_alignParentStart="true"
-                                android:background="?android:attr/selectableItemBackground"/>
+                                android:layout_marginStart="15dp"
+                                android:layout_marginBottom="30dp"
+                                android:tint="?android:attr/textColor"
+                                app:srcCompat="@drawable/ic_cancel"
+                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
 
-                            <FrameLayout
-                                android:id="@+id/playlist_name_holder"
+                            <ImageButton
+                                android:id="@+id/playlist_more_btn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                app:srcCompat="@drawable/ic_more_vert"
+                                android:tint="?android:attr/textColor"
+                                android:layout_marginEnd="15dp"
+                                android:visibility="invisible"
+                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
+
+                            <TextView
+                                android:id="@+id/playlist_name"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentTop="true">
-                                <TextView
-                                    android:id="@+id/playlist_name"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:singleLine="true"
-                                    android:maxLines="1"
-                                    android:textSize="20sp"/>
+                                android:layout_toStartOf="@id/playlist_modify_btn"
+                                android:layout_alignBaseline="@id/playlist_modify_btn"
+                                android:singleLine="true"
+                                android:maxLines="1"
+                                android:textSize="20sp"/>
+
+                            <android.support.design.widget.TextInputLayout
+                                android:id="@+id/playlist_name_edit_holder"
+                                android:layout_width="match_parent"
+                                android:visibility="invisible"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentStart="true">
                                 <EditText
                                     android:id="@+id/playlist_name_edit"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:inputType="text"
-                                    android:visibility="invisible"
+                                    android:hint="@string/playlist_name"
                                     android:padding="8dp" />
-                            </FrameLayout>
+                            </android.support.design.widget.TextInputLayout>
 
                             <TextView
                                 android:id="@+id/playlist_size"
@@ -148,19 +181,9 @@
                                 android:layout_marginTop="3dp"
                                 android:maxLines="1"
                                 android:textSize="15sp"
-                                android:layout_below="@+id/playlist_name_holder"/>
+                                android:layout_below="@+id/playlist_name"/>
 
                         </RelativeLayout>
-                        <ImageButton
-                            android:id="@+id/playlist_more_btn"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            app:srcCompat="@drawable/ic_more_vert"
-                            android:tint="?android:attr/textColor"
-                            android:layout_marginEnd="15dp"
-                            android:background="?android:attr/selectableItemBackgroundBorderless"/>
                     </RelativeLayout>
                 </android.support.v7.widget.CardView>
             </RelativeLayout>

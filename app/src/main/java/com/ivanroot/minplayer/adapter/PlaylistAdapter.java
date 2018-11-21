@@ -14,10 +14,9 @@ import com.ivanroot.minplayer.adapter.viewholder.AudioViewHolder;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
 
 /**
  * Created by Ivan Root on 16.12.2017.
@@ -27,7 +26,7 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
 
     private Activity activity;
     private boolean playlistModifyModeEnabled = false;
-    private Playlist originalPlaylist;
+    private List<Audio> originalAudioList = new ArrayList<>();
     private ItemTouchHelper itemTouchHelper;
     private OnModifiedPlaylistSaveListener onModifiedPlaylistSaveListener;
 
@@ -73,15 +72,18 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
         this.playlistModifyModeEnabled = playlistModifyModeEnabled;
 
         if (playlistModifyModeEnabled) {
-            Playlist changedPlaylist = new Playlist(playlist);
-            originalPlaylist = playlist;
-            playlist = changedPlaylist;
-            transformer.setCurrentList(playlist.getAudioList());
+            originalAudioList.addAll(playlist.getAudioList());
+            transformer.setPaused(true);
         } else {
-            playlist = originalPlaylist;
+            if(!originalAudioList.isEmpty()){
+               playlist.getAudioList().clear();
+               playlist.getAudioList().addAll(originalAudioList);
+               originalAudioList.clear();
+            }
+
+            transformer.setPaused(false);
         }
 
-        transformer.setCurrentList(playlist.getAudioList());
         notifyDataSetChanged();
     }
 
@@ -114,7 +116,7 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
     public void saveModifiedPlaylist() {
         Log.i(toString(), "saveModifiedPlaylist");
         if (playlistModifyModeEnabled) {
-            originalPlaylist = playlist;
+            originalAudioList.clear();
 
             if (onModifiedPlaylistSaveListener != null)
                 onModifiedPlaylistSaveListener.onPlaylistSave(playlist);

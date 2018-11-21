@@ -26,4 +26,5 @@ public class PlayerActions {
     public static final String ACTION_GET_AUDIO_DURATION = "com.ivanroot.minplayer.action_get_audio_duration";
     public static final String ACTION_GET_AUDIO_POSITION = "com.ivanroot.minplayer.action_get_audio_position";
     public static final String ACTION_SEEK_TO = "com.ivanroot.minplayer.action_seek_to";
+    public static final String ACTION_ON_PLAYLIST_NAME_CHANGED = "com.ivanroot.minplayer.action_on_playlist_name_changed";
 }

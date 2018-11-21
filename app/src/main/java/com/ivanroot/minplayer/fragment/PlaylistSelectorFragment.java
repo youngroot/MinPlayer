@@ -29,6 +29,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     private FastScrollRecyclerView recyclerView;
     private PlaylistSelectorAdapter adapter;
     private FloatingActionButton addFab;
+    private PlaylistManager playlistManager = PlaylistManager.getInstance();
 
 
     @Override
@@ -49,6 +50,17 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         return view;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        adapter.subscribe(playlistManager.getPlaylistItemsObservable(activity));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        adapter.dispose();
+    }
 
     @Override
     protected String getActionBarTitle() {
@@ -56,7 +68,6 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     }
 
     private void setupRecycler(View view) {
-
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView = (FastScrollRecyclerView)view.findViewById(R.id.playlist_recycler);
         recyclerView.setHasFixedSize(true);
@@ -110,6 +121,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
                         return false;
                 }
             });
+
             popupMenu.show();
 
         });
@@ -125,16 +137,9 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     private void showPlaylistDeletionDialog(String playlistName){
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                 .setMessage(R.string.remove_playlist_question)
-                .setPositiveButton(R.string.ok, (dialogInterface, i) -> adapter.removePlaylistFromStorage(playlistName))
+                .setPositiveButton(R.string.ok, (dialogInterface, i) -> playlistManager.removePlaylist(activity, playlistName))
                 .setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.dismiss());
         builder.show();
 
-    }
-
-    @Override
-    public void onDestroy() {
-        if (adapter != null)
-            adapter.dispose();
-        super.onDestroy();
     }
 }

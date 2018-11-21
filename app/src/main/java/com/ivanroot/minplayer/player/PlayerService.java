@@ -131,7 +131,6 @@ public class PlayerService extends Service implements
     private CompositeDisposable compositeDisposable;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();
     private Bus rxBus = RxBus.get();
-    private ArrayList<Long> clicks = new ArrayList<>();
     private boolean foregroundStarted = false;
 
     @Override
@@ -302,6 +301,15 @@ public class PlayerService extends Service implements
             prepareToPlay();
         }
 
+    }
+
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED)})
+    public void onPlaylistNameChanged(Pair<String, String> namePair){
+        String oldName = namePair.first;
+        String newName = namePair.second;
+
+        if(playlist != null && playlist.getName().equals(oldName))
+            setPlaylist(newName);
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_PLAYLIST)})

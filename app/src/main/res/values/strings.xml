@@ -18,7 +18,7 @@
     <string name="settings">Settings</string>
     <string name="options">Options</string>
     <string name="player">Player</string>
-    <string name="playlist_name">Playlist Name</string>
+    <string name="playlist_name">Playlist name</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="about_short">Made with 💜</string>
@@ -45,7 +45,7 @@
     <string name="upload_completed">Uploaded</string>
     <string name="upload_canceled">Canceled</string>
     <string name="all_tracks_uploaded">All tracks successfully uploaded!</string>
-    <string name="no_internet_connection">No Internet Connection!</string>
+    <string name="no_internet_connection">No internet Ccnnection!</string>
     <string name="waiting_for_internet_connection">Waiting for internet connection</string>
     <string name="disk_login_error">Disk Login Error!</string>
     <string name="wave_in">Wave In</string>
@@ -69,4 +69,5 @@
     <string name="label_search">Search…</string>
     <string name="tracks">Tracks</string>
     <string name="modify">Modify</string>
+    <string name="playlist_already_exists">Playlist with such name already exists!</string>
 </resources>
