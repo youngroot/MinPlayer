@@ -29,6 +29,7 @@
     <string name="title_activity_startup">StartupActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="playlist_cannot_be_empty">Playlist cannot be empty!</string>
     <string name="playlist_name_cannot_be_empty">Playlist name cannot be empty!</string>
     <string name="songs">Songs</string>
     <string name="appearance">Appearance</string>
@@ -70,4 +71,11 @@
     <string name="tracks">Tracks</string>
     <string name="modify">Modify</string>
     <string name="playlist_already_exists">Playlist with such name already exists!</string>
+
+    <plurals name="song_plurals">
+        <item quantity="zero">No songs</item>
+        <item quantity="one">%1$d song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+
 </resources>

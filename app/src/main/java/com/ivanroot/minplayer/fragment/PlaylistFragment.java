@@ -1,6 +1,9 @@
 package com.ivanroot.minplayer.fragment;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -15,7 +18,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -43,10 +45,12 @@ import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import jp.wasabeef.blurry.Blurry;
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
@@ -57,7 +61,6 @@ import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_P
  */
 
 public class PlaylistFragment extends NavFragmentBase {
-
     public static final String NAME = "PlaylistFragment";
     private static final String BUNDLE_RECYCLER_LAYOUT = "classname.recycler.layout";
 
@@ -70,6 +73,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private PlaylistManager playlistManager;
     private AppBarLayout appBarLayout;
     private ImageView playlistImage = null;
+    private ImageView bigPlaylistImage;
     private ImageView[] playlistImages = null;
     private CardView playlistHeaderCard;
     private TextView playlistNameView;
@@ -89,6 +93,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private boolean playlistModifyModeEnabled = false;
     private ItemTouchHelper itemTouchHelper;
     private Observable<Playlist> playlistObservable;
+    private SlidingUpPanelLayout.PanelState prevState = SlidingUpPanelLayout.PanelState.HIDDEN;
 
     public PlaylistFragment() {
     }
@@ -148,6 +153,8 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistEditedNameView = (EditText) view.findViewById(R.id.playlist_name_edit);
             playlistEditedNameViewHolder = view.findViewById(R.id.playlist_name_edit_holder);
 
+            bigPlaylistImage = (ImageView) view.findViewById(R.id.big_playlist_image);
+
             playlistImages = new ImageView[]{
                     (ImageView) view.findViewById(R.id.sub_playlist_image_1),
                     (ImageView) view.findViewById(R.id.sub_playlist_image_2),
@@ -157,7 +164,7 @@ public class PlaylistFragment extends NavFragmentBase {
             };
 
             moreButton = (ImageButton) view.findViewById(R.id.playlist_more_btn);
-            playlistModifyButton = (ImageButton)view.findViewById(R.id.playlist_modify_btn);
+            playlistModifyButton = (ImageButton) view.findViewById(R.id.playlist_modify_btn);
             playlistModifyCancelButton = (ImageButton) view.findViewById(R.id.cancel_btn);
             playlistModifyOkButton = (ImageButton) view.findViewById(R.id.ok_btn);
         } else {
@@ -201,7 +208,13 @@ public class PlaylistFragment extends NavFragmentBase {
                 Log.i(toString(), "OnSaveButtonClick");
                 String editedName = playlistEditedNameView.getText().toString();
 
-                if(editedName.isEmpty()){
+                if (adapter.getItemCount() == 0) {
+                    Toast.makeText(activity, getResources().getString(R.string.playlist_cannot_be_empty), Toast.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+
+                if (editedName.isEmpty()) {
                     Toast.makeText(activity, getResources().getString(R.string.playlist_name_cannot_be_empty), Toast.LENGTH_SHORT)
                             .show();
                     return;
@@ -217,7 +230,7 @@ public class PlaylistFragment extends NavFragmentBase {
                         setupPlaylistObservable();
                         adapter.saveModifiedPlaylist();
 
-                    } catch (PlaylistAlreadyExistsException ex){
+                    } catch (PlaylistAlreadyExistsException ex) {
                         Toast.makeText(activity, getResources().getString(R.string.playlist_already_exists), Toast.LENGTH_SHORT)
                                 .show();
                     }
@@ -415,17 +428,36 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setImages(Playlist playlist) {
         try {
+            bigPlaylistImage.setImageResource(0);
+
             for (ImageView playlistImage : playlistImages)
                 playlistImage.setImageResource(0);
 
+            Bitmap bitmap = null;
+
             int i = 0;
             for (Audio audio : playlist.getAudioList()) {
-                if (i == 4) break;
+                if (i == 4)
+                    break;
+
                 String imagePath = audio.getAlbumArtPath();
+
                 if (imagePath != null) {
                     Picasso.with(getActivity())
                             .load(Utils.getFileFromPath(imagePath))
                             .into(playlistImages[i]);
+
+
+                    if (bitmap == null) {
+                        bitmap = Utils.getAudioAlbumArt(imagePath,
+                                BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey));
+                        Blurry.with(getActivity())
+                                .async()
+                                .sampling(10)
+                                .color(Color.argb(80, 60, 60, 60))
+                                .from(bitmap)
+                                .into(bigPlaylistImage);
+                    }
 
                     i++;
                 }
@@ -439,8 +471,7 @@ public class PlaylistFragment extends NavFragmentBase {
     private void setText(Playlist playlist) {
         try {
             playlistNameView.setText(playlist.getName());
-            String playlistSize = playlist.size() + " " + getActivity().getResources().getString(R.string.songs);
-            playlistSizeView.setText(playlistSize);
+            playlistSizeView.setText(getResources().getQuantityString(R.plurals.song_plurals, playlist.size(), playlist.size()));
         } catch (NullPointerException ex) {
             ex.printStackTrace();
             //Log.e(toString(), ex.getMessage());
@@ -470,6 +501,7 @@ public class PlaylistFragment extends NavFragmentBase {
         Log.i(toString(), "setPlaylistModifyModeEnabled " + playlistModifyModeEnabled);
         this.playlistModifyModeEnabled = playlistModifyModeEnabled;
         adapter.setPlaylistModifyModeEnabled(playlistModifyModeEnabled);
+        SlidingUpPanelLayout panelLayout = activity.getPanelLayout();
 
         if (playlistModifyModeEnabled) {
             if (itemTouchHelper == null) {
@@ -491,7 +523,12 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistEditedNameView.setText(adapter.getPlaylist().getName());
 
             itemTouchHelper.attachToRecyclerView(audioRecyclerView);
+
+            prevState = panelLayout.getPanelState();
+            panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+
         } else {
+            playlistEditedNameView.setSelected(false);
             playlistEditedNameViewHolder.setVisibility(View.INVISIBLE);
             playlistModifyCancelButton.setVisibility(View.INVISIBLE);
             playlistModifyOkButton.setVisibility(View.INVISIBLE);
@@ -504,6 +541,8 @@ public class PlaylistFragment extends NavFragmentBase {
 
             if (itemTouchHelper != null)
                 itemTouchHelper.attachToRecyclerView(null);
+
+            panelLayout.setPanelState(prevState);
         }
     }
 }

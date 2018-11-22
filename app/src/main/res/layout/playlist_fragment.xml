@@ -20,173 +20,186 @@
             app:expandedTitleTextAppearance="@style/CollapsingToolbarLayoutExpandedTextStyle"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
-            <RelativeLayout
-                android:id="@+id/playlist_header"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7">
 
-                <android.support.v7.widget.CardView
-                    android:id="@+id/playlist_header_card"
+                <ImageView
+                    android:id="@+id/big_playlist_image"
                     android:layout_width="match_parent"
-                    android:layout_height="140dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="?attr/actionBarSize"
-                    card_view:cardCornerRadius="10dp"
-                    card_view:cardElevation="2dp">
+                    android:layout_height="match_parent"
+                    android:scaleType="fitXY"/>
 
-                    <RelativeLayout
-                        android:id="@+id/info_layout"
+                <RelativeLayout
+                    android:id="@+id/playlist_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <android.support.v7.widget.CardView
+                        android:id="@+id/playlist_header_card"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <android.support.v7.widget.CardView
-                            android:id="@+id/playlist_image_card"
-                            android:layout_width="140dp"
-                            android:layout_height="140dp"
-                            android:layout_centerVertical="true"
-                            card_view:cardCornerRadius="10dp"
-                            card_view:cardElevation="2dp">
-
-                            <RelativeLayout
-                                android:id="@+id/playlist_image_layout"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent">
-
-                                <ImageView
-                                    android:id="@+id/sub_playlist_image_1"
-                                    android:layout_width="70dp"
-                                    android:layout_height="70dp"
-                                    android:layout_alignParentStart="true"
-                                    android:layout_alignParentTop="true"
-                                    android:scaleType="fitXY" />
-
-                                <ImageView
-                                    android:id="@+id/sub_playlist_image_2"
-                                    android:layout_width="71dp"
-                                    android:layout_height="70dp"
-                                    android:layout_alignParentEnd="true"
-                                    android:layout_alignParentTop="true"
-                                    android:scaleType="fitXY" />
-
-                                <ImageView
-                                    android:id="@+id/sub_playlist_image_3"
-                                    android:layout_width="70dp"
-                                    android:layout_height="70dp"
-                                    android:layout_alignParentBottom="true"
-                                    android:layout_alignParentStart="true"
-                                    android:scaleType="fitXY" />
-
-                                <ImageView
-                                    android:id="@+id/sub_playlist_image_4"
-                                    android:layout_width="70dp"
-                                    android:layout_height="70dp"
-                                    android:layout_alignParentBottom="true"
-                                    android:layout_alignParentEnd="true"
-                                    android:scaleType="fitXY" />
-                            </RelativeLayout>
-                        </android.support.v7.widget.CardView>
+                        android:layout_height="140dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="?attr/actionBarSize"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginBottom="10dp"
+                        card_view:cardCornerRadius="10dp"
+                        card_view:cardElevation="2dp">
 
                         <RelativeLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentTop="true"
-                            android:layout_marginTop="5dp"
-                            android:layout_marginEnd="10dp"
-                            android:layout_marginStart="20dp"
-                            android:layout_toEndOf="@id/playlist_image_card">
-                            <ImageButton
-                                android:id="@+id/playlist_modify_btn"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:layout_alignParentTop="true"
-                                android:tint="?android:attr/textColor"
-                                app:srcCompat="@drawable/ic_modify"
-                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
+                            android:id="@+id/info_layout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
 
-                            <ImageButton
-                                android:id="@+id/ok_btn"
-                                android:visibility="invisible"
-                                android:textColor="?attr/colorAccent"
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                android:layout_alignParentBottom="true"
-                                android:layout_alignParentEnd="true"
-                                android:layout_marginEnd="15dp"
-                                android:layout_marginBottom="30dp"
-                                android:tint="?android:attr/textColor"
-                                app:srcCompat="@drawable/ic_done"
-                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
-
-                            <ImageButton
-                                android:id="@+id/cancel_btn"
-                                android:visibility="invisible"
-                                android:textColor="?attr/colorAccent"
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                android:layout_alignParentBottom="true"
-                                android:layout_alignParentStart="true"
-                                android:layout_marginStart="15dp"
-                                android:layout_marginBottom="30dp"
-                                android:tint="?android:attr/textColor"
-                                app:srcCompat="@drawable/ic_cancel"
-                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
-
-                            <ImageButton
-                                android:id="@+id/playlist_more_btn"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
+                            <android.support.v7.widget.CardView
+                                android:id="@+id/playlist_image_card"
+                                android:layout_width="140dp"
+                                android:layout_height="140dp"
                                 android:layout_centerVertical="true"
-                                app:srcCompat="@drawable/ic_more_vert"
-                                android:tint="?android:attr/textColor"
-                                android:layout_marginEnd="15dp"
-                                android:visibility="invisible"
-                                android:background="?android:attr/selectableItemBackgroundBorderless"/>
+                                card_view:cardCornerRadius="10dp"
+                                card_view:cardElevation="2dp">
 
-                            <TextView
-                                android:id="@+id/playlist_name"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_toStartOf="@id/playlist_modify_btn"
-                                android:layout_alignBaseline="@id/playlist_modify_btn"
-                                android:singleLine="true"
-                                android:maxLines="1"
-                                android:textSize="20sp"/>
+                                <RelativeLayout
+                                    android:id="@+id/playlist_image_layout"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent">
 
-                            <android.support.design.widget.TextInputLayout
-                                android:id="@+id/playlist_name_edit_holder"
-                                android:layout_width="match_parent"
-                                android:visibility="invisible"
+                                    <ImageView
+                                        android:id="@+id/sub_playlist_image_1"
+                                        android:layout_width="70dp"
+                                        android:layout_height="70dp"
+                                        android:layout_alignParentStart="true"
+                                        android:layout_alignParentTop="true"
+                                        android:scaleType="fitXY" />
+
+                                    <ImageView
+                                        android:id="@+id/sub_playlist_image_2"
+                                        android:layout_width="71dp"
+                                        android:layout_height="70dp"
+                                        android:layout_alignParentTop="true"
+                                        android:layout_alignParentEnd="true"
+                                        android:scaleType="fitXY" />
+
+                                    <ImageView
+                                        android:id="@+id/sub_playlist_image_3"
+                                        android:layout_width="70dp"
+                                        android:layout_height="70dp"
+                                        android:layout_alignParentStart="true"
+                                        android:layout_alignParentBottom="true"
+                                        android:scaleType="fitXY" />
+
+                                    <ImageView
+                                        android:id="@+id/sub_playlist_image_4"
+                                        android:layout_width="70dp"
+                                        android:layout_height="70dp"
+                                        android:layout_alignParentEnd="true"
+                                        android:layout_alignParentBottom="true"
+                                        android:scaleType="fitXY" />
+                                </RelativeLayout>
+                            </android.support.v7.widget.CardView>
+
+                            <RelativeLayout
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true">
-                                <EditText
-                                    android:id="@+id/playlist_name_edit"
+                                android:layout_alignParentTop="true"
+                                android:layout_marginStart="20dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginEnd="10dp"
+                                android:layout_toEndOf="@id/playlist_image_card">
+
+                                <ImageButton
+                                    android:id="@+id/playlist_modify_btn"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentTop="true"
+                                    android:layout_alignParentEnd="true"
+                                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                                    android:tint="?android:attr/textColor"
+                                    app:srcCompat="@drawable/ic_modify" />
+
+                                <ImageButton
+                                    android:id="@+id/ok_btn"
+                                    android:layout_width="30dp"
+                                    android:layout_height="30dp"
+                                    android:layout_alignParentEnd="true"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_marginEnd="15dp"
+                                    android:layout_marginBottom="30dp"
+                                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                                    android:textColor="?attr/colorAccent"
+                                    android:tint="?android:attr/textColor"
+                                    android:visibility="invisible"
+                                    app:srcCompat="@drawable/ic_done" />
+
+                                <ImageButton
+                                    android:id="@+id/cancel_btn"
+                                    android:layout_width="30dp"
+                                    android:layout_height="30dp"
+                                    android:layout_alignParentStart="true"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_marginStart="15dp"
+                                    android:layout_marginBottom="30dp"
+                                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                                    android:textColor="?attr/colorAccent"
+                                    android:tint="?android:attr/textColor"
+                                    android:visibility="invisible"
+                                    app:srcCompat="@drawable/ic_cancel" />
+
+                                <ImageButton
+                                    android:id="@+id/playlist_more_btn"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:layout_centerVertical="true"
+                                    android:layout_marginEnd="15dp"
+                                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                                    android:tint="?android:attr/textColor"
+                                    android:visibility="invisible"
+                                    app:srcCompat="@drawable/ic_more_vert" />
+
+                                <TextView
+                                    android:id="@+id/playlist_name"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:inputType="text"
-                                    android:hint="@string/playlist_name"
-                                    android:padding="8dp" />
-                            </android.support.design.widget.TextInputLayout>
+                                    android:layout_alignBaseline="@id/playlist_modify_btn"
+                                    android:layout_toStartOf="@id/playlist_modify_btn"
+                                    android:maxLines="1"
+                                    android:singleLine="true"
+                                    android:textSize="20sp" />
 
-                            <TextView
-                                android:id="@+id/playlist_size"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
-                                android:maxLines="1"
-                                android:textSize="15sp"
-                                android:layout_below="@+id/playlist_name"/>
+                                <android.support.design.widget.TextInputLayout
+                                    android:id="@+id/playlist_name_edit_holder"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentStart="true"
+                                    android:visibility="invisible">
 
+                                    <EditText
+                                        android:id="@+id/playlist_name_edit"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:hint="@string/playlist_name"
+                                        android:inputType="text"
+                                        android:padding="8dp" />
+                                </android.support.design.widget.TextInputLayout>
+
+                                <TextView
+                                    android:id="@+id/playlist_size"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_below="@+id/playlist_name"
+                                    android:layout_marginTop="3dp"
+                                    android:maxLines="1"
+                                    android:textSize="15sp" />
+
+                            </RelativeLayout>
                         </RelativeLayout>
-                    </RelativeLayout>
-                </android.support.v7.widget.CardView>
-            </RelativeLayout>
+                    </android.support.v7.widget.CardView>
+                </RelativeLayout>
+            </FrameLayout>
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
@@ -206,6 +219,7 @@
         android:id="@+id/audio_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="4dp"
         app:fastScrollPopupBgColor="?attr/colorAccent"
         app:fastScrollPopupTextColor="@android:color/primary_text_dark"
         app:fastScrollThumbColor="?attr/colorAccent"
@@ -216,6 +230,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:layout_marginBottom="18dp"
         app:layout_anchor="@+id/app_bar"
         app:layout_anchorGravity="bottom|right|end"
         app:srcCompat="@drawable/ic_play" />

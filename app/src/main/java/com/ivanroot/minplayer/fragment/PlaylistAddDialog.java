@@ -59,7 +59,14 @@ public class PlaylistAddDialog extends DialogFragment {
         audioListView.setAdapter(adapter);
         cancelBtn.setOnClickListener(v -> dismiss());
         okBtn.setOnClickListener(v -> {
+            if(adapter.getCount() == 0){
+                Toast.makeText(getActivity(), getResources().getString(R.string.playlist_cannot_be_empty), Toast.LENGTH_SHORT)
+                        .show();
+                return;
+            }
+
             String name = playlistName.getText().toString();
+
             if (!name.equals("")) {
                 playlist.setAudioList(adapter.getSelectedAudiosList());
                 playlist.setName(name);

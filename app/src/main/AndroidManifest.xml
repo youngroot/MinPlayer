@@ -34,6 +34,7 @@
         android:roundIcon="@mipmap/min_player_ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/MinPlayerOriginalTheme"
+        android:windowSoftInputMode="adjustPan"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".activity.PlayerActivity"

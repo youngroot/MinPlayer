@@ -41,7 +41,8 @@ public class PlaylistViewHolder extends BaseItemViewHolder<PlaylistItem> {
     public void representItem(Context context, PlaylistItem playlistItem){
         try {
             playlistName.setText(playlistItem.getName());
-            playlistSize.setText(playlistItem.getPlaylistSize() + " " + context.getResources().getString(R.string.songs));
+            playlistSize.setText(getPlaylistSizeQuantityString(context, playlistItem));
+
             for (int i = 0; i < 4; i++) {
                 String imagePath = playlistItem.getImagePaths()[i];
                 if (imagePath != null) {
@@ -57,7 +58,11 @@ public class PlaylistViewHolder extends BaseItemViewHolder<PlaylistItem> {
             ex.printStackTrace();
             Log.e(toString(),ex.getMessage());
         }
+    }
 
+    private String getPlaylistSizeQuantityString(Context context, PlaylistItem playlistItem){
+        int playlistSizeInt = playlistItem.getPlaylistSize();
+        return context.getResources().getQuantityString(R.plurals.song_plurals, playlistSizeInt, playlistSizeInt);
     }
 
 }
