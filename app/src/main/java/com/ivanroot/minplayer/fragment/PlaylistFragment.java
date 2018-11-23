@@ -8,12 +8,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,10 +71,8 @@ public class PlaylistFragment extends NavFragmentBase {
     private FloatingActionButton playFab;
     private PlaylistManager playlistManager;
     private AppBarLayout appBarLayout;
-    private ImageView playlistImage = null;
     private ImageView bigPlaylistImage;
-    private ImageView[] playlistImages = null;
-    private CardView playlistHeaderCard;
+    private ImageView[] playlistImages;
     private TextView playlistNameView;
     private TextView playlistSizeView;
     private EditText playlistEditedNameView;
@@ -89,15 +86,10 @@ public class PlaylistFragment extends NavFragmentBase {
     private boolean selectorDialogIsActive = false;
     private Audio selectedAudio;
     private LinearLayoutManager layoutManager;
-    private RecyclerView.SmoothScroller smoothScroller;
     private boolean playlistModifyModeEnabled = false;
     private ItemTouchHelper itemTouchHelper;
     private Observable<Playlist> playlistObservable;
     private SlidingUpPanelLayout.PanelState prevState = SlidingUpPanelLayout.PanelState.HIDDEN;
-
-    public PlaylistFragment() {
-    }
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -134,7 +126,6 @@ public class PlaylistFragment extends NavFragmentBase {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-
         View view = getView(inflater, container);
         setupDrawer(view);
         setupRecycler(view);
@@ -146,8 +137,6 @@ public class PlaylistFragment extends NavFragmentBase {
         }
 
         if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
-            playlistHeaderCard = (CardView) view.findViewById(R.id.playlist_header_card);
-            //playlistHeaderCard.getBackground().setAlpha(100);
             playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
             playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
             playlistEditedNameView = (EditText) view.findViewById(R.id.playlist_name_edit);
@@ -177,7 +166,6 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     private void prepareListeners(View view) {
-
         if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
 
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
@@ -278,16 +266,9 @@ public class PlaylistFragment extends NavFragmentBase {
             rxBus.post(ACTION_SET_PLAYLIST, playlistName);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
-
-//        adapter.setNewPlaylistUpdateListener(playlist -> {
-//            setImages(playlist);
-//            setText(playlist);
-//        });
-
     }
 
     private View getView(LayoutInflater inflater, @Nullable ViewGroup container) {
-
         int layoutResource = (playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)
                 ? R.layout.all_tracks_playlist_fragment
                 : R.layout.playlist_fragment);
@@ -299,20 +280,11 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     private void setupRecycler(View view) {
-
         layoutManager = new LinearLayoutManager(getActivity());
-        smoothScroller = new LinearSmoothScroller(activity) {
-            @Override
-            protected int getVerticalSnapPreference() {
-                return LinearSmoothScroller.SNAP_TO_START;
-            }
-        };
 
         audioRecyclerView = (FastScrollRecyclerView) view.findViewById(R.id.audio_recycler);
         audioRecyclerView.setHasFixedSize(true);
         audioRecyclerView.setLayoutManager(layoutManager);
-        //DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(audioRecyclerView.getContext(),LinearLayoutManager.VERTICAL);
-        //audioRecyclerView.addItemDecoration(mDividerItemDecoration);
         audioRecyclerView.setStateChangeListener(new OnFastScrollStateChangeListener() {
 
             @Override
@@ -330,7 +302,6 @@ public class PlaylistFragment extends NavFragmentBase {
         });
 
         audioRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-
             private String logMessage;
 
             @Override
@@ -358,7 +329,7 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     @Override
-    protected String getActionBarTitle() {
+    public String getActionBarTitle() {
         return playlistManager.getTitleFromPlaylistName(getActivity(), playlistName);
     }
 
@@ -384,8 +355,7 @@ public class PlaylistFragment extends NavFragmentBase {
             }
 
             int pos = savedInstanceState.getInt("pos", 0);
-            //smoothScroller.setTargetPosition(pos);
-            //layoutManager.startSmoothScroll(smoothScroller);
+
             layoutManager.scrollToPositionWithOffset(pos, 0);
             Log.i(toString(), "pos: " + pos);
         }
@@ -401,11 +371,13 @@ public class PlaylistFragment extends NavFragmentBase {
     public void onSaveInstanceState(Bundle outState) {
         Gson gson = new Gson();
         String json = gson.toJson(selectedAudio);
+
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, audioRecyclerView.getLayoutManager().onSaveInstanceState());
         outState.putString("playlist_name", playlistName);
         outState.putBoolean("selector_dialog_is_active", selectorDialogIsActive);
         outState.putString("selected_audio", json);
         outState.putInt("pos", layoutManager.findFirstVisibleItemPosition());
+
         super.onSaveInstanceState(outState);
     }
 
@@ -451,10 +423,11 @@ public class PlaylistFragment extends NavFragmentBase {
                     if (bitmap == null) {
                         bitmap = Utils.getAudioAlbumArt(imagePath,
                                 BitmapFactory.decodeResource(getResources(), R.drawable.lowpoly_grey));
+
                         Blurry.with(getActivity())
                                 .async()
-                                .sampling(10)
-                                .color(Color.argb(80, 60, 60, 60))
+                                .sampling(2)
+                                .color(Color.argb(5, 20, 20, 20))
                                 .from(bitmap)
                                 .into(bigPlaylistImage);
                     }
@@ -470,7 +443,14 @@ public class PlaylistFragment extends NavFragmentBase {
 
     private void setText(Playlist playlist) {
         try {
-            playlistNameView.setText(playlist.getName());
+            String playlistName = playlist.getName();
+
+            if(playlistName != null) {
+                this.playlistName = playlistName;
+                setActionBarTitle(playlistName);
+                playlistNameView.setText(playlistName);
+            }
+
             playlistSizeView.setText(getResources().getQuantityString(R.plurals.song_plurals, playlist.size(), playlist.size()));
         } catch (NullPointerException ex) {
             ex.printStackTrace();
@@ -520,6 +500,7 @@ public class PlaylistFragment extends NavFragmentBase {
             playlistModifyCancelButton.setVisibility(View.VISIBLE);
             playlistModifyOkButton.setVisibility(View.VISIBLE);
 
+            playlistEditedNameView.setInputType(InputType.TYPE_CLASS_TEXT);
             playlistEditedNameView.setText(adapter.getPlaylist().getName());
 
             itemTouchHelper.attachToRecyclerView(audioRecyclerView);
@@ -528,8 +509,11 @@ public class PlaylistFragment extends NavFragmentBase {
             panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
 
         } else {
+            playlistEditedNameView.setInputType(InputType.TYPE_NULL);
             playlistEditedNameView.setSelected(false);
+
             playlistEditedNameViewHolder.setVisibility(View.INVISIBLE);
+
             playlistModifyCancelButton.setVisibility(View.INVISIBLE);
             playlistModifyOkButton.setVisibility(View.INVISIBLE);
 

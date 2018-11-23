@@ -63,7 +63,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     }
 
     @Override
-    protected String getActionBarTitle() {
+    public String getActionBarTitle() {
         return getResources().getString(R.string.playlists);
     }
 

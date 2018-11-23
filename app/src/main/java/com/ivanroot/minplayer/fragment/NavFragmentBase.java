@@ -6,17 +6,19 @@ import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.activity.MainActivity;
+
+import retrofit.RestAdapter;
 
 /**
  * Created by Ivan Root on 30.12.2017.
  */
 
 public abstract class NavFragmentBase extends Fragment {
-
     protected MainActivity activity;
     protected Toolbar toolbar;
     protected DrawerLayout drawer;
@@ -35,17 +37,21 @@ public abstract class NavFragmentBase extends Fragment {
         toggle.syncState();
     }
 
-    protected abstract String getActionBarTitle();
+    public void setActionBarTitle(String title){
+        try {
+            Log.i(toString(),"onSetActionBarTitle");
+            activity.getSupportActionBar().setTitle(title);
+        } catch (NullPointerException ex) {
+            Log.e(toString(), ex.toString());
+            ex.printStackTrace();
+        }
+    }
 
+    public abstract String getActionBarTitle();
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        try {
-            activity.getSupportActionBar().setTitle(getActionBarTitle());
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
-        }
+        setActionBarTitle(getActionBarTitle());
     }
 }

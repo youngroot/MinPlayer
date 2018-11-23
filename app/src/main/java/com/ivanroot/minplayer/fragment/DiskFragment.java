@@ -199,7 +199,7 @@ public class DiskFragment extends NavFragmentBase {
     }
 
     @Override
-    protected String getActionBarTitle() {
+    public String getActionBarTitle() {
         return getResources().getString(R.string.yandex_disk);
     }
 }

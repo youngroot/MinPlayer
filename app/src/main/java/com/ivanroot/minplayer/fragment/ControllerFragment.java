@@ -272,7 +272,7 @@ public class ControllerFragment extends Fragment {
 
             Blurry.with(getActivity())
                     .async()
-                    .sampling(10)
+                    .sampling(2)
                     .color(Color.argb(80, 60, 60, 60))
                     .from(bitmap)
                     .into(bigAlbumArt);
