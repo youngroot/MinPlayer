@@ -58,7 +58,6 @@ import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
@@ -98,6 +97,7 @@ public class PlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener {
     public static final String SERVICE_NAME = "PlayerService";
     public static final String PREF_LAST_PLAYLIST_NAME = "pref_last_playlist";
+    public static final String PREF_LAST_PLAYLIST_ID = "pref_last_playlist_id";
 
     private final int permissionDenied = PackageManager.PERMISSION_DENIED;
     private final int permissionGranted = PackageManager.PERMISSION_GRANTED;
@@ -140,7 +140,7 @@ public class PlayerService extends Service implements
         super.onCreate();
         nextQueue = new PriorityQueue<>();
         rxBus.register(this);
-        setupRestClient();
+        setupRestClientDisposable();
         initExoPlayer();
         initMediaSession();
         registerBecomingNoisy();
@@ -206,7 +206,7 @@ public class PlayerService extends Service implements
 
     }
 
-    void setupRestClient() {
+    void setupRestClientDisposable() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         Observable<String> tokenObservable = RxSharedPreferences.create(preferences)
@@ -221,9 +221,9 @@ public class PlayerService extends Service implements
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> {
                     restClient = (RestClient) state.get(RestClientUtil.KEY_REST_CLIENT);
-                    if (playlist != null && playlist.getName().equals(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)) {
+                    if (playlist != null && Objects.equals(playlist.getId(), PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID)) {
                         playlistDisposable.dispose();
-                        subscribe(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST);
+                        subscribe(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID);
                     }
                 });
     }
@@ -287,8 +287,27 @@ public class PlayerService extends Service implements
         subscribe(playlistName);
     }
 
+    @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
+    public void setPlaylist(Long playlistId){
+        if (playlist != null)
+            if (Objects.equals(playlistId, playlist.getId()))
+                return;
+
+        if (playlistDisposable != null)
+            playlistDisposable.dispose();
+
+        playlistManager.writePlaylist(this, playlist);
+        subscribe(playlistId);
+    }
+
     private void subscribe(String playlistName) {
         playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistName)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::setPlaylist);
+    }
+
+    private void subscribe(long playlistId){
+        playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
     }
@@ -299,19 +318,20 @@ public class PlayerService extends Service implements
         if (!playlist.checkAndSetAudio(currAudio)) {
             currAudio = playlist.getCurrentAudio();
             rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
+            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getId());
             updateMetaData();
             prepareToPlay();
         }
     }
 
-    @Subscribe(tags = {@Tag(PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED)})
-    public void onPlaylistNameChanged(Pair<String, String> namePair) {
-        String oldName = namePair.first;
-        String newName = namePair.second;
-
-        if (playlist != null && playlist.getName().equals(oldName))
-            setPlaylist(newName);
-    }
+//    @Subscribe(tags = {@Tag(PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED)})
+//    public void onPlaylistNameChanged(Pair<String, String> namePair) {
+//        String oldName = namePair.first;
+//        String newName = namePair.second;
+//
+//        if (playlist != null && playlist.getName().equals(oldName))
+//            setPlaylist(newName);
+//    }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_PLAYLIST)})
     public Playlist getPlaylist(Object object) {
@@ -732,8 +752,10 @@ public class PlayerService extends Service implements
         sharedPreferences = getSharedPreferences(SERVICE_NAME, Context.MODE_PRIVATE);
         //wasPlaying = settings.getBoolean("wasPlaying",false);
         if (checkPermissions()) {
-            String playlistName = sharedPreferences.getString(PREF_LAST_PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
-            setPlaylist(playlistName);
+            //String playlistName = sharedPreferences.getString(PREF_LAST_PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
+            //setPlaylist(playlistName);
+            long playlistId = sharedPreferences.getLong(PREF_LAST_PLAYLIST_ID, PlaylistManager.ALL_TRACKS_PLAYLIST_ID);
+            setPlaylist(playlistId);
         } else {
             startActivity(new Intent(this, StartupActivity.class));
             stopSelf();
@@ -746,7 +768,8 @@ public class PlayerService extends Service implements
         SharedPreferences.Editor editor = sharedPreferences.edit();
         //editor.putBoolean("wasPlaying", wasPlaying);
         if (checkPermissions()) {
-            editor.putString(PREF_LAST_PLAYLIST_NAME, playlist.getName());
+            //editor.putString(PREF_LAST_PLAYLIST_NAME, playlist.getName());
+            editor.putLong(PREF_LAST_PLAYLIST_ID, playlist.getId());
             editor.apply();
             playlistManager.writePlaylist(this, playlist);
         }

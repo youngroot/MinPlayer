@@ -34,7 +34,7 @@ public class PlaylistItemSection extends BaseItemSection<PlaylistItem> {
     @Override
     public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
         PlaylistViewHolder playlistViewHolder = (PlaylistViewHolder) holder;
-        playlistViewHolder.itemView.setOnClickListener(v -> onPlaylistClickListener.onPlaylistClick(filteredData.get(position).getName()));
+        playlistViewHolder.itemView.setOnClickListener(v -> onPlaylistClickListener.onPlaylistClick(filteredData.get(position).getId()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> onPlaylistItemMoreBtnClickListener.onMoreBtnClick(v, filteredData.get(position)));
         playlistViewHolder.representItem(context, filteredData.get(position));
     }

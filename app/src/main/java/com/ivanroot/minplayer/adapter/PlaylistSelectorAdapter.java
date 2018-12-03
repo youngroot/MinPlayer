@@ -72,7 +72,7 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistViewHo
     public void onBindViewHolder(PlaylistViewHolder playlistViewHolder, int i) {
         PlaylistItem playlistItem = playlistItems.get(i);
         playlistViewHolder.representItem(context, playlistItem);
-        playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getName()));
+        playlistViewHolder.itemView.setOnClickListener(v -> playlistClickListener.onPlaylistClick(playlistItem.getId()));
         playlistViewHolder.setMoreBtnOnClickListener(v -> {
             if (moreBtnClickListener != null) {
                 moreBtnClickListener.onMoreBtnClick(v, playlistItem);

@@ -95,9 +95,9 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
 
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
 
-        adapter.setOnPlaylistClickListener((playlistName -> {
-            activity.launchPlaylistFragment(playlistName);
-            Log.i(toString(), playlistName);
+        adapter.setOnPlaylistClickListener((playlistId -> {
+            activity.launchPlaylistFragment(playlistId);
+            Log.i(toString(), String.valueOf(playlistId));
         }));
 
         adapter.setOnMoreBtnClickListener((v, playlistItem) -> {
@@ -106,7 +106,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.remove_playlist:
-                        showPlaylistDeletionDialog(playlistItem.getName());
+                        showPlaylistDeletionDialog(playlistItem.getId());
                         return true;
                     default:
                         return false;
@@ -125,10 +125,10 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         dialog.show(getFragmentManager(),tag);
     }
 
-    private void showPlaylistDeletionDialog(String playlistName){
+    private void showPlaylistDeletionDialog(long playlistId){
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                 .setMessage(R.string.remove_playlist_question)
-                .setPositiveButton(R.string.ok, (dialogInterface, i) -> playlistManager.removePlaylist(activity, playlistName))
+                .setPositiveButton(R.string.ok, (dialogInterface, i) -> playlistManager.removePlaylist(activity, playlistId))
                 .setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.dismiss());
         builder.show();
 

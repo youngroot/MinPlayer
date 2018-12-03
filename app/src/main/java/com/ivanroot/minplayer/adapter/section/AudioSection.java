@@ -40,7 +40,7 @@ public class AudioSection extends BaseItemSection<Audio> {
     public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
         AudioViewHolder audioViewHolder = (AudioViewHolder)holder;
         audioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(filteredData.get(position),
-                PlaylistManager.ALL_TRACKS_PLAYLIST));
+                PlaylistManager.ALL_TRACKS_PLAYLIST_ID));
         audioViewHolder.setMoreBtnOnClickListener(v -> {
             Playlist playlist = new Playlist();
             playlist.setAudioList(filteredData);

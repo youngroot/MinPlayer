@@ -5,5 +5,5 @@ package com.ivanroot.minplayer.adapter.listeners;
  */
 
 public interface OnPlaylistClickListener {
-    void onPlaylistClick(String playlistName);
+    void onPlaylistClick(long playlistId);
 }

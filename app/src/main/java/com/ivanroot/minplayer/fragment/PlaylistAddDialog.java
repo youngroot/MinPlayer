@@ -38,7 +38,6 @@ import io.reactivex.disposables.Disposable;
  */
 
 public class PlaylistAddDialog extends DialogFragment {
-
     private Playlist playlist;
     private AudioSelectorAdapter adapter;
     private PlaylistManager playlistManager = PlaylistManager.getInstance();

@@ -14,8 +14,10 @@ import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.exceptions.PlaylistAlreadyExistsException;
 import com.ivanroot.minplayer.storio.contentresolver.StorIOContentResolverFactory;
+import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
+import com.pushtorefresh.storio3.contentresolver.queries.UpdateQuery;
 import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
@@ -44,13 +46,16 @@ public class PlaylistManager {
     public static final String DISK_ALL_TRACKS_PLAYLIST = "com.ivanroot.minplayer.disk_all_tracks_playlist";
     public static final String IMAGE_DIR = "playlists_images";
     public static final String IMAGE_PATH = "playlist_image";
+
+    public static final long ALL_TRACKS_PLAYLIST_ID = 0;
+    public static final long DISK_ALL_TRACKS_PLAYLIST_ID = 1;
+
     private static final int period = 10000;
     private static final int limit = 500;
 
     private static final PlaylistManager ourInstance = new PlaylistManager();
 
-    private PlaylistManager() {
-    }
+    private PlaylistManager() {}
 
     public static synchronized PlaylistManager getInstance() {
         return ourInstance;
@@ -67,6 +72,15 @@ public class PlaylistManager {
         return getPlaylistObservable(context, playlistName);
     }
 
+    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, long playlistId){
+        if(Objects.equals(playlistId, DISK_ALL_TRACKS_PLAYLIST_ID))
+            return getDiskAllTracksObservable(context, restClient)
+                    .map(list -> new Playlist(DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
+                    .distinctUntilChanged();
+
+        return getPlaylistObservable(context, playlistId);
+    }
+
     public Observable<Playlist> getPlaylistObservable(Context context, String playlistName) {
         if (playlistName.equals(ALL_TRACKS_PLAYLIST))
             return StorIOContentResolverFactory
@@ -74,6 +88,14 @@ public class PlaylistManager {
                     .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
         return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
 
+    }
+
+    public Observable<Playlist> getPlaylistObservable(Context context, long playlistId) {
+        if (Objects.equals(playlistId, ALL_TRACKS_PLAYLIST_ID))
+            return StorIOContentResolverFactory
+                    .getAllAudioObservable(context, ASC_SORT_ORDER)
+                    .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
+        return StorIOContentResolverFactory.getPlaylistObservable(context, playlistId);
     }
 
     public Observable<List<Audio>> getAllAudiosObservable(Context context) {
@@ -172,6 +194,16 @@ public class PlaylistManager {
         }
     }
 
+    public synchronized void removePlaylist(Context context, long playlistId){
+        StorIOContentResolverFactory.get(context)
+                .delete()
+                .byQuery(DeleteQuery.builder()
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .where(MediaStore.Audio.Playlists._ID + " = ?")
+                        .whereArgs(playlistId).build())
+                .prepare()
+                .executeAsBlocking();
+    }
 
     public String getTitleFromPlaylistName(Context context, String playlistName) {
         String title;
@@ -223,6 +255,16 @@ public class PlaylistManager {
                     }
                     return audioList;
                 }).subscribeOn(Schedulers.io());
+    }
+
+    public synchronized void renamePlaylist(@NonNull Context context, long playlistId, @NonNull String newName){
+        ContentValues newNameValue = new ContentValues(1);
+        newNameValue.put(MediaStore.Audio.Playlists.NAME, newName);
+
+        StorIOContentResolverFactory.get(context)
+                .lowLevel()
+                .contentResolver()
+                .update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, newNameValue, MediaStore.Audio.Playlists._ID + "=" + playlistId, null );
     }
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) throws PlaylistAlreadyExistsException {

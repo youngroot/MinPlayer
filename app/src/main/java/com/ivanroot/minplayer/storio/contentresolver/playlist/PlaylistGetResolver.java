@@ -19,8 +19,6 @@ public class PlaylistGetResolver extends DefaultGetResolver<Playlist> {
     @NonNull
     @Override
     public Playlist mapFromCursor(@NonNull StorIOContentResolver contentResolver, @NonNull Cursor cursor) {
-
-
         long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
         String playlistName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists.NAME));
         //Date dateAdded  = new Date(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.DATE_ADDED)));

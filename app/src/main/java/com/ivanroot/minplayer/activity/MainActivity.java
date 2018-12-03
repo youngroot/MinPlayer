@@ -37,6 +37,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class MainActivity extends NightModeResponsibleActivity
@@ -89,8 +90,8 @@ public class MainActivity extends NightModeResponsibleActivity
             startPlayerService();
 
             SharedPreferences sharedPreferences = getSharedPreferences(PlayerService.SERVICE_NAME, MODE_PRIVATE);
-            String playlistName = sharedPreferences.getString(PlayerService.PREF_LAST_PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
-            launchPlaylistFragment(playlistName);
+            long playlistId = sharedPreferences.getLong(PlayerService.PREF_LAST_PLAYLIST_ID, PlaylistManager.ALL_TRACKS_PLAYLIST_ID);
+            launchPlaylistFragment(playlistId);
         } else {
             wasStarted = savedInstanceState.getBoolean("wasStarted");
         }
@@ -288,15 +289,15 @@ public class MainActivity extends NightModeResponsibleActivity
         return panelLayout;
     }
 
-    public void launchPlaylistFragment(@NonNull String playlistName) {
-        if (playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+    public void launchPlaylistFragment(long playlistId) {
+        if (Objects.equals(playlistId, PlaylistManager.ALL_TRACKS_PLAYLIST_ID)) {
             fragmentLauncher(R.id.all_audio);
             navigationView.setCheckedItem(R.id.all_audio);
             return;
         }
 
         PlaylistFragment playlistFragment = new PlaylistFragment();
-        playlistFragment.setPlaylistName(playlistName);
+        playlistFragment.setPlaylistId(playlistId);
 
         getFragmentManager()
                 .beginTransaction()

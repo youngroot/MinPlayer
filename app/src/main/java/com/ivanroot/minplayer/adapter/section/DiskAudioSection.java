@@ -50,7 +50,7 @@ public class DiskAudioSection extends AudioSection {
 
         DiskAudioViewHolder diskAudioViewHolder = (DiskAudioViewHolder)holder;
         diskAudioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(audio,
-                PlaylistManager.DISK_ALL_TRACKS_PLAYLIST));
+                PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID));
 
         diskAudioViewHolder.setMoreBtnOnClickListener(v -> {
             Playlist playlist = new Playlist();

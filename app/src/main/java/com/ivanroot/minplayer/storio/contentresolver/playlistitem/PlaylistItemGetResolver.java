@@ -30,7 +30,7 @@ public class PlaylistItemGetResolver extends DefaultGetResolver<PlaylistItem> {
         //Date dateAdded  = new Date(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.DATE_ADDED)));
         //Date dateModified = new Date(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.DATE_MODIFIED)));
         //Log.i(toString(),dateAdded + " " + dateModified);
-        Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
+        Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
         String[] imagePaths = new String[4];
 
         try {
@@ -77,10 +77,10 @@ public class PlaylistItemGetResolver extends DefaultGetResolver<PlaylistItem> {
                 }
             }
             membersCursor.close();
-        }catch (NullPointerException | CursorIndexOutOfBoundsException ex){
+        } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
             ex.printStackTrace();
-            Log.e(toString(),ex.getMessage());
+            Log.e(toString(), ex.getMessage());
         }
-        return new PlaylistItem(playlistName,playlistSize,imagePaths,null,null);
+        return new PlaylistItem(playlistId, playlistName, playlistSize, imagePaths, null, null);
     }
 }

@@ -44,7 +44,7 @@ public class DiskPlaylistAdapter extends BasePlaylistAdapter<Audio, DiskAudioVie
             status = statuses.get(audio.getMd5Hash());
 
         holder.representItem(activity, audio, status);
-        holder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(audio, playlist.getName()));
+        holder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(audio, playlist.getId()));
         holder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, position));
     }
 

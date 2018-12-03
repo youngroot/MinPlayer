@@ -11,6 +11,7 @@ import java.util.Objects;
  */
 
 public class PlaylistItem {
+    private long playlistId = -1;
     private String name;
     private int playlistSize;
     private String imagePath;
@@ -20,7 +21,8 @@ public class PlaylistItem {
 
     public PlaylistItem(){}
 
-    public PlaylistItem(@NonNull String name, int playlistSize, @NonNull String imagePath, Date dateAdded, Date dateModified) {
+    public PlaylistItem(long playlistId, @NonNull String name, int playlistSize, @NonNull String imagePath, Date dateAdded, Date dateModified) {
+        this.playlistId = playlistId;
         this.name = name;
         this.playlistSize = playlistSize;
         this.imagePath = imagePath;
@@ -28,12 +30,21 @@ public class PlaylistItem {
         this.dateModified = dateModified;
     }
 
-    public PlaylistItem(@NonNull String name, int playlistSize, @NonNull String[] imagePaths, Date dateAdded, Date dateModified) {
+    public PlaylistItem(long playlistId, @NonNull String name, int playlistSize, @NonNull String[] imagePaths, Date dateAdded, Date dateModified) {
+        this.playlistId = playlistId;
         this.name = name;
         this.playlistSize = playlistSize;
         this.imagePaths = imagePaths;
         this.dateAdded = dateAdded;
         this.dateModified = dateModified;
+    }
+
+    public long getId(){
+        return playlistId;
+    }
+
+    public void setId(long playlistId){
+        this.playlistId = playlistId;
     }
 
     public String getName() {

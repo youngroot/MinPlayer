@@ -48,6 +48,8 @@ import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
+import java.util.Objects;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import jp.wasabeef.blurry.Blurry;
@@ -64,9 +66,8 @@ public class PlaylistFragment extends NavFragmentBase {
     public static final String NAME = "PlaylistFragment";
     private static final String BUNDLE_RECYCLER_LAYOUT = "classname.recycler.layout";
 
+    protected long playlistId;
 
-    private PlaylistItem playlistItem = null;
-    protected String playlistName = null;
     private PlaylistAdapter adapter;
     private FastScrollRecyclerView audioRecyclerView;
     private CollapsingToolbarLayout collapsingToolbarLayout;
@@ -98,12 +99,8 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onCreate(savedInstanceState);
         playlistManager = PlaylistManager.getInstance();
 
-        if (savedInstanceState == null) {
-            if (playlistItem != null)
-                playlistName = playlistItem.getName();
-
-        } else {
-            playlistName = savedInstanceState.getString("playlist_name");
+        if (savedInstanceState != null){
+            playlistId = savedInstanceState.getLong("playlist_id");
         }
 
         adapter = new PlaylistAdapter(getActivity());
@@ -113,7 +110,7 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     private void setupPlaylistObservable() {
-        playlistObservable = playlistManager.getPlaylistObservable(getActivity(), playlistName)
+        playlistObservable = playlistManager.getPlaylistObservable(getActivity(), playlistId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(playlist -> {
                     setImages(playlist);
@@ -121,8 +118,8 @@ public class PlaylistFragment extends NavFragmentBase {
                 });
     }
 
-    public void setPlaylistName(String playlistName) {
-        this.playlistName = playlistName;
+    public void setPlaylistId(long playlistId) {
+        this.playlistId = playlistId;
     }
 
     @Nullable
@@ -138,7 +135,7 @@ public class PlaylistFragment extends NavFragmentBase {
                     .onRestoreInstanceState(savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT));
         }
 
-        if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+        if (!Objects.equals(playlistId, PlaylistManager.ALL_TRACKS_PLAYLIST_ID)) {
             collapsingToolbarLayout = (CollapsingToolbarLayout) view.findViewById(R.id.collapsing_toolbar_layout);
             playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
             playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
@@ -169,11 +166,11 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     private void prepareListeners(View view) {
-        if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+        if (!Objects.equals(playlistId, PlaylistManager.ALL_TRACKS_PLAYLIST_ID)) {
 
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
-                rxBus.post(ACTION_SET_PLAYLIST, playlistName);
+                rxBus.post(ACTION_SET_PLAYLIST, playlistId);
                 if (adapter.getItemCount() > 0) {
                     rxBus.post(ACTION_PLAY_AUDIO, adapter.getPlaylist().getAudio(0));
                 }
@@ -211,23 +208,11 @@ public class PlaylistFragment extends NavFragmentBase {
                     return;
                 }
 
-                if (playlistName != null && !playlistName.equals(editedName)) {
-                    try {
-                        playlistManager.renamePlaylist(activity, playlistName, editedName);
-                        rxBus.post(ACTION_ON_PLAYLIST_NAME_CHANGED, new Pair<>(playlistName, editedName));
+                playlistManager.renamePlaylist(activity, playlistId, editedName);
 
-                        playlistName = editedName;
+                setupPlaylistObservable();
+                adapter.saveModifiedPlaylist();
 
-                        setupPlaylistObservable();
-                        adapter.saveModifiedPlaylist();
-
-                    } catch (PlaylistAlreadyExistsException ex) {
-                        Toast.makeText(activity, getResources().getString(R.string.playlist_already_exists), Toast.LENGTH_SHORT)
-                                .show();
-                    }
-                } else {
-                    adapter.saveModifiedPlaylist();
-                }
             });
 
             adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
@@ -272,7 +257,7 @@ public class PlaylistFragment extends NavFragmentBase {
     }
 
     private View getView(LayoutInflater inflater, @Nullable ViewGroup container) {
-        int layoutResource = (playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)
+        int layoutResource = (Objects.equals(playlistId, PlaylistManager.ALL_TRACKS_PLAYLIST_ID)
                 ? R.layout.all_tracks_playlist_fragment
                 : R.layout.playlist_fragment);
         View view = inflater.inflate(layoutResource, container, false);
@@ -326,14 +311,9 @@ public class PlaylistFragment extends NavFragmentBase {
         audioRecyclerView.setAdapter(adapter);
     }
 
-
-    public String getPlaylistName() {
-        return playlistName;
-    }
-
     @Override
     public String getActionBarTitle() {
-        return playlistManager.getTitleFromPlaylistName(getActivity(), playlistName);
+        return "";
     }
 
     @Override
@@ -376,7 +356,7 @@ public class PlaylistFragment extends NavFragmentBase {
         String json = gson.toJson(selectedAudio);
 
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, audioRecyclerView.getLayoutManager().onSaveInstanceState());
-        outState.putString("playlist_name", playlistName);
+        outState.putLong("playlist_id", playlistId);
         outState.putBoolean("selector_dialog_is_active", selectorDialogIsActive);
         outState.putString("selected_audio", json);
         outState.putInt("pos", layoutManager.findFirstVisibleItemPosition());
@@ -447,7 +427,7 @@ public class PlaylistFragment extends NavFragmentBase {
     @Override
     public void setActionBarTitle(String title) {
         super.setActionBarTitle(title);
-        if(collapsingToolbarLayout != null)
+        if (collapsingToolbarLayout != null)
             collapsingToolbarLayout.setTitle(title);
     }
 
@@ -455,8 +435,7 @@ public class PlaylistFragment extends NavFragmentBase {
         try {
             String playlistName = playlist.getName();
 
-            if(playlistName != null) {
-                this.playlistName = playlistName;
+            if (playlistName != null) {
                 setActionBarTitle(playlistManager.getTitleFromPlaylistName(activity, playlistName));
                 playlistNameView.setText(playlistName);
             }

@@ -1,15 +1,21 @@
 package com.ivanroot.minplayer.fragment;
 
+import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 
 public class AllTracksPlaylistFragment extends PlaylistFragment {
     public static final String NAME = "AllTracksPlaylistFragment";
 
     public AllTracksPlaylistFragment(){
-        playlistName = PlaylistManager.ALL_TRACKS_PLAYLIST;
+        playlistId = PlaylistManager.ALL_TRACKS_PLAYLIST_ID;
     }
 
     @Override
-    public void setPlaylistName(String playlistName){}
+    public void setPlaylistId(long playlistId){}
+
+    @Override
+    public String getActionBarTitle() {
+        return getResources().getString(R.string.all_tracks_playlist);
+    }
 }
 

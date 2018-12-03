@@ -61,7 +61,7 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
             audioViewHolder.setMoreBtnIconResource(R.drawable.ic_drag);
         } else {
             audioViewHolder.setMoreBtnOnTouchListener(null);
-            audioViewHolder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(playlist.getAudio(i), playlist.getName()));
+            audioViewHolder.itemView.setOnClickListener(v -> audioClickListener.onAudioClick(playlist.getAudio(i), playlist.getId()));
             audioViewHolder.setMoreBtnOnClickListener(v -> moreBtnListener.onMoreBtnClick(v, playlist, i));
             audioViewHolder.setMoreBtnIconResource(R.drawable.ic_more_vert);
         }

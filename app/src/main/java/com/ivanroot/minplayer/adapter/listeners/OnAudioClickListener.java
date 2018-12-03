@@ -7,5 +7,5 @@ import com.ivanroot.minplayer.audio.Audio;
  */
 
 public interface OnAudioClickListener {
-    void onAudioClick(Audio audio, String playlistName);
+    void onAudioClick(Audio audio, long playlistId);
 }
