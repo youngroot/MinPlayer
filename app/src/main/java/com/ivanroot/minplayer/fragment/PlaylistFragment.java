@@ -331,7 +331,7 @@ public class PlaylistFragment extends NavFragmentBase {
                         .findFragmentByTag(getActivity().getResources().getString(R.string.add_to_playlist));
                 if (dialog != null) {
                     dialog.setPlaylistItemClickListener(playlistItem -> {
-                        playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), selectedAudio);
+                        playlistManager.addToPlaylist(getActivity(), playlistItem.getId(), selectedAudio);
                         dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
                     });
                 }
@@ -381,7 +381,7 @@ public class PlaylistFragment extends NavFragmentBase {
         super.onDestroy();
     }
 
-    private void setImages(Playlist playlist) {
+    protected void setImages(Playlist playlist) {
         try {
             bigPlaylistImage.setImageResource(0);
 
@@ -431,12 +431,12 @@ public class PlaylistFragment extends NavFragmentBase {
             collapsingToolbarLayout.setTitle(title);
     }
 
-    private void setText(Playlist playlist) {
+    protected void setText(Playlist playlist) {
         try {
             String playlistName = playlist.getName();
 
             if (playlistName != null) {
-                setActionBarTitle(playlistManager.getTitleFromPlaylistName(activity, playlistName));
+                setActionBarTitle(playlistName);
                 playlistNameView.setText(playlistName);
             }
 
@@ -450,7 +450,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
     public void showPlaylistSelectionDialog(Audio audio) {
         PlaylistSelectorDialog dialog = new PlaylistSelectorDialog();
-        dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), audio));
+        dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(), playlistItem.getId(), audio));
         dialog.show(getActivity().getFragmentManager(), getActivity().getResources().getString(R.string.add_to_playlist));
         selectorDialogIsActive = true;
         dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);

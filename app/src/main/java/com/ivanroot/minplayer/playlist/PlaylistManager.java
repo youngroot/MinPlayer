@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -12,12 +11,11 @@ import android.util.Log;
 
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
-import com.ivanroot.minplayer.exceptions.PlaylistAlreadyExistsException;
 import com.ivanroot.minplayer.storio.contentresolver.StorIOContentResolverFactory;
-import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
+import com.ivanroot.minplayer.storio.sqlite.StorIOSQLiteFactory;
+import com.ivanroot.minplayer.storio.sqlite.playlist.PlaylistTable;
 import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
-import com.pushtorefresh.storio3.contentresolver.queries.UpdateQuery;
 import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
@@ -29,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -40,7 +39,6 @@ import io.reactivex.schedulers.Schedulers;
  */
 
 public class PlaylistManager {
-
     public static final String ASC_SORT_ORDER = MediaStore.Audio.Media.TITLE + " ASC";
     public static final String ALL_TRACKS_PLAYLIST = "com.ivanroot.minplayer.all_tracks_playlist";
     public static final String DISK_ALL_TRACKS_PLAYLIST = "com.ivanroot.minplayer.disk_all_tracks_playlist";
@@ -62,32 +60,14 @@ public class PlaylistManager {
     }
 
 
-    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, @NonNull String playlistName) {
-        if (playlistName.equals(DISK_ALL_TRACKS_PLAYLIST))
-            return getDiskAllTracksObservable(context, restClient)
-                    .map(list -> new Playlist(DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
-                    .distinctUntilChanged();
-
-
-        return getPlaylistObservable(context, playlistName);
-    }
-
     public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, long playlistId){
         if(Objects.equals(playlistId, DISK_ALL_TRACKS_PLAYLIST_ID))
             return getDiskAllTracksObservable(context, restClient)
                     .map(list -> new Playlist(DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
+                    //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist))
                     .distinctUntilChanged();
 
         return getPlaylistObservable(context, playlistId);
-    }
-
-    public Observable<Playlist> getPlaylistObservable(Context context, String playlistName) {
-        if (playlistName.equals(ALL_TRACKS_PLAYLIST))
-            return StorIOContentResolverFactory
-                    .getAllAudioObservable(context, ASC_SORT_ORDER)
-                    .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
-        return StorIOContentResolverFactory.getPlaylistObservable(context, playlistName);
-
     }
 
     public Observable<Playlist> getPlaylistObservable(Context context, long playlistId) {
@@ -95,7 +75,10 @@ public class PlaylistManager {
             return StorIOContentResolverFactory
                     .getAllAudioObservable(context, ASC_SORT_ORDER)
                     .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
+                    //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist));
+
         return StorIOContentResolverFactory.getPlaylistObservable(context, playlistId);
+                //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist));
     }
 
     public Observable<List<Audio>> getAllAudiosObservable(Context context) {
@@ -107,38 +90,34 @@ public class PlaylistManager {
     }
 
     public synchronized void writePlaylist(Context context, Playlist playlist) {
-        if (playlist == null) return;
-
-        Log.i(toString(), "writePlaylist " + playlist.getName() + " size: " + playlist.size());
-
-        if (Objects.equals(playlist.getName(), ALL_TRACKS_PLAYLIST) || Objects.equals(playlist.getName(), DISK_ALL_TRACKS_PLAYLIST))
-            //playlist.setAudioList(new ArrayList<>());
+        if (playlist == null)
             return;
 
-        StorIOContentResolverFactory.get(context)
+        if (!Objects.equals(playlist.getId(), ALL_TRACKS_PLAYLIST_ID) &&
+                !Objects.equals(playlist.getId(), DISK_ALL_TRACKS_PLAYLIST_ID)) {
+
+            StorIOContentResolverFactory.get(context)
+                    .put()
+                    .object(playlist)
+                    .prepare()
+                    .executeAsBlocking();
+        } else {
+            playlist.setAudioList(new ArrayList<>());
+        }
+
+        StorIOSQLiteFactory.get(context)
                 .put()
                 .object(playlist)
                 .prepare()
                 .executeAsBlocking();
-
     }
 
-    public synchronized void addToPlaylist(Context context, String playlistName, Audio audio) {
+    public synchronized void addToPlaylist(Context context, long playlistId, Audio audio) {
         Completable.create(emitter -> {
             ContentResolver contentResolver = context.getContentResolver();
 
-            String[] projection = new String[]{MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME};
-            String selection = MediaStore.Audio.Playlists.NAME + " = ?";
-            String[] selectionArgs = new String[]{playlistName};
-
-            Cursor cursor = contentResolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null);
-            cursor.moveToFirst();
-
-            long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-            cursor.close();
-
             Uri membersUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
-            cursor = contentResolver.query(membersUri, null, null, null, null);
+            Cursor cursor = contentResolver.query(membersUri, null, null, null, null);
             int playlistSize = cursor.getCount();
             cursor.close();
 
@@ -160,40 +139,6 @@ public class PlaylistManager {
                 .subscribe();
     }
 
-    public PlaylistItem getPlaylistItem(Context context, String playlistName) {
-        if (playlistName.equals(ALL_TRACKS_PLAYLIST)) {
-            PlaylistItem playlistItem = new PlaylistItem();
-            playlistItem.setName(ALL_TRACKS_PLAYLIST);
-            return playlistItem;
-        }
-
-        return StorIOContentResolverFactory.get(context)
-                .get()
-                .object(PlaylistItem.class)
-                .withQuery(Query.builder()
-                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
-                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
-                        .whereArgs(playlistName)
-                        .build())
-                .prepare()
-                .executeAsBlocking();
-    }
-
-    public synchronized void removePlaylist(Context context, String name) {
-        if (!Objects.equals(name, ALL_TRACKS_PLAYLIST) && !Objects.equals(name, DISK_ALL_TRACKS_PLAYLIST)) {
-            StorIOContentResolverFactory.get(context)
-                    .delete()
-                    .byQuery(DeleteQuery
-                            .builder()
-                            .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
-                            .where(MediaStore.Audio.Playlists.NAME + " = ?")
-                            .whereArgs(name)
-                            .build())
-                    .prepare()
-                    .executeAsBlocking();
-        }
-    }
-
     public synchronized void removePlaylist(Context context, long playlistId){
         StorIOContentResolverFactory.get(context)
                 .delete()
@@ -203,19 +148,6 @@ public class PlaylistManager {
                         .whereArgs(playlistId).build())
                 .prepare()
                 .executeAsBlocking();
-    }
-
-    public String getTitleFromPlaylistName(Context context, String playlistName) {
-        String title;
-        switch (playlistName) {
-            case ALL_TRACKS_PLAYLIST:
-                title = context.getResources().getString(R.string.all_tracks_playlist);
-                break;
-            default:
-                title = playlistName;
-        }
-
-        return title;
     }
 
     public Observable<List<Audio>> getDiskAllTracksObservable(Context context, RestClient restClient) {
@@ -257,6 +189,17 @@ public class PlaylistManager {
                 }).subscribeOn(Schedulers.io());
     }
 
+    private Observable<Playlist> getPlaylistAdditionalObservable(@NonNull Context context, @NonNull final Playlist playlist){
+        return StorIOSQLiteFactory.getPlaylistObservable(context, playlist.getId())
+                .map(dbPlaylist ->{
+                    if(dbPlaylist.isShuffled())
+                        playlist.shuffle();
+                    playlist.setImagePath(dbPlaylist.getImagePath());
+                    playlist.checkAndSetAudio(dbPlaylist.getCurrentAudio());
+                    return playlist;
+                });
+    }
+
     public synchronized void renamePlaylist(@NonNull Context context, long playlistId, @NonNull String newName){
         ContentValues newNameValue = new ContentValues(1);
         newNameValue.put(MediaStore.Audio.Playlists.NAME, newName);
@@ -266,45 +209,5 @@ public class PlaylistManager {
                 .contentResolver()
                 .update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, newNameValue, MediaStore.Audio.Playlists._ID + "=" + playlistId, null );
     }
-
-    public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) throws PlaylistAlreadyExistsException {
-        Cursor cursor = StorIOContentResolverFactory.get(context)
-                .get()
-                .cursor().withQuery(Query.builder()
-                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
-                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
-                        .whereArgs(newName)
-                        .build())
-                .prepare()
-                .executeAsBlocking();
-        if(cursor.getCount() > 0)
-        cursor = StorIOContentResolverFactory.get(context)
-                .get()
-                .cursor()
-                .withQuery(Query.builder()
-                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
-                        .where(MediaStore.Audio.Playlists.NAME + " = ?")
-                        .whereArgs(oldName).build())
-                .prepare()
-                .executeAsBlocking();
-        try {
-            cursor.moveToFirst();
-            long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-
-            ContentResolver contentResolver = StorIOContentResolverFactory
-                    .get(context)
-                    .lowLevel()
-                    .contentResolver();
-
-            ContentValues value = new ContentValues(1);
-            value.put(MediaStore.Audio.Playlists.NAME, newName);
-            contentResolver.update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, value, MediaStore.Audio.Playlists._ID + "=" + playlistId, null);
-
-        } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
-            ex.printStackTrace();
-            Log.e(toString(), ex.toString());
-        }
-    }
-
 
 }

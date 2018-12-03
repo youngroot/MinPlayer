@@ -96,7 +96,7 @@ public class DiskFragment extends NavFragmentBase {
                     }
 
                     if(restClient != null){
-                        Observable<Playlist> playlistObservable = playlistManager.getPlaylistObservable(activity, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST);
+                        Observable<Playlist> playlistObservable = playlistManager.getPlaylistObservable(activity, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID);
                         adapter.subscribe(playlistObservable);
                     }
                 });

@@ -211,7 +211,7 @@ public class SearchActivity extends NavUpActivityBase {
                             .findFragmentByTag(getActivity().getResources().getString(R.string.add_to_playlist));
                     if (dialog != null) {
                         dialog.setPlaylistItemClickListener(playlistItem -> {
-                            playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), selectedAudio);
+                            playlistManager.addToPlaylist(getActivity(), playlistItem.getId(), selectedAudio);
                             dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);
                         });
                     }
@@ -259,7 +259,7 @@ public class SearchActivity extends NavUpActivityBase {
 
         public void showPlaylistSelectionDialog(Audio audio) {
             PlaylistSelectorDialog dialog = new PlaylistSelectorDialog();
-            dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(), playlistItem.getName(), audio));
+            dialog.setPlaylistItemClickListener(playlistItem -> playlistManager.addToPlaylist(getActivity(), playlistItem.getId(), audio));
             dialog.show(getActivity().getFragmentManager(), getActivity().getResources().getString(R.string.add_to_playlist));
             selectorDialogIsActive = true;
             dialog.setDialogDismissListener(dialogInterface -> selectorDialogIsActive = false);

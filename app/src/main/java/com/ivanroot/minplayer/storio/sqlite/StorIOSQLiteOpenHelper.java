@@ -26,7 +26,7 @@ public class StorIOSQLiteOpenHelper extends SQLiteOpenHelper {
         Gson gson = new Gson();
         ContentValues values = new ContentValues();
 
-        values.put(PlaylistTable.Columns.PLAYLIST_ID, 1);
+        values.put(PlaylistTable.Columns.PLAYLIST_ID, PlaylistManager.ALL_TRACKS_PLAYLIST_ID);
         values.put(PlaylistTable.Columns.PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
         values.put(PlaylistTable.Columns.PLAYLIST_JSON, gson.toJson(playlist));
         sqLiteDatabase.insert(PlaylistTable.TABLE_NAME, null, values);
@@ -34,7 +34,7 @@ public class StorIOSQLiteOpenHelper extends SQLiteOpenHelper {
         values.clear();
         playlist.setName(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST);
 
-        values.put(PlaylistTable.Columns.PLAYLIST_ID, 2);
+        values.put(PlaylistTable.Columns.PLAYLIST_ID, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID);
         values.put(PlaylistTable.Columns.PLAYLIST_NAME, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST);
         values.put(PlaylistTable.Columns.PLAYLIST_JSON, gson.toJson(playlist));
         sqLiteDatabase.insert(PlaylistTable.TABLE_NAME, null, values);

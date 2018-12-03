@@ -96,7 +96,6 @@ import okhttp3.OkHttpClient;
 public class PlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener {
     public static final String SERVICE_NAME = "PlayerService";
-    public static final String PREF_LAST_PLAYLIST_NAME = "pref_last_playlist";
     public static final String PREF_LAST_PLAYLIST_ID = "pref_last_playlist_id";
 
     private final int permissionDenied = PackageManager.PERMISSION_DENIED;
@@ -274,18 +273,6 @@ public class PlayerService extends Service implements
         sendBroadcast(equalizerIntent);
     }
 
-    @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
-    public void setPlaylist(String playlistName) {
-
-        if (playlist != null)
-            if (playlistName.equals(playlist.getName())) return;
-
-        if (playlistDisposable != null)
-            playlistDisposable.dispose();
-
-        playlistManager.writePlaylist(this,playlist);
-        subscribe(playlistName);
-    }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
     public void setPlaylist(Long playlistId){
@@ -298,12 +285,6 @@ public class PlayerService extends Service implements
 
         playlistManager.writePlaylist(this, playlist);
         subscribe(playlistId);
-    }
-
-    private void subscribe(String playlistName) {
-        playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistName)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setPlaylist);
     }
 
     private void subscribe(long playlistId){
@@ -323,15 +304,6 @@ public class PlayerService extends Service implements
             prepareToPlay();
         }
     }
-
-//    @Subscribe(tags = {@Tag(PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED)})
-//    public void onPlaylistNameChanged(Pair<String, String> namePair) {
-//        String oldName = namePair.first;
-//        String newName = namePair.second;
-//
-//        if (playlist != null && playlist.getName().equals(oldName))
-//            setPlaylist(newName);
-//    }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_PLAYLIST)})
     public Playlist getPlaylist(Object object) {
