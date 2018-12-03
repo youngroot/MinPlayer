@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.storio;
+package com.ivanroot.minplayer.storio.contentresolver;
 
 
 import android.content.Context;
@@ -7,6 +7,15 @@ import android.provider.MediaStore;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistItem;
+import com.ivanroot.minplayer.storio.contentresolver.audio.AudioDeleteResolver;
+import com.ivanroot.minplayer.storio.contentresolver.audio.AudioGetResolver;
+import com.ivanroot.minplayer.storio.contentresolver.audio.AudioPutResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlist.PlaylistDeleteResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlist.PlaylistGetResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlistitem.PlaylistItemDeleteResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlist.PlaylistPutResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlistitem.PlaylistItemGetResolver;
+import com.ivanroot.minplayer.storio.contentresolver.playlistitem.PlaylistItemPutResolver;
 import com.pushtorefresh.storio3.contentresolver.ContentResolverTypeMapping;
 import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.impl.DefaultStorIOContentResolver;
@@ -22,7 +31,6 @@ import io.reactivex.Observable;
  */
 
 public class StorIOContentResolverFactory {
-
     private static StorIOContentResolver INSTANCE;
 
     public static synchronized StorIOContentResolver get(Context context) {
@@ -41,7 +49,7 @@ public class StorIOContentResolverFactory {
                         .getResolver(new PlaylistGetResolver())
                         .deleteResolver(new PlaylistDeleteResolver())
                         .build())
-                .addTypeMapping(PlaylistItem.class,ContentResolverTypeMapping.<PlaylistItem>builder()
+                .addTypeMapping(PlaylistItem.class, ContentResolverTypeMapping.<PlaylistItem>builder()
                         .putResolver(new PlaylistItemPutResolver())
                         .getResolver(new PlaylistItemGetResolver())
                         .deleteResolver(new PlaylistItemDeleteResolver())
@@ -66,7 +74,7 @@ public class StorIOContentResolverFactory {
 
     }
 
-    public static Observable<Playlist> getPlaylistObservable(Context context, String playlistName){
+    public static Observable<Playlist> getPlaylistObservable(Context context, String playlistName) {
         return get(context)
                 .get()
                 .listOfObjects(Playlist.class)
@@ -81,7 +89,22 @@ public class StorIOContentResolverFactory {
                 .flatMap(Observable::fromIterable);
     }
 
-    public static Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context){
+    public static Observable<Playlist> getPlaylistObservable(Context context, long playlistId) {
+        return get(context)
+                .get()
+                .listOfObjects(Playlist.class)
+                .withQuery(Query.builder()
+                        .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
+                        .where(MediaStore.Audio.Playlists._ID + " = ?")
+                        .whereArgs(playlistId)
+                        .build())
+                .prepare()
+                .asRxFlowable(BackpressureStrategy.LATEST)
+                .toObservable()
+                .flatMap(Observable::fromIterable);
+    }
+
+    public static Observable<List<PlaylistItem>> getPlaylistItemsObservable(Context context) {
         return get(context)
                 .get()
                 .listOfObjects(PlaylistItem.class)

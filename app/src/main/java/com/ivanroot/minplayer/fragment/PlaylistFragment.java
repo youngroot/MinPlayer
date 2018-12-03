@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
@@ -68,6 +69,7 @@ public class PlaylistFragment extends NavFragmentBase {
     protected String playlistName = null;
     private PlaylistAdapter adapter;
     private FastScrollRecyclerView audioRecyclerView;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
     private FloatingActionButton playFab;
     private PlaylistManager playlistManager;
     private AppBarLayout appBarLayout;
@@ -137,6 +139,7 @@ public class PlaylistFragment extends NavFragmentBase {
         }
 
         if (!playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+            collapsingToolbarLayout = (CollapsingToolbarLayout) view.findViewById(R.id.collapsing_toolbar_layout);
             playlistNameView = (TextView) view.findViewById(R.id.playlist_name);
             playlistSizeView = (TextView) view.findViewById(R.id.playlist_size);
             playlistEditedNameView = (EditText) view.findViewById(R.id.playlist_name_edit);
@@ -441,13 +444,20 @@ public class PlaylistFragment extends NavFragmentBase {
         }
     }
 
+    @Override
+    public void setActionBarTitle(String title) {
+        super.setActionBarTitle(title);
+        if(collapsingToolbarLayout != null)
+            collapsingToolbarLayout.setTitle(title);
+    }
+
     private void setText(Playlist playlist) {
         try {
             String playlistName = playlist.getName();
 
             if(playlistName != null) {
                 this.playlistName = playlistName;
-                setActionBarTitle(playlistName);
+                setActionBarTitle(playlistManager.getTitleFromPlaylistName(activity, playlistName));
                 playlistNameView.setText(playlistName);
             }
 

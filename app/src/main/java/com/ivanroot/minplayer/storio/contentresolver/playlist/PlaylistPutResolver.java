@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.storio;
+package com.ivanroot.minplayer.storio.contentresolver.playlist;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -59,6 +59,7 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
             e.printStackTrace();
             Log.e(toString(), e.getMessage());
         }
+
         return null;
     }
 

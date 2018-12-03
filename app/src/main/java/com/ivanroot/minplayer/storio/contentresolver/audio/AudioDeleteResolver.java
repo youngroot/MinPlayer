@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.storio;
+package com.ivanroot.minplayer.storio.contentresolver.audio;
 
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;

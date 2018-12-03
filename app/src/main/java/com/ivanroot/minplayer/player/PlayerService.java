@@ -58,6 +58,7 @@ import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.google.gson.Gson;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
@@ -76,12 +77,11 @@ import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.ivanroot.minplayer.utils.Utils;
-import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.RestClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -96,15 +96,16 @@ import okhttp3.OkHttpClient;
 
 public class PlayerService extends Service implements
         AudioManager.OnAudioFocusChangeListener {
-
     public static final String SERVICE_NAME = "PlayerService";
+    public static final String PREF_LAST_PLAYLIST_NAME = "pref_last_playlist";
+
     private final int permissionDenied = PackageManager.PERMISSION_DENIED;
     private final int permissionGranted = PackageManager.PERMISSION_GRANTED;
     private static final int NOTIFICATION_ID = 101;
     private int audioSessionId = 0;
     private RestClient restClient;
     private PlayerBinder localBinder = new PlayerBinder();
-    private SharedPreferences settings;
+    private SharedPreferences sharedPreferences;
     private Playlist playlist;
     private Queue<Audio> nextQueue;
     private BroadcastReceiver becomingNoisyReceiver;
@@ -219,12 +220,10 @@ public class PlayerService extends Service implements
         restDisposable = RestClientUtil.asObservable(tokenObservable, networkInfoObservable)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> {
-                    restClient = (RestClient)state.get(RestClientUtil.KEY_REST_CLIENT);
+                    restClient = (RestClient) state.get(RestClientUtil.KEY_REST_CLIENT);
                     if (playlist != null && playlist.getName().equals(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)) {
                         playlistDisposable.dispose();
-                        playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(this::setPlaylist);
+                        subscribe(PlaylistManager.DISK_ALL_TRACKS_PLAYLIST);
                     }
                 });
     }
@@ -284,11 +283,14 @@ public class PlayerService extends Service implements
         if (playlistDisposable != null)
             playlistDisposable.dispose();
 
-        //PlaylistManager.writePlaylist(this,playlist);
+        playlistManager.writePlaylist(this,playlist);
+        subscribe(playlistName);
+    }
+
+    private void subscribe(String playlistName) {
         playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistName)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
-
     }
 
     private void setPlaylist(Playlist playlist) {
@@ -300,15 +302,14 @@ public class PlayerService extends Service implements
             updateMetaData();
             prepareToPlay();
         }
-
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED)})
-    public void onPlaylistNameChanged(Pair<String, String> namePair){
+    public void onPlaylistNameChanged(Pair<String, String> namePair) {
         String oldName = namePair.first;
         String newName = namePair.second;
 
-        if(playlist != null && playlist.getName().equals(oldName))
+        if (playlist != null && playlist.getName().equals(oldName))
             setPlaylist(newName);
     }
 
@@ -371,7 +372,9 @@ public class PlayerService extends Service implements
                     rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                 }
                 removeAudioFocus();
+                stopForeground(false);
                 buildNotification(false, false);
+                foregroundStarted = false;
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
@@ -380,7 +383,9 @@ public class PlayerService extends Service implements
                         exoPlayer.setPlayWhenReady(false);
                         rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                     }
+                    stopForeground(false);
                     buildNotification(false, false);
+                    foregroundStarted = false;
                 }
                 break;
 
@@ -724,10 +729,10 @@ public class PlayerService extends Service implements
 
     private void loadSettings() {
         Log.i("PlayerService", "loadSettings");
-        settings = getSharedPreferences(SERVICE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences(SERVICE_NAME, Context.MODE_PRIVATE);
         //wasPlaying = settings.getBoolean("wasPlaying",false);
         if (checkPermissions()) {
-            String playlistName = settings.getString("playlist", PlaylistManager.ALL_TRACKS_PLAYLIST);
+            String playlistName = sharedPreferences.getString(PREF_LAST_PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
             setPlaylist(playlistName);
         } else {
             startActivity(new Intent(this, StartupActivity.class));
@@ -738,11 +743,11 @@ public class PlayerService extends Service implements
 
     private void writeSettings() {
         Log.i("PlayerService", "writeSettings");
-        SharedPreferences.Editor editor = settings.edit();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         //editor.putBoolean("wasPlaying", wasPlaying);
         if (checkPermissions()) {
-            editor.putString("playlist", playlist.getName());
-            editor.commit();
+            editor.putString(PREF_LAST_PLAYLIST_NAME, playlist.getName());
+            editor.apply();
             playlistManager.writePlaylist(this, playlist);
         }
     }
@@ -777,7 +782,9 @@ public class PlayerService extends Service implements
                             exoPlayer.setPlayWhenReady(false);
                             rxBus.post(PlayerEvents.EVENT_AUDIO_IS_PAUSED, false);
                         }
-                        removeNotification();
+                        stopForeground(true);
+                        foregroundStarted = false;
+                        //removeNotification();
                         ongoingCall = true;
 
                         break;
@@ -878,7 +885,7 @@ public class PlayerService extends Service implements
                     .addAction(notificationAction, "play/pause", playPauseAction)
                     .addAction(R.drawable.ic_next_noti, "next", playbackAction(2));
 
-            if(foregroundStarted) {
+            if (foregroundStarted) {
                 ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                         .notify(NOTIFICATION_ID, notificationBuilder.build());
             } else {

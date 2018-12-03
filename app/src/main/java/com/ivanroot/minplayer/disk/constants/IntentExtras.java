@@ -1,6 +1,7 @@
 package com.ivanroot.minplayer.disk.constants;
 
 public class IntentExtras {
+    public static final String EXTRA_AUDIO_JSON = "extra_audio_json";
     public static final String EXTRA_AUDIO_ID = "extra_audio_id";
     public static final String EXTRA_AUDIO_SIZE = "extra_audio_size";
     public static final String EXTRA_AUDIO_LOCAL_DATA = "extra_audio_local_data";

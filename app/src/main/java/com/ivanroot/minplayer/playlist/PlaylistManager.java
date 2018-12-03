@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -12,7 +13,7 @@ import android.util.Log;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.exceptions.PlaylistAlreadyExistsException;
-import com.ivanroot.minplayer.storio.StorIOContentResolverFactory;
+import com.ivanroot.minplayer.storio.contentresolver.StorIOContentResolverFactory;
 import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
 import com.yandex.disk.rest.ResourcesArgs;
@@ -225,18 +226,16 @@ public class PlaylistManager {
     }
 
     public synchronized void renamePlaylist(Context context, @NonNull String oldName, @NonNull String newName) throws PlaylistAlreadyExistsException {
-       try{
         Cursor cursor = StorIOContentResolverFactory.get(context)
                 .get()
                 .cursor().withQuery(Query.builder()
                         .uri(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI)
                         .where(MediaStore.Audio.Playlists.NAME + " = ?")
                         .whereArgs(newName)
-                        .build()).prepare()
+                        .build())
+                .prepare()
                 .executeAsBlocking();
         if(cursor.getCount() > 0)
-            throw new PlaylistAlreadyExistsException();
-
         cursor = StorIOContentResolverFactory.get(context)
                 .get()
                 .cursor()
@@ -246,7 +245,7 @@ public class PlaylistManager {
                         .whereArgs(oldName).build())
                 .prepare()
                 .executeAsBlocking();
-
+        try {
             cursor.moveToFirst();
             long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
 
@@ -259,7 +258,7 @@ public class PlaylistManager {
             value.put(MediaStore.Audio.Playlists.NAME, newName);
             contentResolver.update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, value, MediaStore.Audio.Playlists._ID + "=" + playlistId, null);
 
-        } catch (NullPointerException ex) {
+        } catch (NullPointerException | CursorIndexOutOfBoundsException ex) {
             ex.printStackTrace();
             Log.e(toString(), ex.toString());
         }

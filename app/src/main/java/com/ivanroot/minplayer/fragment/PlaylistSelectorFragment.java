@@ -96,16 +96,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
 
         adapter.setOnPlaylistClickListener((playlistName -> {
-            PlaylistFragment fragment = new PlaylistFragment();
-            fragment.setPlaylistName(playlistName);
-
-            getActivity()
-                    .getFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_holder, fragment, PlaylistFragment.NAME)
-                    .addToBackStack(PlaylistFragment.NAME)
-                    .commit();
-
+            activity.launchPlaylistFragment(playlistName);
             Log.i(toString(), playlistName);
         }));
 

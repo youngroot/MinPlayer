@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -14,15 +15,12 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
-import com.hwangjr.rxbus.annotation.Subscribe;
-import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.fragment.AllTracksPlaylistFragment;
 import com.ivanroot.minplayer.fragment.ControllerFragment;
@@ -33,7 +31,6 @@ import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.fragment.VisSelectorFragment;
 import com.ivanroot.minplayer.player.PlayerService;
-import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Pair;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -44,20 +41,16 @@ import java.util.Map;
 
 public class MainActivity extends NightModeResponsibleActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
     public static final String ACTION_OPEN_PLAYLISTS = "action_open_playlists";
 
     private PlayerService player;
     private boolean wasStarted = false;
-    private Toolbar toolbar;
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle drawerToggle;
     private NavigationView navigationView;
-    private String playlistName;
     private Map<String, Integer> itemId;
     private SlidingUpPanelLayout panelLayout;
     private ControllerFragment controllerFragment;
-    private PlayerFragment playerFragment;
     private Bus rxBus = RxBus.get();
 
     private ServiceConnection conn = new ServiceConnection() {
@@ -74,9 +67,6 @@ public class MainActivity extends NightModeResponsibleActivity
             wasStarted = false;
         }
     };
-
-    public MainActivity() {
-    }
 
     private void initItemId() {
         itemId = new HashMap<>();
@@ -97,14 +87,12 @@ public class MainActivity extends NightModeResponsibleActivity
 
         if (savedInstanceState == null) {
             startPlayerService();
-            fragmentLauncher(R.id.all_audio);
-            navigationView.setCheckedItem(R.id.all_audio);
 
+            SharedPreferences sharedPreferences = getSharedPreferences(PlayerService.SERVICE_NAME, MODE_PRIVATE);
+            String playlistName = sharedPreferences.getString(PlayerService.PREF_LAST_PLAYLIST_NAME, PlaylistManager.ALL_TRACKS_PLAYLIST);
+            launchPlaylistFragment(playlistName);
         } else {
-
             wasStarted = savedInstanceState.getBoolean("wasStarted");
-            playlistName = savedInstanceState.getString("name");
-            //getSupportActionBar().setTitle(savedInstanceState.getString("title", getResources().getString(R.string.app_name)));
         }
     }
 
@@ -112,8 +100,8 @@ public class MainActivity extends NightModeResponsibleActivity
         if (!wasStarted) {
             startService(new Intent(this, PlayerService.class));
             controllerFragment = new ControllerFragment();
-            playerFragment = new PlayerFragment();
-            //controllerFragment.setPanelLayout(panelLayout);
+            PlayerFragment playerFragment = new PlayerFragment();
+
             getFragmentManager()
                     .beginTransaction()
                     .replace(R.id.controller_holder, controllerFragment, ControllerFragment.NAME)
@@ -193,9 +181,6 @@ public class MainActivity extends NightModeResponsibleActivity
         super.onSaveInstanceState(outState);
         outState.putBoolean("wasStarted", wasStarted);
         outState.putString("title", getSupportActionBar().getTitle().toString());
-        if (playlistName != null) {
-            outState.putString("name", playlistName);
-        }
     }
 
 
@@ -303,6 +288,24 @@ public class MainActivity extends NightModeResponsibleActivity
         return panelLayout;
     }
 
+    public void launchPlaylistFragment(@NonNull String playlistName) {
+        if (playlistName.equals(PlaylistManager.ALL_TRACKS_PLAYLIST)) {
+            fragmentLauncher(R.id.all_audio);
+            navigationView.setCheckedItem(R.id.all_audio);
+            return;
+        }
+
+        PlaylistFragment playlistFragment = new PlaylistFragment();
+        playlistFragment.setPlaylistName(playlistName);
+
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_holder, playlistFragment, PlaylistFragment.NAME)
+                .commit();
+
+        navigationView.setCheckedItem(R.id.playlists);
+
+    }
 
     private Pair<Fragment, Boolean> getExistingOrNewFragment(@NonNull String tag, Class fragmentClass) {
         Fragment fragment = getFragmentManager().findFragmentByTag(tag);

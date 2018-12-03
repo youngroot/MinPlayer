@@ -43,7 +43,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public abstract class AudioTransferServiceBase extends Service {
-
+    public static final String PREF_SERVICE_TYPE = "yandex_disk_transfer_service";
     protected String prefKeyTasks;
     protected int notificationId;
     protected int processingAudioStringId;
@@ -79,8 +79,8 @@ public abstract class AudioTransferServiceBase extends Service {
 
     @Override
     public void onCreate() {
-        sharedPreferences = getSharedPreferences(getPackageName() + "disk_service", MODE_PRIVATE);
-        rxPreferences = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(this));
+        sharedPreferences = getSharedPreferences(PREF_SERVICE_TYPE, MODE_PRIVATE);
+        rxPreferences = RxSharedPreferences.create(sharedPreferences);
 
         prefDisposable = rxPreferences.getString(TokenActivity.PREF_ACCESS_TOKEN)
                 .asObservable()
@@ -236,33 +236,37 @@ public abstract class AudioTransferServiceBase extends Service {
 
     @NonNull
     public Audio getAudioFromIntent(@NonNull Intent intent) {
-        long id = intent.getLongExtra(IntentExtras.EXTRA_AUDIO_ID, 0);
-        long size = intent.getLongExtra(IntentExtras.EXTRA_AUDIO_SIZE, 0);
-        String localData = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_LOCAL_DATA);
-        String cloudData = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_CLOUD_DATA);
-        String md5Hash = intent.getStringExtra(IntentExtras.EXTRA_MD5_HASH);
-        String title = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_TITLE);
-        String album = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ALBUM);
-        String artist = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ARTIST);
-        String genre = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_GENRE);
-        String albumArtPath = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ALBUM_ART_PATH);
-
-        return new Audio(id, size, localData, cloudData, md5Hash, title, album, artist, genre, albumArtPath);
+//        long id = intent.getLongExtra(IntentExtras.EXTRA_AUDIO_ID, 0);
+//        long size = intent.getLongExtra(IntentExtras.EXTRA_AUDIO_SIZE, 0);
+//        String localData = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_LOCAL_DATA);
+//        String cloudData = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_CLOUD_DATA);
+//        String md5Hash = intent.getStringExtra(IntentExtras.EXTRA_MD5_HASH);
+//        String title = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_TITLE);
+//        String album = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ALBUM);
+//        String artist = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ARTIST);
+//        String genre = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_GENRE);
+//        String albumArtPath = intent.getStringExtra(IntentExtras.EXTRA_AUDIO_ALBUM_ART_PATH);
+//
+//        return new Audio(id, size, localData, cloudData, md5Hash, title, album, artist, genre, albumArtPath);
+        Gson gson = new Gson();
+        return gson.fromJson(intent.getStringExtra(IntentExtras.EXTRA_AUDIO_JSON), Audio.class);
     }
 
     @NonNull
     public static <T extends AudioTransferServiceBase> Intent getIntentFromAudio(Context context, Audio audio, Class<T> serviceClass) {
         Intent intent = new Intent(context, serviceClass);
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_ID, audio.getId());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_SIZE, audio.getSize());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_LOCAL_DATA, audio.getLocalData());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_CLOUD_DATA, audio.getCloudData());
-        intent.putExtra(IntentExtras.EXTRA_MD5_HASH, audio.getMd5Hash());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_TITLE, audio.getTitle());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_ALBUM, audio.getAlbum());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_ARTIST, audio.getArtist());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_GENRE,audio.getGenre());
-        intent.putExtra(IntentExtras.EXTRA_AUDIO_ALBUM_ART_PATH,audio.getAlbumArtPath());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_ID, audio.getId());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_SIZE, audio.getSize());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_LOCAL_DATA, audio.getLocalData());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_CLOUD_DATA, audio.getCloudData());
+//        intent.putExtra(IntentExtras.EXTRA_MD5_HASH, audio.getMd5Hash());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_TITLE, audio.getTitle());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_ALBUM, audio.getAlbum());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_ARTIST, audio.getArtist());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_GENRE,audio.getGenre());
+//        intent.putExtra(IntentExtras.EXTRA_AUDIO_ALBUM_ART_PATH,audio.getAlbumArtPath());
+        Gson gson = new Gson();
+        intent.putExtra(IntentExtras.EXTRA_AUDIO_JSON, gson.toJson(audio));
         return intent;
     }
 

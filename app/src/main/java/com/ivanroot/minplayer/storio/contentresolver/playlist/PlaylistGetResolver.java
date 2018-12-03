@@ -1,18 +1,15 @@
-package com.ivanroot.minplayer.storio;
+package com.ivanroot.minplayer.storio.contentresolver.playlist;
 
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 
-import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.playlist.Playlist;
+import com.ivanroot.minplayer.storio.contentresolver.audio.AudioGetResolver;
 import com.pushtorefresh.storio3.contentresolver.StorIOContentResolver;
 import com.pushtorefresh.storio3.contentresolver.operations.get.DefaultGetResolver;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
-
-import java.util.Date;
 
 /**
  * Created by ivanroot on 3/23/18.

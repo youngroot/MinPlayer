@@ -17,7 +17,6 @@ import java.util.List;
  */
 
 public class Playlist implements Serializable, IPlaylist {
-
     protected long id = -1;
     protected String name = "";
     protected Date dateAdded;

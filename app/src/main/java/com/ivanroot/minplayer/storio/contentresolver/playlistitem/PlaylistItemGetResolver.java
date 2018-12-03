@@ -1,4 +1,4 @@
-package com.ivanroot.minplayer.storio;
+package com.ivanroot.minplayer.storio.contentresolver.playlistitem;
 
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
