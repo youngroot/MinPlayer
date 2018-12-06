@@ -296,6 +296,12 @@ public class MainActivity extends NightModeResponsibleActivity
             return;
         }
 
+        if (Objects.equals(playlistId, PlaylistManager.DISK_ALL_TRACKS_PLAYLIST_ID)) {
+            fragmentLauncher(R.id.disk);
+            navigationView.setCheckedItem(R.id.disk);
+            return;
+        }
+
         PlaylistFragment playlistFragment = new PlaylistFragment();
         playlistFragment.setPlaylistId(playlistId);
 

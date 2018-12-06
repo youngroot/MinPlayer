@@ -9,7 +9,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.storio.contentresolver.StorIOContentResolverFactory;
 import com.ivanroot.minplayer.storio.sqlite.StorIOSQLiteFactory;
@@ -27,9 +26,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -53,35 +52,59 @@ public class PlaylistManager {
 
     private static final PlaylistManager ourInstance = new PlaylistManager();
 
-    private PlaylistManager() {}
+    private PlaylistManager() {
+    }
 
     public static synchronized PlaylistManager getInstance() {
         return ourInstance;
     }
 
 
-    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, long playlistId){
-        if(Objects.equals(playlistId, DISK_ALL_TRACKS_PLAYLIST_ID))
-            return getDiskAllTracksObservable(context, restClient)
-                    .map(list -> new Playlist(DISK_ALL_TRACKS_PLAYLIST).setAudioList(list))
-                    //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist))
-                    .distinctUntilChanged();
+    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, RestClient restClient, long playlistId) {
+        if (Objects.equals(playlistId, DISK_ALL_TRACKS_PLAYLIST_ID))
+            return getPlaylistCombinedObservable(getDiskAllTracksObservable(context, restClient)
+                    .map(list -> {
+                        Playlist playlist = new Playlist(DISK_ALL_TRACKS_PLAYLIST);
+                        playlist.setAudioList(list);
+                        playlist.setId(DISK_ALL_TRACKS_PLAYLIST_ID);
+                        return playlist;
+                    })
+                    .distinctUntilChanged(), getPlaylistSQLiteObservable(context, playlistId));
 
         return getPlaylistObservable(context, playlistId);
     }
 
-    public Observable<Playlist> getPlaylistObservable(Context context, long playlistId) {
-        if (Objects.equals(playlistId, ALL_TRACKS_PLAYLIST_ID))
-            return StorIOContentResolverFactory
-                    .getAllAudioObservable(context, ASC_SORT_ORDER)
-                    .map(list -> new Playlist(ALL_TRACKS_PLAYLIST).setAudioList(list));
-                    //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist));
+    public Observable<Playlist> getPlaylistObservable(@NonNull Context context, long playlistId) {
+        Observable<Playlist> playlistObservable = Objects.equals(playlistId, ALL_TRACKS_PLAYLIST_ID) ?
+                StorIOContentResolverFactory
+                        .getAllAudioObservable(context, ASC_SORT_ORDER)
+                        .map(list -> {
+                            Playlist playlist = new Playlist(ALL_TRACKS_PLAYLIST);
+                            playlist.setAudioList(list);
+                            playlist.setId(ALL_TRACKS_PLAYLIST_ID);
+                            return playlist;
+                        }) :
+                StorIOContentResolverFactory.getPlaylistObservable(context, playlistId);
 
-        return StorIOContentResolverFactory.getPlaylistObservable(context, playlistId);
-                //.flatMap(playlist -> getPlaylistAdditionalObservable(context, playlist));
+        Observable<Playlist> dbPlaylistObservable = getPlaylistSQLiteObservable(context, playlistId);
+
+        return getPlaylistCombinedObservable(playlistObservable, dbPlaylistObservable);
     }
 
-    public Observable<List<Audio>> getAllAudiosObservable(Context context) {
+    private Observable<Playlist> getPlaylistCombinedObservable(Observable<Playlist> playlistObservable, Observable<Playlist> dbPlaylistObservable) {
+        return Observable.combineLatest(playlistObservable, dbPlaylistObservable, (playlist, dbPlaylist) -> {
+            if (dbPlaylist.isShuffled())
+                playlist.shuffle();
+
+            playlist.setRepeatMode(dbPlaylist.getRepeatMode());
+            playlist.checkAndSetAudio(dbPlaylist.getCurrentAudio());
+            playlist.setImagePath(dbPlaylist.getImagePath());
+
+            return playlist;
+        });
+    }
+
+    public Observable<List<Audio>> getAllAudiosObservable(@NonNull Context context) {
         return StorIOContentResolverFactory.getAllAudioObservable(context, ASC_SORT_ORDER);
     }
 
@@ -89,7 +112,7 @@ public class PlaylistManager {
         return StorIOContentResolverFactory.getPlaylistItemsObservable(context);
     }
 
-    public synchronized void writePlaylist(Context context, Playlist playlist) {
+    public synchronized void writePlaylist(@NonNull Context context, Playlist playlist) {
         if (playlist == null)
             return;
 
@@ -112,7 +135,7 @@ public class PlaylistManager {
                 .executeAsBlocking();
     }
 
-    public synchronized void addToPlaylist(Context context, long playlistId, Audio audio) {
+    public synchronized void addToPlaylist(@NonNull Context context, long playlistId, @NonNull Audio audio) {
         Completable.create(emitter -> {
             ContentResolver contentResolver = context.getContentResolver();
 
@@ -139,7 +162,7 @@ public class PlaylistManager {
                 .subscribe();
     }
 
-    public synchronized void removePlaylist(Context context, long playlistId){
+    public synchronized void removePlaylist(@NonNull Context context, long playlistId) {
         StorIOContentResolverFactory.get(context)
                 .delete()
                 .byQuery(DeleteQuery.builder()
@@ -150,7 +173,7 @@ public class PlaylistManager {
                 .executeAsBlocking();
     }
 
-    public Observable<List<Audio>> getDiskAllTracksObservable(Context context, RestClient restClient) {
+    public Observable<List<Audio>> getDiskAllTracksObservable(@NonNull Context context, @NonNull RestClient restClient) {
         return Observable.interval(0, period, TimeUnit.MILLISECONDS)
                 .map(i -> {
                     List<Audio> audioList = new ArrayList<>();
@@ -189,25 +212,44 @@ public class PlaylistManager {
                 }).subscribeOn(Schedulers.io());
     }
 
-    private Observable<Playlist> getPlaylistAdditionalObservable(@NonNull Context context, @NonNull final Playlist playlist){
-        return StorIOSQLiteFactory.getPlaylistObservable(context, playlist.getId())
-                .map(dbPlaylist ->{
-                    if(dbPlaylist.isShuffled())
-                        playlist.shuffle();
-                    playlist.setImagePath(dbPlaylist.getImagePath());
-                    playlist.checkAndSetAudio(dbPlaylist.getCurrentAudio());
-                    return playlist;
-                });
+    private Observable<Playlist> getPlaylistSQLiteObservable(@NonNull Context context, long playlistId) {
+        int count = 0;
+        try {
+            count = StorIOSQLiteFactory
+                    .get(context)
+                    .get()
+                    .numberOfResults()
+                    .withQuery(com.pushtorefresh.storio3.sqlite.queries.Query.builder()
+                            .table(PlaylistTable.TABLE_NAME)
+                            .where(PlaylistTable.Columns.PLAYLIST_ID + " = ?")
+                            .whereArgs(playlistId).build())
+                    .prepare()
+                    .executeAsBlocking();
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
+
+        if (count == 0) {
+            Playlist playlist = new Playlist();
+            playlist.setId(playlistId);
+
+            StorIOSQLiteFactory.get(context)
+                    .put()
+                    .object(playlist)
+                    .prepare()
+                    .executeAsBlocking();
+        }
+
+        return StorIOSQLiteFactory.getPlaylistObservable(context, playlistId);
     }
 
-    public synchronized void renamePlaylist(@NonNull Context context, long playlistId, @NonNull String newName){
+    public synchronized void renamePlaylist(@NonNull Context context, long playlistId, @NonNull String newName) {
         ContentValues newNameValue = new ContentValues(1);
         newNameValue.put(MediaStore.Audio.Playlists.NAME, newName);
 
         StorIOContentResolverFactory.get(context)
                 .lowLevel()
                 .contentResolver()
-                .update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, newNameValue, MediaStore.Audio.Playlists._ID + "=" + playlistId, null );
+                .update(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, newNameValue, MediaStore.Audio.Playlists._ID + "=" + playlistId, null);
     }
-
 }

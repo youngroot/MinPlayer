@@ -382,6 +382,11 @@ public class ControllerFragment extends Fragment {
         }
     }
 
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYLIST_CHANGED)})
+    public void onPlaylistChanged(Long playlistId){
+       rxBus.post(PlayerActions.ACTION_GET_METADATA, this);
+    }
+
     public String getPlayerTimeString(int millis){
         int sec = millis / 1000;
         int min = sec / 60;

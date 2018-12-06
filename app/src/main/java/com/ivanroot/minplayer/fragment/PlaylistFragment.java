@@ -250,8 +250,8 @@ public class PlaylistFragment extends NavFragmentBase {
             popupMenu.show();
         });
 
-        adapter.setAudioClickListener((audio, playlistName) -> {
-            rxBus.post(ACTION_SET_PLAYLIST, playlistName);
+        adapter.setAudioClickListener((audio, playlistId) -> {
+            rxBus.post(ACTION_SET_PLAYLIST, playlistId);
             rxBus.post(ACTION_PLAY_AUDIO, audio);
         });
     }
