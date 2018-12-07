@@ -51,7 +51,7 @@ public class PlaylistViewHolder extends BaseItemViewHolder<PlaylistItem> {
                             .error(R.drawable.default_album_art)
                             .into(playlistImages[i]);
                 }else{
-                    playlistImages[i].setImageResource(R.color.colorWhite);
+                    playlistImages[i].setImageResource(0);
                 }
             }
         }catch (NullPointerException ex){

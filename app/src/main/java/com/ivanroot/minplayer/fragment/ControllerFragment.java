@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
@@ -27,6 +28,7 @@ import com.ivanroot.minplayer.player.constants.PlayerActions;
 import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
+
 import static com.ivanroot.minplayer.player.constants.PlayerKeys.*;
 import static java.lang.String.format;
 
@@ -88,14 +90,14 @@ public class ControllerFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        Log.i(toString(),"onCreateView");
+        Log.i(toString(), "onCreateView");
         View view = inflater.inflate(R.layout.controller_fragment, container, false);
         prepareViews(view);
         prepareListeners();
         prepareScreenUpdater();
 
-        if(savedInstanceState != null)
-            applyAlphaToSmallViews(savedInstanceState.getFloat("smallAlpha",1));
+        if (savedInstanceState != null)
+            applyAlphaToSmallViews(savedInstanceState.getFloat("smallAlpha", 1));
 
         rxBus.post(PlayerActions.ACTION_GET_METADATA, this);
 //        rxBus.post(ACTION_IS_PLAYING,this);
@@ -116,7 +118,7 @@ public class ControllerFragment extends Fragment {
         smallViewContainer = (ViewGroup) view.findViewById(R.id.small_controller_layout);
 
         playbackProgress = (SeekBar) view.findViewById(R.id.song_progress);
-        loadProgress = (ProgressBar)view.findViewById(R.id.load_progress);
+        loadProgress = (ProgressBar) view.findViewById(R.id.load_progress);
         bigAlbumArt = (ImageView) view.findViewById(R.id.big_album_art);
         albumArt = (ImageView) view.findViewById(R.id.album_art);
         title = (TextView) view.findViewById(R.id.txt_title);
@@ -128,17 +130,17 @@ public class ControllerFragment extends Fragment {
         shuffleBtn = (ImageButton) view.findViewById(R.id.shuffle_btn);
         repeatBtn = (ImageButton) view.findViewById(R.id.repeat_btn);
 
-        secNow = (TextView)view.findViewById(R.id.sec_now);
-        secLeft = (TextView)view.findViewById(R.id.sec_left);
+        secNow = (TextView) view.findViewById(R.id.sec_now);
+        secLeft = (TextView) view.findViewById(R.id.sec_left);
 
-        if(panelLayout == null && getActivity() instanceof MainActivity)
-            panelLayout = ((MainActivity)getActivity()).getPanelLayout();
+        if (panelLayout == null && getActivity() instanceof MainActivity)
+            panelLayout = ((MainActivity) getActivity()).getPanelLayout();
     }
 
-    private void prepareListeners(){
-        smallPrevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO,this));
-        smallPlayBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE,this));
-        smallNextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO,this));
+    private void prepareListeners() {
+        smallPrevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO, this));
+        smallPlayBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE, this));
+        smallNextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO, this));
 
         playbackProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -157,10 +159,10 @@ public class ControllerFragment extends Fragment {
                 rxBus.post(PlayerActions.ACTION_SEEK_TO, seekBar.getProgress());
             }
         });
-        prevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO,this));
+        prevBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PREV_AUDIO, this));
         prevBtn.setOnLongClickListener(v -> true);
-        playBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE,this));
-        nextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO,this));
+        playBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_PLAY_OR_PAUSE, this));
+        nextBtn.setOnClickListener(view -> rxBus.post(PlayerActions.ACTION_NEXT_AUDIO, this));
         nextBtn.setOnLongClickListener(v -> true);
         shuffleBtn.setOnClickListener(v -> rxBus.post(PlayerActions.ACTION_CHANGE_SHUFFLE_MODE, this));
         repeatBtn.setOnClickListener(v -> rxBus.post(PlayerActions.ACTION_CHANGE_RP_MODE, this));
@@ -170,7 +172,7 @@ public class ControllerFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        if(panelLayout != null){
+        if (panelLayout != null) {
             panelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
                 @Override
                 public void onPanelSlide(View panel, float slideOffset) {
@@ -186,8 +188,8 @@ public class ControllerFragment extends Fragment {
 //                                    .setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
 //                                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 //                        else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-                    if(currAudio == null)
-                        ((SlidingUpPanelLayout)panel).setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+                    if (currAudio == null)
+                        ((SlidingUpPanelLayout) panel).setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
                 }
             });
         }
@@ -202,17 +204,17 @@ public class ControllerFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Log.i(toString(),"onSaveInstanceState");
-        if(smallViewContainer != null) {
+        Log.i(toString(), "onSaveInstanceState");
+        if (smallViewContainer != null) {
             outState.putFloat("smallAlpha", smallViewContainer.getAlpha());
-            Log.i(toString(),"small alpha: " + String.valueOf(smallViewContainer.getAlpha()));
+            Log.i(toString(), "small alpha: " + String.valueOf(smallViewContainer.getAlpha()));
         }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if(screenUpdater != null)
+        if (screenUpdater != null)
             screenUpdater.dispose();
     }
 
@@ -222,19 +224,19 @@ public class ControllerFragment extends Fragment {
         rxBus.unregister(this);
     }
 
-    public void setPanelLayout(SlidingUpPanelLayout panelLayout){
+    public void setPanelLayout(SlidingUpPanelLayout panelLayout) {
         this.panelLayout = panelLayout;
     }
 
-    private void updateViewMetadata(HashMap<String, Object> state){
+    private void updateViewMetadata(HashMap<String, Object> state) {
         currAudio = (Audio) state.get(KEY_AUDIO);
-        if(currAudio != null) {
-            if(panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
+        if (currAudio != null) {
+            if (panelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.HIDDEN)
                 panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-            if(initState){
-                smallProgress.setMax((int)state.get(KEY_DURATION));
-                playbackProgress.setMax((int)state.get(KEY_DURATION));
-                onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+            if (initState) {
+                smallProgress.setMax((int) state.get(KEY_DURATION));
+                playbackProgress.setMax((int) state.get(KEY_DURATION));
+                onPlayPauseEvents((boolean) state.get(KEY_IS_PLAYING));
             }
             initState = false;
 
@@ -251,10 +253,10 @@ public class ControllerFragment extends Fragment {
             albumArt.setImageResource(R.drawable.default_album_art);
 
             onShuffleModeEvents((boolean) state.get(KEY_IS_SHUFFLED));
-            onRepeatModeEvents((int)state.get(KEY_RP_MODE));
+            onRepeatModeEvents((int) state.get(KEY_RP_MODE));
 
 
-            if(currAudio.getAlbumArtPath() != null) {
+            if (currAudio.getAlbumArtPath() != null) {
 
                 Picasso.with(getActivity())
                         .load(Utils.getFileFromPath(currAudio.getAlbumArtPath()))
@@ -276,15 +278,14 @@ public class ControllerFragment extends Fragment {
                     .color(Color.argb(80, 60, 60, 60))
                     .from(bitmap)
                     .into(bigAlbumArt);
-        }
-        else {
+        } else {
             panelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
         }
 
     }
 
-    private void applyAlphaToSmallViews(float smallAlpha){
-        if(smallViewContainer != null)
+    private void applyAlphaToSmallViews(float smallAlpha) {
+        if (smallViewContainer != null)
             smallViewContainer.setAlpha(smallAlpha);
 
     }
@@ -319,7 +320,7 @@ public class ControllerFragment extends Fragment {
     }
 
     @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYER_PREPAIRING)})
-    public void onPlayerPrepairingEvent(Object o){
+    public void onPlayerPrepairingEvent(Object o) {
         onPlayPauseEvents(false);
         loadProgress.setVisibility(View.VISIBLE);
         smallProgress.setProgress(0);
@@ -327,11 +328,11 @@ public class ControllerFragment extends Fragment {
     }
 
     @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYER_READY)})
-    public void onPlayerReadyEvent(HashMap<String, Object> state){
-        onPlayPauseEvents((boolean)state.get(KEY_IS_PLAYING));
+    public void onPlayerReadyEvent(HashMap<String, Object> state) {
+        onPlayPauseEvents((boolean) state.get(KEY_IS_PLAYING));
         loadProgress.setVisibility(View.INVISIBLE);
-        smallProgress.setMax((int)state.get(KEY_DURATION));
-        playbackProgress.setMax((int)state.get(KEY_DURATION));
+        smallProgress.setMax((int) state.get(KEY_DURATION));
+        playbackProgress.setMax((int) state.get(KEY_DURATION));
     }
 
     @Subscribe(tags = {
@@ -341,7 +342,7 @@ public class ControllerFragment extends Fragment {
         updateViewMetadata(state);
     }
 
-    @Subscribe(tags = {@Tag (PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})
+    @Subscribe(tags = {@Tag(PlayerEvents.EVENT_AUDIO_IS_PLAYING), @Tag(PlayerEvents.EVENT_AUDIO_IS_PAUSED)})
     public void onPlayPauseEvents(Boolean isPlaying) {
 
         if (isPlaying) {
@@ -383,11 +384,11 @@ public class ControllerFragment extends Fragment {
     }
 
     @Subscribe(tags = {@Tag(PlayerEvents.EVENT_PLAYLIST_CHANGED)})
-    public void onPlaylistChanged(Long playlistId){
-       rxBus.post(PlayerActions.ACTION_GET_METADATA, this);
+    public void onPlaylistChanged(Long playlistId) {
+        rxBus.post(PlayerActions.ACTION_GET_METADATA, this);
     }
 
-    public String getPlayerTimeString(int millis){
+    public String getPlayerTimeString(int millis) {
         int sec = millis / 1000;
         int min = sec / 60;
         sec %= 60;

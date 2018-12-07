@@ -2,7 +2,6 @@ package com.ivanroot.minplayer.activity;
 
 import android.app.Fragment;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -26,7 +25,6 @@ import com.hwangjr.rxbus.annotation.Subscribe;
 import com.hwangjr.rxbus.annotation.Tag;
 import com.ivanroot.minplayer.R;
 import com.ivanroot.minplayer.adapter.listeners.OnAudioClickListener;
-import com.ivanroot.minplayer.adapter.listeners.OnAudioMoreBtnClickListener;
 import com.ivanroot.minplayer.adapter.section.AudioSection;
 import com.ivanroot.minplayer.adapter.section.DiskAudioSection;
 import com.ivanroot.minplayer.adapter.section.PlaylistItemSection;
@@ -38,16 +36,12 @@ import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.disk.service.AudioUploadService;
 import com.ivanroot.minplayer.fragment.PlaylistSelectorDialog;
 import com.ivanroot.minplayer.player.constants.PlayerActions;
-import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.yandex.disk.rest.RestClient;
 
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 public class SearchActivity extends NavUpActivityBase {
 
@@ -89,7 +83,7 @@ public class SearchActivity extends NavUpActivityBase {
         private PlaylistItemSection playlistItemSection;
         private SectionedRecyclerViewAdapter adapter;
         private RecyclerView recyclerView;
-        private PlaylistManager playlistManager = PlaylistManager.getInstance();
+        private PlaylistManager playlistManager = PlaylistManager.get();
         private boolean selectorDialogIsActive = false;
         private Audio selectedAudio;
         private Disposable disposable;

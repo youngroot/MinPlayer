@@ -1,6 +1,5 @@
 package com.ivanroot.minplayer.fragment;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -29,7 +28,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     private FastScrollRecyclerView recyclerView;
     private PlaylistSelectorAdapter adapter;
     private FloatingActionButton addFab;
-    private PlaylistManager playlistManager = PlaylistManager.getInstance();
+    private PlaylistManager playlistManager = PlaylistManager.get();
 
 
     @Override
@@ -38,7 +37,6 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         adapter = new PlaylistSelectorAdapter(getActivity());
     }
 
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -46,14 +44,13 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
         setupDrawer(view);
         setupRecycler(view);
         prepareListeners(view);
-
         return view;
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        adapter.subscribe(playlistManager.getPlaylistItemsObservable(activity));
+        adapter.subscribe(playlistManager.getPlaylistItemsObservable(activity).distinctUntilChanged());
     }
 
     @Override
@@ -90,7 +87,6 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
     }
 
     private void prepareListeners(View view) {
-
         addFab = (FloatingActionButton)view.findViewById(R.id.add_playlist_fab);
 
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
@@ -117,8 +113,7 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
 
         });
     }
-
-
+    
     private void showPlaylistCreationDialog(){
         PlaylistAddDialog dialog = new PlaylistAddDialog();
         String tag = getResources().getString(R.string.add_playlist);

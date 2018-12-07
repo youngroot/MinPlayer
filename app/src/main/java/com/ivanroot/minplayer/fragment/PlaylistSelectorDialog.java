@@ -82,7 +82,7 @@ public class PlaylistSelectorDialog extends DialogFragment {
         private List<PlaylistItem> playlistItems;
 
         public PlaylistSelectorAdapter(Context context, OnPlaylistItemClickListener playlistItemClickListener){
-            playlistManager = PlaylistManager.getInstance();
+            playlistManager = PlaylistManager.get();
             this.context = context;
             this.playlistItemClickListener = playlistItemClickListener;
             disposable = playlistManager.getPlaylistItemsObservable(context)

@@ -40,7 +40,7 @@ import io.reactivex.disposables.Disposable;
 public class PlaylistAddDialog extends DialogFragment {
     private Playlist playlist;
     private AudioSelectorAdapter adapter;
-    private PlaylistManager playlistManager = PlaylistManager.getInstance();
+    private PlaylistManager playlistManager = PlaylistManager.get();
 
 
     @Override
@@ -100,7 +100,7 @@ public class PlaylistAddDialog extends DialogFragment {
         private CheckBox audioCheckBox;
         private Animation fadeIn;
         private Disposable disposable;
-        private PlaylistManager playlistManager = PlaylistManager.getInstance();
+        private PlaylistManager playlistManager = PlaylistManager.get();
 
 
         public AudioSelectorAdapter(Activity activity) {

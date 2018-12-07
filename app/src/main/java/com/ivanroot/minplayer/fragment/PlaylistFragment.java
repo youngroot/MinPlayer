@@ -37,11 +37,8 @@ import com.ivanroot.minplayer.audio.Audio;
 import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.disk.service.AudioUploadService;
-import com.ivanroot.minplayer.exceptions.PlaylistAlreadyExistsException;
 import com.ivanroot.minplayer.playlist.Playlist;
-import com.ivanroot.minplayer.playlist.PlaylistItem;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -54,7 +51,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import jp.wasabeef.blurry.Blurry;
 
-import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_ON_PLAYLIST_NAME_CHANGED;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_SET_PLAYLIST;
 
@@ -97,7 +93,7 @@ public class PlaylistFragment extends NavFragmentBase {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        playlistManager = PlaylistManager.getInstance();
+        playlistManager = PlaylistManager.get();
 
         if (savedInstanceState != null){
             playlistId = savedInstanceState.getLong("playlist_id");
@@ -170,11 +166,12 @@ public class PlaylistFragment extends NavFragmentBase {
 
             playFab = (FloatingActionButton) view.findViewById(R.id.fab_play);
             playFab.setOnClickListener(v -> {
-                rxBus.post(ACTION_SET_PLAYLIST, playlistId);
                 if (adapter.getItemCount() > 0) {
+                    rxBus.post(ACTION_SET_PLAYLIST, playlistId);
                     rxBus.post(ACTION_PLAY_AUDIO, adapter.getPlaylist().getAudio(0));
+                    appBarLayout.setExpanded(false, true);
                 }
-                appBarLayout.setExpanded(false, true);
+
             });
 
             moreButton.setOnClickListener(v -> {

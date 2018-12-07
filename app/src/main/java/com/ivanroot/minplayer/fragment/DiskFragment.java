@@ -14,7 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
-import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.hwangjr.rxbus.Bus;
 import com.hwangjr.rxbus.RxBus;
 import com.hwangjr.rxbus.annotation.Subscribe;
@@ -32,20 +31,12 @@ import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-import com.yandex.disk.rest.Credentials;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
-
-import java.net.UnknownHostException;
-
-import javax.net.ssl.SSLException;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.Subject;
 
 
 import static com.ivanroot.minplayer.player.constants.PlayerActions.ACTION_PLAY_AUDIO;
@@ -57,7 +48,7 @@ public class DiskFragment extends NavFragmentBase {
     private DiskPlaylistAdapter adapter;
     private MainActivity activity;
     private Disposable restPrefDisposable;
-    private PlaylistManager playlistManager = PlaylistManager.getInstance();
+    private PlaylistManager playlistManager = PlaylistManager.get();
     private Bus rxBus = RxBus.get();
     private TextView statusText;
 

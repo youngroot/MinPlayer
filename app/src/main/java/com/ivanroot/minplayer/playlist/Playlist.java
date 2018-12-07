@@ -58,9 +58,18 @@ public class Playlist implements Serializable, IPlaylist {
         this.id = id;
     }
 
+    public Playlist(long id){
+        this.id = id;
+    }
+
     public Playlist(String name){
         this.name = name;
         playlist = new ArrayList<>();
+    }
+
+    public Playlist(long id, String name){
+        this.id = id;
+        this.name = name;
     }
 
     public Playlist(String name, String imagePath){
@@ -152,7 +161,6 @@ public class Playlist implements Serializable, IPlaylist {
 
     @Override
     public boolean checkAndSetAudio(Audio audio){
-
         if(audio == null) return false;
 
         if(playlist.contains(audio)){
@@ -335,7 +343,6 @@ public class Playlist implements Serializable, IPlaylist {
 
     @Override
     public boolean equals(IPlaylist playlist){
-
         if(playlist == null) return false;
         if(!playlist.getName().equals(this.getName())) return false;
         if(playlist.size() != this.size()) return false;

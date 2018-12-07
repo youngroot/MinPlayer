@@ -73,7 +73,6 @@ import com.ivanroot.minplayer.player.constants.PlayerEvents;
 import com.ivanroot.minplayer.player.constants.PlayerKeys;
 import com.ivanroot.minplayer.playlist.Playlist;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
-import com.ivanroot.minplayer.utils.Pair;
 import com.ivanroot.minplayer.utils.RxNetworkChangeReceiver;
 import com.ivanroot.minplayer.utils.Utils;
 import com.yandex.disk.rest.RestClient;
@@ -129,7 +128,7 @@ public class PlayerService extends Service implements
     private Disposable playlistDisposable;
     private Disposable restDisposable;
     private CompositeDisposable compositeDisposable;
-    private PlaylistManager playlistManager = PlaylistManager.getInstance();
+    private PlaylistManager playlistManager = PlaylistManager.get();
     private Bus rxBus = RxBus.get();
     private boolean foregroundStarted = false;
 
@@ -282,6 +281,8 @@ public class PlayerService extends Service implements
 
         if (playlistDisposable != null)
             playlistDisposable.dispose();
+        
+        rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlistId);
 
         playlistManager.writePlaylist(this, playlist);
         subscribe(playlistId);
@@ -298,8 +299,6 @@ public class PlayerService extends Service implements
 
         if (!playlist.checkAndSetAudio(currAudio)) {
             currAudio = playlist.getCurrentAudio();
-            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getName());
-            rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getId());
             updateMetaData();
             prepareToPlay();
         }
