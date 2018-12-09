@@ -25,7 +25,6 @@ public class PlaylistItemSection extends BaseItemSection<PlaylistItem> {
                         .build(), tag, adapter);
     }
 
-
     @Override
     public RecyclerView.ViewHolder getItemViewHolder(View view) {
         return new PlaylistViewHolder(view);

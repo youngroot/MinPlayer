@@ -227,29 +227,29 @@ public class PlayerService extends Service implements
     }
 
     private void prepareToPlay() {
-        Log.i("PlayerService", "prepareToPlay");
+        Log.i("PlayerService", "prepareToPlay" + String.valueOf(currAudio));
 
         if (currAudio != null) {
-            if (playlist.size() > 0) {
+            //if (playlist.size() > 0) {
 
-                if (currAudio.getLocalData() != null) {
-                    MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
-                            .createMediaSource(Uri.parse(currAudio.getLocalData()));
-                    exoPlayer.prepare(mediaSource);
-                    exoPlayer.setPlayWhenReady(wasPlaying);
-                } else if (currAudio.getCloudData() != null && restClient != null) {
-                    Disposable dis = Single.<Uri>create(emitter -> emitter.onSuccess(Uri.parse(restClient.getDownloadLink(currAudio.getCloudData()).getHref())))
-                            .subscribeOn(Schedulers.newThread())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(uri -> {
-                                MediaSource mediaSource = new ExtractorMediaSource.Factory(okHttpDataSourceFactory)
-                                        .createMediaSource(uri);
-                                exoPlayer.prepare(mediaSource);
-                                exoPlayer.setPlayWhenReady(wasPlaying);
-                            });
-                }
-
+            if (currAudio.getLocalData() != null) {
+                MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
+                        .createMediaSource(Uri.parse(currAudio.getLocalData()));
+                exoPlayer.prepare(mediaSource);
+                exoPlayer.setPlayWhenReady(wasPlaying);
+            } else if (currAudio.getCloudData() != null && restClient != null) {
+                Disposable dis = Single.<Uri>create(emitter -> emitter.onSuccess(Uri.parse(restClient.getDownloadLink(currAudio.getCloudData()).getHref())))
+                        .subscribeOn(Schedulers.newThread())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(uri -> {
+                            MediaSource mediaSource = new ExtractorMediaSource.Factory(okHttpDataSourceFactory)
+                                    .createMediaSource(uri);
+                            exoPlayer.prepare(mediaSource);
+                            exoPlayer.setPlayWhenReady(wasPlaying);
+                        });
             }
+
+            //}
         }
 
     }
@@ -274,21 +274,19 @@ public class PlayerService extends Service implements
 
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
-    public void setPlaylist(Long playlistId){
+    public void setPlaylist(Long playlistId) {
         if (playlist != null)
             if (Objects.equals(playlistId, playlist.getId()))
                 return;
 
         if (playlistDisposable != null)
             playlistDisposable.dispose();
-        
-        rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlistId);
 
         playlistManager.writePlaylist(this, playlist);
         subscribe(playlistId);
     }
 
-    private void subscribe(long playlistId){
+    private void subscribe(long playlistId) {
         playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
@@ -302,6 +300,8 @@ public class PlayerService extends Service implements
             updateMetaData();
             prepareToPlay();
         }
+
+        rxBus.post(PlayerEvents.EVENT_PLAYLIST_CHANGED, playlist.getId());
     }
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_GET_PLAYLIST)})
@@ -309,7 +309,6 @@ public class PlayerService extends Service implements
         rxBus.post(PlayerActions.ACTION_GET_PLAYLIST, playlist);
         return playlist;
     }
-
 
     @NonNull
     public HashMap<String, Object> getCurrentStateMap() {

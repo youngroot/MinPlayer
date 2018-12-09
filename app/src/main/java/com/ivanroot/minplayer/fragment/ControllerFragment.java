@@ -314,7 +314,7 @@ public class ControllerFragment extends Fragment {
             }
         })
                 .subscribeOn(Schedulers.newThread())
-                .flatMap(Observable::fromIterable)
+                .switchMap(Observable::fromIterable)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pair -> rxBus.post(pair.first, pair.second));
     }
