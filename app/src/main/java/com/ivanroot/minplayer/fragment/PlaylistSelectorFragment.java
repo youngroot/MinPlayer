@@ -91,10 +91,10 @@ public class PlaylistSelectorFragment extends NavFragmentBase{
 
         addFab.setOnClickListener(v -> showPlaylistCreationDialog());
 
-        adapter.setOnPlaylistClickListener((playlistId -> {
-            activity.launchPlaylistFragment(playlistId);
+        adapter.setOnPlaylistItemClickListener((itemView, playlistId) -> {
+            activity.launchPlaylistFragment(itemView, playlistId);
             Log.i(toString(), String.valueOf(playlistId));
-        }));
+        });
 
         adapter.setOnMoreBtnClickListener((v, playlistItem) -> {
             PopupMenu popupMenu = new PopupMenu(getActivity(), v);

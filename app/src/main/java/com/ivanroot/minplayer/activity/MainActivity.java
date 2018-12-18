@@ -15,6 +15,10 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.transition.AutoTransition;
+import android.transition.ChangeBounds;
+import android.transition.Fade;
+import android.transition.Slide;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +35,7 @@ import com.ivanroot.minplayer.fragment.PlaylistSelectorFragment;
 import com.ivanroot.minplayer.fragment.VisFragment;
 import com.ivanroot.minplayer.fragment.VisSelectorFragment;
 import com.ivanroot.minplayer.player.PlayerService;
+import com.ivanroot.minplayer.playlist.PlaylistItemSharedElementTransition;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Pair;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -91,7 +96,7 @@ public class MainActivity extends NightModeResponsibleActivity
 
             SharedPreferences sharedPreferences = getSharedPreferences(PlayerService.SERVICE_NAME, MODE_PRIVATE);
             long playlistId = sharedPreferences.getLong(PlayerService.PREF_LAST_PLAYLIST_ID, PlaylistManager.ALL_TRACKS_PLAYLIST_ID);
-            launchPlaylistFragment(playlistId);
+            launchPlaylistFragment(null, playlistId);
         } else {
             wasStarted = savedInstanceState.getBoolean("wasStarted");
         }
@@ -289,7 +294,7 @@ public class MainActivity extends NightModeResponsibleActivity
         return panelLayout;
     }
 
-    public void launchPlaylistFragment(long playlistId) {
+    public void launchPlaylistFragment(View itemView, long playlistId) {
         if (Objects.equals(playlistId, PlaylistManager.ALL_TRACKS_PLAYLIST_ID)) {
             fragmentLauncher(R.id.all_audio);
             navigationView.setCheckedItem(R.id.all_audio);
@@ -305,10 +310,20 @@ public class MainActivity extends NightModeResponsibleActivity
         PlaylistFragment playlistFragment = new PlaylistFragment();
         playlistFragment.setPlaylistId(playlistId);
 
-        getFragmentManager()
+        FragmentTransaction transaction = getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragment_holder, playlistFragment, PlaylistFragment.NAME)
-                .commit();
+                .replace(R.id.fragment_holder, playlistFragment, PlaylistFragment.NAME);
+
+        if (itemView != null) {
+            transaction.addSharedElement(itemView, "playlist_header_card_transition");
+
+            playlistFragment.setEnterTransition(new Fade());
+            playlistFragment.setExitTransition(new Fade());
+            playlistFragment.setSharedElementEnterTransition(new AutoTransition());
+            playlistFragment.setSharedElementReturnTransition(new AutoTransition());
+        }
+
+        transaction.commit();
 
         navigationView.setCheckedItem(R.id.playlists);
 

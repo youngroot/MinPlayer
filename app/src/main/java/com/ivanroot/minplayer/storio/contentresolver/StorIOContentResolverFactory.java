@@ -33,7 +33,7 @@ import io.reactivex.Observable;
 public class StorIOContentResolverFactory {
     private static StorIOContentResolver INSTANCE;
 
-    public static synchronized StorIOContentResolver get(Context context) {
+    public static StorIOContentResolver get(Context context) {
         if (INSTANCE != null)
             return INSTANCE;
 

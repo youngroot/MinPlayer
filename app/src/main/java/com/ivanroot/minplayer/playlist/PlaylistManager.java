@@ -15,6 +15,8 @@ import com.ivanroot.minplayer.storio.sqlite.StorIOSQLiteFactory;
 import com.ivanroot.minplayer.storio.sqlite.playlist.PlaylistTable;
 import com.pushtorefresh.storio3.contentresolver.queries.DeleteQuery;
 import com.pushtorefresh.storio3.contentresolver.queries.Query;
+import com.pushtorefresh.storio3.sqlite.operations.put.PutResolver;
+import com.pushtorefresh.storio3.sqlite.operations.put.PutResult;
 import com.yandex.disk.rest.ResourcesArgs;
 import com.yandex.disk.rest.RestClient;
 import com.yandex.disk.rest.exceptions.http.UnauthorizedException;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -56,9 +59,10 @@ public class PlaylistManager {
     private final Object removePlaylistLock = new Object();
     private final Object renamePlaylistLock = new Object();
 
-    private PlaylistManager() {}
+    private PlaylistManager() {
+    }
 
-    public static synchronized PlaylistManager get() {
+    public static PlaylistManager get() {
         return ourInstance;
     }
 
@@ -107,25 +111,34 @@ public class PlaylistManager {
     public void writePlaylist(@NonNull Context context, Playlist playlist) {
         if (playlist == null)
             return;
+        Log.i(toString(), "writePlaylist");
 
         synchronized (writePlaylistLock) {
-            if (!Objects.equals(playlist.getId(), ALL_TRACKS_PLAYLIST_ID) &&
-                    !Objects.equals(playlist.getId(), DISK_ALL_TRACKS_PLAYLIST_ID)) {
-
-                StorIOContentResolverFactory.get(context)
-                        .put()
-                        .object(playlist)
-                        .prepare()
-                        .executeAsBlocking();
-            } else {
-                playlist.setAudioList(new ArrayList<>());
-            }
-
-            StorIOSQLiteFactory.get(context)
+            Observable<PutResult> sqliteWritePlaylistObservable = StorIOSQLiteFactory.get(context)
                     .put()
                     .object(playlist)
                     .prepare()
-                    .executeAsBlocking();
+                    .asRxFlowable(BackpressureStrategy.LATEST)
+                    .toObservable();
+
+            if (!Objects.equals(playlist.getId(), ALL_TRACKS_PLAYLIST_ID) &&
+                    !Objects.equals(playlist.getId(), DISK_ALL_TRACKS_PLAYLIST_ID)) {
+                Observable<com.pushtorefresh.storio3.contentresolver.operations.put.PutResult> contentResolverWritePlaylistObservable = StorIOContentResolverFactory.get(context)
+                        .put()
+                        .object(playlist)
+                        .prepare().asRxFlowable(BackpressureStrategy.LATEST)
+                        .toObservable();
+
+                Observable.combineLatest(sqliteWritePlaylistObservable, contentResolverWritePlaylistObservable, (pr1, pr2)-> 1)
+                        .doOnNext(i -> Log.i(toString(), Thread.currentThread().getName()))
+                        .subscribe();
+            } else {
+                playlist.setAudioList(new ArrayList<>());
+
+                sqliteWritePlaylistObservable
+                        .doOnNext(i -> Log.i(toString(), Thread.currentThread().getName()))
+                        .subscribe();
+            }
         }
     }
 
@@ -167,7 +180,8 @@ public class PlaylistManager {
                             .where(MediaStore.Audio.Playlists._ID + " = ?")
                             .whereArgs(playlistId).build())
                     .prepare()
-                    .executeAsBlocking();
+                    .asRxCompletable()
+                    .subscribe();
         }
     }
 

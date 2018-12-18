@@ -31,6 +31,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Surface;
 
@@ -230,8 +231,6 @@ public class PlayerService extends Service implements
         Log.i("PlayerService", "prepareToPlay" + String.valueOf(currAudio));
 
         if (currAudio != null) {
-            //if (playlist.size() > 0) {
-
             if (currAudio.getLocalData() != null) {
                 MediaSource mediaSource = new ExtractorMediaSource.Factory(defaultDataSourceFactory)
                         .createMediaSource(Uri.parse(currAudio.getLocalData()));
@@ -248,8 +247,6 @@ public class PlayerService extends Service implements
                             exoPlayer.setPlayWhenReady(wasPlaying);
                         });
             }
-
-            //}
         }
 
     }
@@ -275,6 +272,7 @@ public class PlayerService extends Service implements
 
     @Subscribe(tags = {@Tag(PlayerActions.ACTION_SET_PLAYLIST)})
     public void setPlaylist(Long playlistId) {
+        Log.i(toString(), "public setPlaylist");
         if (playlist != null)
             if (Objects.equals(playlistId, playlist.getId()))
                 return;
@@ -287,12 +285,14 @@ public class PlayerService extends Service implements
     }
 
     private void subscribe(long playlistId) {
+        Log.i(toString(), "subscribe");
         playlistDisposable = playlistManager.getPlaylistObservable(this, restClient, playlistId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::setPlaylist);
     }
 
     private void setPlaylist(Playlist playlist) {
+        Log.i(toString(), "private setPlaylist");
         this.playlist = playlist;
 
         if (!playlist.checkAndSetAudio(currAudio)) {

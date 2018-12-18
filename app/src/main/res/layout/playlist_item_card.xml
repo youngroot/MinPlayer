@@ -9,6 +9,7 @@
     card_view:cardElevation="@dimen/cardview_default_elevation"
     android:layout_width="match_parent"
     android:layout_height="60dp"
+    android:transitionName="playlist_item_card_transition"
     android:background="?android:attr/selectableItemBackground">
 
     <RelativeLayout

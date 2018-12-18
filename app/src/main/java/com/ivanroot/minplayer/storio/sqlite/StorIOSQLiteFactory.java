@@ -20,7 +20,7 @@ import io.reactivex.Observable;
 public class StorIOSQLiteFactory {
     private static StorIOSQLite INSTANCE;
 
-    public synchronized static StorIOSQLite get(Context context){
+    public static StorIOSQLite get(Context context){
         if(INSTANCE != null)
             return INSTANCE;
 

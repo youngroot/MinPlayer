@@ -21,11 +21,12 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
     @NonNull
     @Override
     public PutResult performPut(@NonNull StorIOContentResolver storIOContentResolver, @NonNull Playlist playlist) {
+        long playlistId = -1;
         try {
 
             ContentResolver contentResolver = storIOContentResolver.lowLevel().contentResolver();
 
-            long playlistId = playlist.getId();
+            playlistId = playlist.getId();
             boolean newPlaylist = false;
 
             if (playlistId == -1) {
@@ -59,8 +60,8 @@ public class PlaylistPutResolver extends PutResolver<Playlist> {
             e.printStackTrace();
             Log.e(toString(), e.getMessage());
         }
-
-        return null;
+        Uri affectedUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId);
+        return PutResult.newInsertResult(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, affectedUri);
     }
 
 }

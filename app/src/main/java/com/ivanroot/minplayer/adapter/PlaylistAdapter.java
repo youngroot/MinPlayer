@@ -23,7 +23,6 @@ import java.util.List;
  */
 
 public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder> implements ItemTouchHelperAdapter {
-
     private Activity activity;
     private boolean playlistModifyModeEnabled = false;
     private List<Audio> originalAudioList = new ArrayList<>();
@@ -111,6 +110,12 @@ public class PlaylistAdapter extends BasePlaylistAdapter<Audio, AudioViewHolder>
 
     public void setItemTouchHelper(ItemTouchHelper itemTouchHelper) {
         this.itemTouchHelper = itemTouchHelper;
+    }
+
+    public void renamePlaylist(@NonNull String newName){
+       if(playlistModifyModeEnabled){
+           playlist.setName(newName);
+       }
     }
 
     public void saveModifiedPlaylist() {

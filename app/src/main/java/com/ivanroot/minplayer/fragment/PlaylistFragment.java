@@ -14,6 +14,8 @@ import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.transition.AutoTransition;
+import android.transition.Fade;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +40,7 @@ import com.ivanroot.minplayer.disk.constants.AudioStatus;
 import com.ivanroot.minplayer.disk.service.AudioTransferServiceBase;
 import com.ivanroot.minplayer.disk.service.AudioUploadService;
 import com.ivanroot.minplayer.playlist.Playlist;
+import com.ivanroot.minplayer.playlist.PlaylistItemSharedElementTransition;
 import com.ivanroot.minplayer.playlist.PlaylistManager;
 import com.ivanroot.minplayer.utils.Utils;
 import com.simplecityapps.recyclerview_fastscroll.interfaces.OnFastScrollStateChangeListener;
@@ -205,17 +208,17 @@ public class PlaylistFragment extends NavFragmentBase {
                     return;
                 }
 
-                playlistManager.renamePlaylist(activity, playlistId, editedName);
-
-                setupPlaylistObservable();
+                //playlistManager.renamePlaylist(activity, playlistId, editedName);
+                //setupPlaylistObservable();
+                adapter.renamePlaylist(editedName);
                 adapter.saveModifiedPlaylist();
 
             });
 
             adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
-                playlistManager.writePlaylist(activity, modifiedPlaylist);
-                adapter.subscribe(playlistObservable);
                 setPlaylistModifyModeEnabled(false);
+                playlistManager.writePlaylist(activity, modifiedPlaylist);
+                //adapter.subscribe(playlistObservable);
             });
 
         } else {
