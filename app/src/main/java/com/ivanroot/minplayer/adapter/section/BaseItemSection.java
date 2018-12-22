@@ -34,6 +34,7 @@ public abstract class BaseItemSection<T> extends StatelessSection
     protected List<T> filteredData = new ArrayList<>();
     protected ObservableEmitter<String> queryEmitter;
     protected ItemRemoveInsertListObservableTransformer<T> transformer;
+    private final Object filterLock = new Object();
 
     public BaseItemSection(Context context, SectionParameters sectionParameters, String tag, SectionedRecyclerViewAdapter adapter) {
         super(sectionParameters);
@@ -54,11 +55,13 @@ public abstract class BaseItemSection<T> extends StatelessSection
 
     @Override
     public void filter(@NonNull String query) {
-        if (queryEmitter != null) {
-            queryEmitter.onNext(query);
-            this.query = null;
-        } else {
-            this.query = query;
+        synchronized (filterLock) {
+            if (queryEmitter != null) {
+                queryEmitter.onNext(query);
+                this.query = null;
+            } else {
+                this.query = query;
+            }
         }
     }
 
@@ -73,6 +76,9 @@ public abstract class BaseItemSection<T> extends StatelessSection
 
     public void subscribe(@NonNull Observable<List<T>> itemsSourceObservable) {
         dispose();
+
+        itemsSourceObservable = itemsSourceObservable.observeOn(AndroidSchedulers.mainThread());
+
         disposable = Observable.combineLatest(itemsSourceObservable, Observable.create(this), (updatedData, query) -> {
             List<T> updatedFilteredData = new ArrayList<>();
 
@@ -81,10 +87,9 @@ public abstract class BaseItemSection<T> extends StatelessSection
                     updatedFilteredData.add(updatedData.get(i));
 
             return updatedFilteredData;
-        }).observeOn(AndroidSchedulers.mainThread())
+        })
                 .compose(transformer)
                 .subscribe(filteredData -> {}, throwable -> Log.e(toString(), throwable.toString()));
-
     }
 
     @Override
@@ -120,5 +125,4 @@ public abstract class BaseItemSection<T> extends StatelessSection
 
         adapter.notifyItemInsertedInSection(TAG, position);
     }
-
 }

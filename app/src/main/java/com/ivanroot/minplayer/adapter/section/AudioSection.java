@@ -2,6 +2,7 @@ package com.ivanroot.minplayer.adapter.section;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.ivanroot.minplayer.R;
@@ -33,20 +34,27 @@ public class AudioSection extends BaseItemSection<Audio> {
 
     @Override
     public RecyclerView.ViewHolder getItemViewHolder(View view) {
+        Log.i(toString(), "getItemViewHolder list size: " + filteredData.size());
         return new AudioViewHolder(view);
     }
 
     @Override
     public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
-        AudioViewHolder audioViewHolder = (AudioViewHolder)holder;
-        audioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(filteredData.get(position),
-                PlaylistManager.ALL_TRACKS_PLAYLIST_ID));
-        audioViewHolder.setMoreBtnOnClickListener(v -> {
-            Playlist playlist = new Playlist();
-            playlist.setAudioList(filteredData);
-            onAudioMoreBtnClickListener.onMoreBtnClick(v, playlist, position);
-        });
-        audioViewHolder.representItem(context, filteredData.get(position));
+        Log.i(toString(), "onBindItemViewHolder pos: " + position + " list size: " + filteredData.size());
+        AudioViewHolder audioViewHolder = (AudioViewHolder) holder;
+
+        if(position < filteredData.size()){
+            final Audio audio = filteredData.get(position);
+            audioViewHolder.itemView.setOnClickListener(v -> onAudioClickListener.onAudioClick(audio, PlaylistManager.ALL_TRACKS_PLAYLIST_ID));
+
+            audioViewHolder.setMoreBtnOnClickListener(v -> {
+                Playlist playlist = new Playlist();
+                playlist.setAudioList(filteredData);
+                onAudioMoreBtnClickListener.onMoreBtnClick(v, playlist, position);
+            });
+
+            audioViewHolder.representItem(context, audio);
+        }
     }
 
     public void setOnAudioClickListener(OnAudioClickListener onAudioClickListener) {
