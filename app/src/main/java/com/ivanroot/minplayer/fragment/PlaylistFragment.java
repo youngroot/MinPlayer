@@ -217,6 +217,7 @@ public class PlaylistFragment extends NavFragmentBase {
 
             adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
                 playlistManager.writePlaylist(activity, modifiedPlaylist);
+                setPlaylistModifyModeEnabled(false);
             });
 
         } else {
