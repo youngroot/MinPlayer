@@ -216,9 +216,7 @@ public class PlaylistFragment extends NavFragmentBase {
             });
 
             adapter.setOnModifiedPlaylistSaveListener(modifiedPlaylist -> {
-                setPlaylistModifyModeEnabled(false);
                 playlistManager.writePlaylist(activity, modifiedPlaylist);
-                //adapter.subscribe(playlistObservable);
             });
 
         } else {
@@ -226,7 +224,6 @@ public class PlaylistFragment extends NavFragmentBase {
         }
 
         adapter.setOnMoreBtnClickListener((v, playlist, i) -> {
-
             PopupMenu popupMenu = new PopupMenu(activity, v);
             popupMenu.inflate(R.menu.audio_item_more_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
